@@ -45,13 +45,14 @@ const DnDFlow = () => {
     event.preventDefault();
 
     if (reactFlowInstance) {
-      const type = event.dataTransfer.getData('application/reactflow');
+      const nodeData = JSON.parse(event.dataTransfer.getData('application/reactflow'));
       const position = reactFlowInstance.project({ x: event.clientX, y: event.clientY - 40 });
+      nodeData.label = `${nodeData.nodeType} node`
       const newNode: Node = {
         id: getId(),
-        type,
+        type: nodeData.nodeType,
         position,
-        data: { label: `${type} node` },
+        data: nodeData,
       };
 
       setElements((es) => es.concat(newNode));
