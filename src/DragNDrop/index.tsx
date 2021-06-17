@@ -15,7 +15,13 @@ import ReactFlow, {
 
 import Sidebar from './Sidebar';
 
+import MultiHandleNode from './MultiHandleNode';
+
 import './dnd.css';
+
+const nodeTypes = {
+  multihandle: MultiHandleNode,
+};
 
 const initialElements = [{ id: '1', type: 'input', data: { label: 'input node' }, position: { x: 250, y: 5 } }];
 
@@ -72,6 +78,7 @@ const DnDFlow = () => {
             onLoad={onLoad}
             onDrop={onDrop}
             onDragOver={onDragOver}
+            nodeTypes={nodeTypes}
           >
             <Controls />
           </ReactFlow>
