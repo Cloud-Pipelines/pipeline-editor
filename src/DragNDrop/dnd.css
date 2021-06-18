@@ -47,6 +47,14 @@
   box-shadow: 0 0 0 0.5px var(--border-color);
 }
 
+.react-flow__handle-connecting {
+  background: #ff6060;
+}
+
+.react-flow__handle-valid {
+  background: #55dd99;
+}
+
 .dndflow .reactflow-wrapper {
   flex-grow: 1;
   height: 100%;
