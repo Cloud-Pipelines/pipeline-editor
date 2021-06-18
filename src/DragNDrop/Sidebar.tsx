@@ -9,19 +9,18 @@ const Sidebar = () => {
   return (
     <aside>
       <div className="description">You can drag these nodes to the pane on the right.</div>
-      <div className="react-flow__node-input" onDragStart={(event: DragEvent) => onDragStart(event, { nodeType: "input", label: "Input Node" })} draggable>
+      <div className="react-flow__node-input" onDragStart={(event: DragEvent) => onDragStart(event, { input: { label: "Input Node" } })} draggable>
         Input Node
       </div>
-      <div className="react-flow__node-default" onDragStart={(event: DragEvent) => onDragStart(event, { nodeType: "default", label: "Default Node" })} draggable>
+      <div className="react-flow__node-default" onDragStart={(event: DragEvent) => onDragStart(event, { default: { label: "Default Node" } })} draggable>
         Default Node
       </div>
-      <div className="react-flow__node-output" onDragStart={(event: DragEvent) => onDragStart(event, { nodeType: "output", label: "Output Node" })} draggable>
+      <div className="react-flow__node-output" onDragStart={(event: DragEvent) => onDragStart(event, { output: { label: "Output Node" } })} draggable>
         Output Node
       </div>
       <div className="react-flow__node react-flow__node-multihandle" draggable
         onDragStart={(event: DragEvent) =>
-          onDragStart(event, {
-            nodeType: "multihandle",
+          onDragStart(event, { multihandle: {
             handles: {
               top: { type: "target", ids: ["top_1", "top_2", "top_3"] },
               bottom: { type: "source", ids: ["bottom_1", "bottom_2"] },
@@ -29,7 +28,7 @@ const Sidebar = () => {
               right: { type: "source", ids: ["right_1"] },
             },
             label: "Multi-handle node (3-2-1-1)",
-          })
+          }})
         }
       >
         Multi-port Node 3-2-1-1
