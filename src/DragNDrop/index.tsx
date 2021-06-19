@@ -81,6 +81,8 @@ const DnDFlow = () => {
             onDrop={onDrop}
             onDragOver={onDragOver}
             nodeTypes={nodeTypes}
+            deleteKeyCode='Delete'
+            multiSelectionKeyCode='Control'
           >
             <Controls />
           </ReactFlow>
