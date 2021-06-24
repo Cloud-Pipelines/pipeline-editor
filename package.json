@@ -1,5 +1,6 @@
 {
   "name": "pipeline-editor",
+  "homepage": "https://cloud-pipelines.github.io/pipeline-editor",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
