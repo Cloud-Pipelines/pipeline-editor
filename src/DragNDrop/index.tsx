@@ -16,11 +16,13 @@ import ReactFlow, {
 import Sidebar from './Sidebar';
 
 import MultiHandleNode from './MultiHandleNode';
+import ComponentTaskNode from './ComponentTaskNode';
 
 import './dnd.css';
 
 const nodeTypes = {
   multihandle: MultiHandleNode,
+  task: ComponentTaskNode,
 };
 
 const initialElements = [{ id: '1', type: 'input', data: { label: 'input node' }, position: { x: 250, y: 5 } }];
