@@ -12,6 +12,7 @@ import ReactFlow, {
   ElementId,
   Node,
   Background,
+  MiniMap,
 } from 'react-flow-renderer';
 
 import Sidebar from './Sidebar';
@@ -92,6 +93,7 @@ const DnDFlow = () => {
             snapToGrid={true}
             snapGrid={[GRID_SIZE, GRID_SIZE]}
           >
+            <MiniMap/>
             <Controls />
             <Background gap={GRID_SIZE}/>
           </ReactFlow>
