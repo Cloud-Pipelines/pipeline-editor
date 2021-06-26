@@ -11,6 +11,7 @@ import ReactFlow, {
   Edge,
   ElementId,
   Node,
+  Background,
 } from 'react-flow-renderer';
 
 import Sidebar from './Sidebar';
@@ -21,12 +22,14 @@ import ComponentTaskNode from './ComponentTaskNode';
 
 import './dnd.css';
 
+const GRID_SIZE = 10;
+
 const nodeTypes = {
   multihandle: MultiHandleNode,
   task: ComponentTaskNode,
 };
 
-const initialElements = [{ id: '1', type: 'input', data: { label: 'input node' }, position: { x: 250, y: 5 } }];
+const initialElements = [{ id: '1', type: 'input', data: { label: 'input node' }, position: { x: 250, y: 10 } }];
 
 const onDragOver = (event: DragEvent) => {
   event.preventDefault();
@@ -86,8 +89,11 @@ const DnDFlow = () => {
             nodeTypes={nodeTypes}
             deleteKeyCode='Delete'
             multiSelectionKeyCode='Control'
+            snapToGrid={true}
+            snapGrid={[GRID_SIZE, GRID_SIZE]}
           >
             <Controls />
+            <Background gap={GRID_SIZE}/>
           </ReactFlow>
         </div>
         <Sidebar />
