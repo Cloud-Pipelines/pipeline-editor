@@ -71,9 +71,9 @@ type UrlAndHash = {
 };
 
 
-export const getComponentUrlsAndHashes = async (
+export async function * getComponentUrlsAndHashes(
   users = ["kubeflow", "Ark-kun"]
-): Promise<UrlAndHash[]> => {
+) {
   let urlsAndHashes: UrlAndHash[] = [];
   const query =
     "filename:component.yaml " + users.map((user) => "user:" + user).join(" ");
@@ -87,7 +87,7 @@ export const getComponentUrlsAndHashes = async (
       break;
     }
     for (let item of items) {
-      urlsAndHashes.push({ url: githubHtmlUrlToDownloadUrl(item.html_url), hash: item.sha })
+      yield { url: githubHtmlUrlToDownloadUrl(item.html_url), hash: item.sha as string };
     }
     await new Promise( resolve => setTimeout(resolve, (60 * 1000 / 10) * (1 + 0.1)));
   }
@@ -98,16 +98,21 @@ export const getComponentUrlsAndHashes = async (
 export const cacheComponentCandidateBlobs = async (
   users = ["kubeflow", "Ark-kun"]
 ): Promise<any[]> => {
-  const urlsAndHashes = await getComponentUrlsAndHashes(users);
+  let urlsAndHashes: UrlAndHash[] = [];
+  let urls = [];
+  for await (const urlAndHash of getComponentUrlsAndHashes(users)) {
+    urlsAndHashes.push(urlAndHash);
+    urls.push(urlAndHash.url);
+  }
   const cache = await caches.open(BLOB_CACHE_NAME);
-  await cache.addAll(urlsAndHashes.map((item) => item.url));
+  await cache.addAll(urls);
   return urlsAndHashes;
 };
 
 
 export const cacheAllComponents = async (users = ["kubeflow", "Ark-kun"]) => {
   console.debug("Starting cacheAllComponents");
-  const urlsAndHashes = await getComponentUrlsAndHashes(users);
+  const urlsAndHashesIterator = getComponentUrlsAndHashes(users);
 
   // const cache = await caches.open(BLOB_CACHE_NAME);
   const urlToHashDb = localForage.createInstance({
@@ -134,7 +139,7 @@ export const cacheAllComponents = async (users = ["kubeflow", "Ark-kun"]) => {
     name: DB_NAME,
     storeName: BAD_HASHES_TABLE_NAME,
   });
-  for (const item of urlsAndHashes) {
+  for await (const item of urlsAndHashesIterator) {
     const hash = item.hash.toLowerCase();
     const htmlUrl = item.url;
     const badHashReason = await badHashesDb.getItem<string>(hash);
