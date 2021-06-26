@@ -21,6 +21,12 @@
   margin-bottom: 10px;
 }
 
+.dndflow .nodeList div {
+  /* Resets position: absolute */
+  position: relative;
+  margin-bottom: 10px;
+}
+
 /* Node styles */
 
 .react-flow__node {
