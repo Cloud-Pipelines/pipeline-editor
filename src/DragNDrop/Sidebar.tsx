@@ -66,6 +66,20 @@ const Sidebar = () => {
       >
         PyTorch/Train_PyTorch_model/from_CSV
       </div>
+      {
+        componentSpec !== undefined && <div className="react-flow__node react-flow__node-multihandle" draggable
+          onDragStart={(event: DragEvent) => {
+            const taskSpec: TaskSpec = {
+              componentRef: {
+                spec: componentSpec,
+              },
+            };
+            return onDragStart(event, { task: taskSpec});
+          }}
+        >
+          {componentSpec.name}
+        </div>
+      }
     </aside>
   );
 };
