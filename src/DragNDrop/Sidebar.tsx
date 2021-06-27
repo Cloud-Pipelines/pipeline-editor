@@ -2,6 +2,7 @@ import React, { DragEvent, useEffect, useState } from 'react';
 
 import {loadComponentFromUrl} from '../componentStore'
 import {ComponentSpec, TaskSpec} from '../componentSpec'
+import GraphComponentExporter from './GraphComponentExporter'
 
 const onDragStart = (event: DragEvent, nodeData: object) => {
   event.dataTransfer.setData('application/reactflow', JSON.stringify(nodeData));
@@ -80,6 +81,7 @@ const Sidebar = () => {
           {componentSpec.name}
         </div>
       }
+      <GraphComponentExporter/>
     </aside>
   );
 };
