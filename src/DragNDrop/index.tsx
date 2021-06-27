@@ -58,9 +58,13 @@ const DnDFlow = () => {
     event.preventDefault();
 
     if (reactFlowInstance) {
-      const transferredData = JSON.parse(event.dataTransfer.getData('application/reactflow'));
-      const nodeType = Object.keys(transferredData)[0];
-      const nodeData = transferredData[nodeType];
+      const droppedData = event.dataTransfer.getData('application/reactflow');
+      if (droppedData === "") {
+        return;
+      }
+      const droppedDataObject = JSON.parse(droppedData);
+      const nodeType = Object.keys(droppedDataObject)[0];
+      const nodeData = droppedDataObject[nodeType];
       const position = reactFlowInstance.project({ x: event.clientX, y: event.clientY - 40 });
       const newNode: Node = {
         id: getId(),
