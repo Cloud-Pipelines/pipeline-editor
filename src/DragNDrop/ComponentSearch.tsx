@@ -71,7 +71,7 @@ const SearchPanel = (props: any) => {
   return (
     <div className="nodeList">
       <form onSubmit={onSubmit}>
-        <input placeholder="XGBoost" onChange={onQueryChange} />
+        <input type="search" placeholder="XGBoost" onChange={onQueryChange} />
         <input type="submit" />
       </form>
       <div>{results}</div>
