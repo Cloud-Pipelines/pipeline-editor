@@ -18,10 +18,10 @@ const GraphComponentExporter = ({pipelineName}: {pipelineName?: string}) => {
   const downloadLink = <a href={URL.createObjectURL(componentTextBlob)} download={"component.yaml"}>component.yaml</a>
 
   return (
-    <div>
-      <h4>Graph component: {downloadLink}</h4>
-      <pre>{componentText}</pre>
-    </div>
+    <details open>
+      <summary>Graph component: {downloadLink}</summary>
+      <pre style={{overflow: "auto"}}>{componentText}</pre>
+    </details>
   );
 };
 
