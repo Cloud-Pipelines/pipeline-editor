@@ -1,6 +1,6 @@
 {
   "files": {
-    "main.css": "/pipeline-editor/static/css/main.a961f9ae.chunk.css",
+    "main.css": "/pipeline-editor/static/css/main.c9cf8eee.chunk.css",
     "main.js": "/pipeline-editor/static/js/main.8ddf8238.chunk.js",
     "main.js.map": "/pipeline-editor/static/js/main.8ddf8238.chunk.js.map",
     "runtime-main.js": "/pipeline-editor/static/js/runtime-main.ed11b291.js",
@@ -12,13 +12,13 @@
     "index.html": "/pipeline-editor/index.html",
     "service-worker.js": "/pipeline-editor/service-worker.js",
     "service-worker.js.map": "/pipeline-editor/service-worker.js.map",
-    "static/css/main.a961f9ae.chunk.css.map": "/pipeline-editor/static/css/main.a961f9ae.chunk.css.map",
+    "static/css/main.c9cf8eee.chunk.css.map": "/pipeline-editor/static/css/main.c9cf8eee.chunk.css.map",
     "static/js/2.c39d8c41.chunk.js.LICENSE.txt": "/pipeline-editor/static/js/2.c39d8c41.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
     "static/js/runtime-main.ed11b291.js",
     "static/js/2.c39d8c41.chunk.js",
-    "static/css/main.a961f9ae.chunk.css",
+    "static/css/main.c9cf8eee.chunk.css",
     "static/js/main.8ddf8238.chunk.js"
   ]
 }
