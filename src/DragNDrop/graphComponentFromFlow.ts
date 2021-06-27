@@ -81,9 +81,9 @@ const createGraphComponentSpecFromFlowElements = (
 
   for (const edge of edges) {
     const sourceTaskId = edge.source;
-    const sourceOutputName = edge.sourceHandle;
+    const sourceOutputName = edge.sourceHandle?.replace(/^output_/, '');
     const targetTaskId = edge.target;
-    const targetInputName = edge.targetHandle;
+    const targetInputName = edge.targetHandle?.replace(/^input_/, '');
 
     // if (!sourceOutputName || !targetInputName) {
     //   console.error("Enexpected edge without a source or target handle:", edge);
