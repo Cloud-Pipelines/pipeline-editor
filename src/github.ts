@@ -109,6 +109,13 @@ export const cacheComponentCandidateBlobs = async (
   return urlsAndHashes;
 };
 
+export const downloadComponentDataWithCache = async (url: string) => {
+  const response = await httpGetWithCache(url, BLOB_CACHE_NAME)
+  const data = await response.blob();
+  const componentText = await data.text();
+  const componentSpec = yaml.load(componentText) as ComponentSpec;
+  return componentSpec;
+}
 
 export const cacheAllComponents = async (users = ["kubeflow", "Ark-kun"]) => {
   console.debug("Starting cacheAllComponents");

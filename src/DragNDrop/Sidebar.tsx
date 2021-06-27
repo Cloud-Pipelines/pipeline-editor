@@ -1,6 +1,6 @@
 import React, { DragEvent, useEffect, useState } from 'react';
 
-import {loadComponentFromUrl} from '../componentStore'
+import {downloadComponentDataWithCache} from '../github'
 import {ComponentSpec, TaskSpec} from '../componentSpec'
 import GraphComponentExporter from './GraphComponentExporter'
 
@@ -14,7 +14,7 @@ const Sidebar = () => {
 
   const componentUrl = "https://raw.githubusercontent.com/kubeflow/pipelines/603342c4b88fe2d69ff07682f702cd3601e883bb/components/PyTorch/Train_PyTorch_model/from_CSV/component.yaml";
   useEffect(() => {
-    loadComponentFromUrl(componentUrl).then(setComponentSpec);
+    downloadComponentDataWithCache(componentUrl).then(setComponentSpec);
   }, []);
 
   return (
