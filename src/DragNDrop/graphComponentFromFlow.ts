@@ -137,16 +137,16 @@ const createGraphComponentSpecFromFlowElements = (
   // Cleanup.
   // I could have prevented these attributes from being added, but then the attribute serialization ordering will be ugly
   // (the first attribute would be "implementation" since it's required).
-  if (inputSpecs.length == 0) {
+  if (inputSpecs.length === 0) {
     delete graphComponent.inputs;
   }
-  if (outputSpecs.length == 0) {
+  if (outputSpecs.length === 0) {
     delete graphComponent.outputs;
   }
-  if (Object.keys(annotations).length == 0) {
+  if (Object.keys(annotations).length === 0) {
     delete graphComponent.metadata;
   }
-  if (Object.keys(graphOutputValues).length == 0) {
+  if (Object.keys(graphOutputValues).length === 0) {
     delete (graphComponent.implementation as GraphImplementation).graph.outputValues;
   }
   return graphComponent;
