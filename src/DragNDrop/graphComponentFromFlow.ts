@@ -90,6 +90,12 @@ const createGraphComponentSpecFromFlowElements = (
     //   continue;
     // }
 
+    // Checking the source task for sanity
+    if (!!sourceOutputName && taskMap[sourceTaskId] === undefined) {
+      console.error("Task node is connected to unknown node type:", edge);
+      continue;
+    }
+
     // FIX: For now, detecting the graph inputs and outputs by sourceOutputName or targetInputName being null
     const argument: ArgumentType =
       !!sourceOutputName
@@ -102,6 +108,10 @@ const createGraphComponentSpecFromFlowElements = (
           } as GraphInputArgument);
     if (!!targetInputName) {
       let targetTask = taskMap[targetTaskId];
+      if (targetTask === undefined) {
+        console.error("Task node is connected to unknown node type:", edge);
+        continue;
+      }
       if (targetTask.arguments === undefined) {
         targetTask.arguments = {};
       }
