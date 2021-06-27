@@ -12,8 +12,9 @@ const onDragStart = (event: DragEvent, nodeData: object) => {
 const Sidebar = () => {
   const [componentSpec, setComponentSpec] = useState<ComponentSpec | undefined>(undefined);
 
+  const componentUrl = "https://raw.githubusercontent.com/kubeflow/pipelines/603342c4b88fe2d69ff07682f702cd3601e883bb/components/PyTorch/Train_PyTorch_model/from_CSV/component.yaml";
   useEffect(() => {
-    loadComponentFromUrl("https://raw.githubusercontent.com/kubeflow/pipelines/603342c4b88fe2d69ff07682f702cd3601e883bb/components/PyTorch/Train_PyTorch_model/from_CSV/component.yaml").then(setComponentSpec);
+    loadComponentFromUrl(componentUrl).then(setComponentSpec);
   }, []);
 
   return (
@@ -72,6 +73,7 @@ const Sidebar = () => {
           onDragStart={(event: DragEvent) => {
             const taskSpec: TaskSpec = {
               componentRef: {
+                url: componentUrl,
                 spec: componentSpec,
               },
             };
