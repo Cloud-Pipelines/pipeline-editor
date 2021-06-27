@@ -129,7 +129,6 @@ export interface ContainerSpec {
  */
 export interface ContainerImplementation {
   container: ContainerSpec;
-  [k: string]: unknown;
 }
 export type ImplementationType = ContainerImplementation | GraphImplementation;
 export interface MetadataSpec {
