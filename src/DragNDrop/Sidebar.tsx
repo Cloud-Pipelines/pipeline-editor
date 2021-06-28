@@ -70,7 +70,7 @@ const Sidebar = () => {
   }, []);
 
   return (
-    <aside>
+    <aside className="nodeList">
       <div className="description">You can drag these nodes to the pane on the right.</div>
       <div className="react-flow__node-input" onDragStart={(event: DragEvent) => onDragStart(event, { input: { label: "Input Node" } })} draggable>
         Input Node
