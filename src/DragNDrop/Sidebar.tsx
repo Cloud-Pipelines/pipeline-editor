@@ -78,21 +78,6 @@ const Sidebar = () => {
       <div className="react-flow__node-output" onDragStart={(event: DragEvent) => onDragStart(event, { output: { label: "Output Node" } })} draggable>
         Output Node
       </div>
-      {
-        componentSpec !== undefined && <div className="react-flow__node react-flow__node-multihandle" draggable
-          onDragStart={(event: DragEvent) => {
-            const taskSpec: TaskSpec = {
-              componentRef: {
-                url: componentUrl,
-                spec: componentSpec,
-              },
-            };
-            return onDragStart(event, { task: taskSpec});
-          }}
-        >
-          {componentSpec.name}
-        </div>
-      }
       <ComponentLibrary componentGroups={COMPONENT_LIBRARY}/>
       <GraphComponentExporter/>
       <details>
@@ -138,6 +123,21 @@ const Sidebar = () => {
         >
           PyTorch/Train_PyTorch_model/from_CSV
         </div>
+        {
+          componentSpec !== undefined && <div className="react-flow__node react-flow__node-multihandle" draggable
+            onDragStart={(event: DragEvent) => {
+              const taskSpec: TaskSpec = {
+                componentRef: {
+                  url: componentUrl,
+                  spec: componentSpec,
+                },
+              };
+              return onDragStart(event, { task: taskSpec});
+            }}
+          >
+            {componentSpec.name}
+          </div>
+        }
       </details>
     </aside>
   );
