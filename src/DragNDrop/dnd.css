@@ -15,6 +15,10 @@
   margin-bottom: 10px;
 }
 
+.dndflow .nodeList {
+  overflow: auto;
+}
+
 .dndflow .nodeList div {
   /* Resets position: absolute */
   position: relative;
