@@ -72,6 +72,13 @@
 
   .dndflow aside {
     width: 20%;
-    max-width: 250px;
+    max-width: 280px;
   }
+}
+
+input:required:invalid {
+  /* box-shadow: 0 0 0 0.5px #FF0000; */
+  /* border-color: #c00000; */
+  /* border: 2px dashed red; */
+  border: 1px solid red;
 }

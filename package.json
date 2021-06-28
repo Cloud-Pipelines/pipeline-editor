@@ -7,6 +7,7 @@
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^11.2.7",
     "@testing-library/user-event": "^12.8.3",
+    "@types/gapi": "^0.0.39",
     "@types/jest": "^26.0.23",
     "@types/js-yaml": "^4.0.1",
     "@types/react": "^17.0.2",

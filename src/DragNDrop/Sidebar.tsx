@@ -4,6 +4,7 @@ import {downloadComponentDataWithCache} from '../github'
 import {ComponentSpec, TaskSpec} from '../componentSpec'
 import ComponentLibrary from './ComponentLibrary'
 import GraphComponentExporter from './GraphComponentExporter'
+import GoogleCloudSubmitter from './GoogleCloud'
 
 const onDragStart = (event: DragEvent, nodeData: object) => {
   event.dataTransfer.setData('application/reactflow', JSON.stringify(nodeData));
@@ -71,6 +72,10 @@ const Sidebar = () => {
 
   return (
     <aside className="nodeList">
+      <details open style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>
+        <summary style={{ borderWidth: "1px", padding: "8px", fontWeight: "bold" }}>Submit to Google Cloud</summary>
+        <GoogleCloudSubmitter/>
+      </details>
       <div className="description">You can drag these nodes to the pane on the right.</div>
       <div className="react-flow__node-input" onDragStart={(event: DragEvent) => onDragStart(event, { input: { label: "Input Node" } })} draggable>
         Input Node
