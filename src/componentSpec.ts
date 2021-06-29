@@ -86,7 +86,7 @@ export interface IsPresentPlaceholder {
   /**
    * Name of the input.
    */
-  isPresent?: string;
+  isPresent: string;
 }
 export type IfConditionArgumentType =
   | IsPresentPlaceholder
