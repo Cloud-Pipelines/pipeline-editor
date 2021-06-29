@@ -79,7 +79,7 @@ const aiplatformListPipelineJobs = async (projetId: string, region='us-central1'
     ["https://www.googleapis.com/auth/cloud-platform"]
   );
   const response = await gapi.client.request({
-    path: `https://us-central1-aiplatform.googleapis.com/v1beta1/projects/${projetId}/locations/${region}/pipelineJobs`,
+    path: `https://${region}-aiplatform.googleapis.com/v1beta1/projects/${projetId}/locations/${region}/pipelineJobs`,
   });
   return response.result;
 }
@@ -120,6 +120,7 @@ const GoogleCloudSubmitter = () => {
           ))}
         </datalist>
         <button
+          type="button" // The default button type is "submit", not "button". WTF!?
           onClick={async (e) => {
             try {
               const result = await cloudresourcemanagerListProjects();
