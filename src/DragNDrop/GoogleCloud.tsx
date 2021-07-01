@@ -2,6 +2,13 @@
 
 import { useState } from 'react';
 
+import {
+  useStoreState,
+} from "react-flow-renderer";
+
+import {createGraphComponentSpecFromFlowElements} from './graphComponentFromFlow'
+import {generateVertexPipelineJobFromGraphComponent} from './vertexAiCompiler'
+
 var CLIENT_ID = '640001104961-2m8hs192tmd9f9nssbr5thr5o3uhmita.apps.googleusercontent.com';
 var API_KEY = 'AIzaSyCDPTffgYGXoit-jKsj1_1WWbSxvU7aEdQ';
      
@@ -74,12 +81,14 @@ const cloudresourcemanagerListProjects = async (isAuthenticated = false) => {
   return response.result;
 }
 
-const aiplatformListPipelineJobs = async (projetId: string, region='us-central1', isAuthenticated = false) => {
+const aiplatformCreatePipelineJob = async (projetId: string, region='us-central1', pipelineJob: Record<string, any>) => {
   await ensureGoogleCloudAuthorizesScopes(
     ["https://www.googleapis.com/auth/cloud-platform"]
   );
   const response = await gapi.client.request({
     path: `https://${region}-aiplatform.googleapis.com/v1beta1/projects/${projetId}/locations/${region}/pipelineJobs`,
+    method: "POST",
+    body: JSON.stringify(pipelineJob),
   });
   return response.result;
 }
@@ -89,19 +98,32 @@ const GoogleCloudSubmitter = () => {
   const [project, setProject] = useState<string>(""); // undefined causes error: https://reactjs.org/docs/forms.html#controlled-components https://stackoverflow.com/a/47012342
   const [region, setRegion] = useState(VERTEX_AI_PIPELINES_DEFAULT_REGION);
   const [error, setError] = useState("");
+  const [gcsOutputDirectory, setGcsOutputDirectory] = useState("");
+  const [pipelineJobWebUrl, setPipelineJobWebUrl] = useState("");
+
+  const nodes = useStoreState((store) => store.nodes);
+  const edges = useStoreState((store) => store.edges);
 
   return (
     <form
       onSubmit={async (e) => {
         e.preventDefault()
         try {
-          const result = await aiplatformListPipelineJobs(project, region);
-          console.log("aiplatformListPipelineJobs result:", result);
-          setError("");
+          const pipelineName = "Pipeline";
+        
+          const graphComponent = createGraphComponentSpecFromFlowElements(nodes, edges, pipelineName, undefined, false, true);
+          const vertexPipelineJob = generateVertexPipelineJobFromGraphComponent(graphComponent, gcsOutputDirectory);
+          const result = await aiplatformCreatePipelineJob(project, region, vertexPipelineJob);
+          const pipelineJobName: string = result.name;
+          const pipelineJobId = pipelineJobName.split('/').slice(-1)[0];
+          const pipelineJobWebUrl = `https://console.cloud.google.com/vertex-ai/locations/${region}/pipelines/runs/${pipelineJobId}?project=${project}`;
+          setPipelineJobWebUrl(pipelineJobWebUrl);
         } catch (err) {
+          console.error(err);
+          setPipelineJobWebUrl("");
           setError(err?.result?.error?.message ?? "Error");
         }
-      }}
+    }}
     >
       <div>
         <label htmlFor="project">Project: </label>
@@ -153,7 +175,18 @@ const GoogleCloudSubmitter = () => {
           ))}
         </datalist>
       </div>
-      <input type="submit" value="List Pipelines" />
+      <div>
+        <label htmlFor="region">GCS dir: </label>
+        <input
+          id="gcsOutputDirectory"
+          required
+          type="text"
+          value={gcsOutputDirectory}
+          onChange={(e) => setGcsOutputDirectory(e.target.value)}
+        />
+      </div>
+      <input type="submit" value="Submit pipeline job" />
+      {pipelineJobWebUrl !== "" && <div><a href={pipelineJobWebUrl}>Job</a></div>}
       {error !== "" && <div>Error: {error}</div>}
     </form>
   );
