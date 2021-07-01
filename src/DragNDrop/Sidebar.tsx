@@ -5,6 +5,7 @@ import {ComponentSpec, TaskSpec} from '../componentSpec'
 import ComponentLibrary from './ComponentLibrary'
 import GraphComponentExporter from './GraphComponentExporter'
 import GoogleCloudSubmitter from './GoogleCloud'
+import VertexAiExporter from './VertexAiExporter'
 
 const onDragStart = (event: DragEvent, nodeData: object) => {
   event.dataTransfer.setData('application/reactflow', JSON.stringify(nodeData));
@@ -85,6 +86,7 @@ const Sidebar = () => {
       </div>
       <ComponentLibrary componentGroups={COMPONENT_LIBRARY}/>
       <GraphComponentExporter/>
+      <VertexAiExporter/>
       <details>
         <summary>Legacy nodes</summary>
           <div className="react-flow__node-default" onDragStart={(event: DragEvent) => onDragStart(event, { default: { label: "Default Node" } })} draggable>
