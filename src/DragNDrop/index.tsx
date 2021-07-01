@@ -38,7 +38,9 @@ const onDragOver = (event: DragEvent) => {
 };
 
 let id = 0;
-const getId = (): ElementId => `dndnode_${id++}`;
+const getId = (nodeData: any): ElementId => {
+  return (nodeData?.componentRef?.spec?.name ?? "task") + " " + `${id++}`;
+};
 
 const DnDFlow = () => {
   const [reactFlowInstance, setReactFlowInstance] = useState<OnLoadParams>();
@@ -67,7 +69,7 @@ const DnDFlow = () => {
       const nodeData = droppedDataObject[nodeType];
       const position = reactFlowInstance.project({ x: event.clientX, y: event.clientY - 40 });
       const newNode: Node = {
-        id: getId(),
+        id: getId(nodeData),
         type: nodeType,
         position,
         data: nodeData,
