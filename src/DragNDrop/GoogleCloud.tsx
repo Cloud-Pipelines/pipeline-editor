@@ -19,7 +19,7 @@ const authorizeGoogleCloudClient = async (
   apiKey: string = API_KEY,
   clientId: string = CLIENT_ID,
 ) => {
-  return new Promise<gapi.auth.GoogleApiOAuth2TokenObject>(
+  return new Promise<GoogleApiOAuth2TokenObject>(
     (resolve, reject) => {
       gapi.client.setApiKey(apiKey);
       gapi.auth.authorize(
