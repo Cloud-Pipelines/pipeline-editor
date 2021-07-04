@@ -21,12 +21,20 @@ const VertexAiExporter = ({pipelineName}: {pipelineName?: string}) => {
   }
 
   const vertexPipelineSpecTextBlob = new Blob([vertexPipelineSpecText], { type: "application/json" }); // Or application/x-yaml (which leads to downloading)
-  const downloadLink = <a href={URL.createObjectURL(vertexPipelineSpecTextBlob)} download={"pipeline.json"}>pipeline.json</a>
+  // TODO: Call vertexPipelineSpecTextBlobUrl.revokeObjectURL in the future
+  const vertexPipelineSpecTextBlobUrl = URL.createObjectURL(vertexPipelineSpecTextBlob);
 
   return (
     <details open>
-      <summary>Cloud IR {downloadLink}</summary>
-      <pre style={{overflow: "auto"}}>{vertexPipelineSpecText}</pre>
+      <summary>
+        Cloud IR <a
+          href={vertexPipelineSpecTextBlobUrl}
+          download={"vertex_pipeline_spec.json"}
+        >
+          vertex_pipeline_spec.json
+        </a>
+      </summary>
+      <pre style={{ overflow: "auto" }}>{vertexPipelineSpecText}</pre>
     </details>
   );
 };
