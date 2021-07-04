@@ -121,10 +121,10 @@ const GoogleCloudSubmitter = () => {
   return (
     <form
       onSubmit={async (e) => {
-        e.preventDefault()
+        e.preventDefault();
         try {
           const pipelineName = "Pipeline";
-        
+
           const graphComponent = createGraphComponentSpecFromFlowElements(nodes, edges, pipelineName, undefined, false, true);
           const vertexPipelineJob = generateVertexPipelineJobFromGraphComponent(graphComponent, gcsOutputDirectory);
           const result = await aiplatformCreatePipelineJob(project, region, vertexPipelineJob);
@@ -137,7 +137,7 @@ const GoogleCloudSubmitter = () => {
           setPipelineJobWebUrl("");
           setError(err?.result?.error?.message ?? "Error");
         }
-    }}
+      }}
     >
       <div>
         <label htmlFor="project">Project: </label>
