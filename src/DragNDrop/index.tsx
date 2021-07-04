@@ -37,9 +37,17 @@ const onDragOver = (event: DragEvent) => {
   event.dataTransfer.dropEffect = 'move';
 };
 
-let id = 0;
+let nodeNames = new Set<string>();
 const getId = (nodeData: any): ElementId => {
-  return (nodeData?.componentRef?.spec?.name ?? "task") + " " + `${id++}`;
+  const baseName = nodeData?.componentRef?.spec?.name ?? "task";
+  let finalName = baseName;
+  let index = 0;
+  while (nodeNames.has(finalName)) {
+    index++;
+    finalName = baseName + " " + index.toString();
+  }
+  nodeNames.add(finalName);
+  return finalName;
 };
 
 const DnDFlow = () => {
@@ -50,7 +58,12 @@ const DnDFlow = () => {
   const onEdgeUpdate = (oldEdge: Edge, newConnection: Connection) =>
     setElements((els) => updateEdge(oldEdge, newConnection, els));
   const onConnect = (params: Connection | Edge) => setElements((els) => addEdge(params, els));
-  const onElementsRemove = (elementsToRemove: Elements) => setElements((els) => removeElements(elementsToRemove, els));
+  const onElementsRemove = (elementsToRemove: Elements) => {
+    for (const element of elementsToRemove) {
+      nodeNames.delete(element.id);
+    }
+    setElements((els) => removeElements(elementsToRemove, els));
+  };
   const onLoad = (_reactFlowInstance: OnLoadParams) => setReactFlowInstance(_reactFlowInstance);
 
   const onEdgeUpdateStart = (_: React.MouseEvent, edge: Edge) => console.log('start update', edge);
