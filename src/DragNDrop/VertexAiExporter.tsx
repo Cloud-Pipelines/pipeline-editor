@@ -3,17 +3,7 @@ import {
 } from "react-flow-renderer";
 
 import {createGraphComponentSpecFromFlowElements} from './graphComponentFromFlow'
-import {graphComponentSpecToVertexPipelineSpec, generateVertexPipelineJobFromGraphComponent} from './vertexAiCompiler'
-
-// const getVertexPipelineJob = (gcsOutputDirectory: string, pipelineName?: string) => {
-//   const nodes = useStoreState((store) => store.nodes);
-//   const edges = useStoreState((store) => store.edges);
-
-//   pipelineName = pipelineName ?? "Pipeline";
-
-//   const graphComponent = createGraphComponentSpecFromFlowElements(nodes, edges, pipelineName, undefined, false, true);
-//   const vertexPipelineJob = generateVertexPipelineJobFromGraphComponent(graphComponent, gcsOutputDirectory);
-// }
+import {graphComponentSpecToVertexPipelineSpec} from './vertexAiCompiler'
 
 const VertexAiExporter = ({pipelineName}: {pipelineName?: string}) => {
   const nodes = useStoreState((store) => store.nodes);
