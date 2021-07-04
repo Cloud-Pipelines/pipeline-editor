@@ -16,8 +16,6 @@ import ReactFlow, {
 } from 'react-flow-renderer';
 
 import Sidebar from './Sidebar';
-import ComponentSearch from './ComponentSearch'
-
 import MultiHandleNode from './MultiHandleNode';
 import ComponentTaskNode from './ComponentTaskNode';
 
@@ -118,7 +116,6 @@ const DnDFlow = () => {
           </ReactFlow>
         </div>
         <Sidebar />
-        <ComponentSearch />
       </ReactFlowProvider>
     </div>
   );

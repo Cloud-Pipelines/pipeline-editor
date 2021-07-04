@@ -3,6 +3,7 @@ import React, { DragEvent, useEffect, useState } from 'react';
 import {downloadComponentDataWithCache} from '../github'
 import {ComponentSpec, TaskSpec} from '../componentSpec'
 import ComponentLibrary from './ComponentLibrary'
+import ComponentSearch from './ComponentSearch'
 import GraphComponentExporter from './GraphComponentExporter'
 import GoogleCloudSubmitter from './GoogleCloud'
 import VertexAiExporter from './VertexAiExporter'
@@ -87,6 +88,10 @@ const Sidebar = () => {
         Output Node
       </div>
       <ComponentLibrary componentGroups={COMPONENT_LIBRARY}/>
+      <details open style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>
+        <summary style={{ borderWidth: "1px", padding: "8px", fontWeight: "bold" }}>Component search</summary>
+        <ComponentSearch />
+      </details>
       <GraphComponentExporter/>
       <VertexAiExporter/>
       <details>
