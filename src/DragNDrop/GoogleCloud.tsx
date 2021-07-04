@@ -104,6 +104,20 @@ const GoogleCloudSubmitter = () => {
   const nodes = useStoreState((store) => store.nodes);
   const edges = useStoreState((store) => store.edges);
 
+  let vertexPipelineJobJson: string | undefined = undefined;
+  let vertexPipelineJobUrl: string | undefined = undefined;
+  try {
+    const pipelineName = "Pipeline";
+  
+    const graphComponent = createGraphComponentSpecFromFlowElements(nodes, edges, pipelineName, undefined, false, true);
+    const vertexPipelineJob = generateVertexPipelineJobFromGraphComponent(graphComponent, gcsOutputDirectory);
+    vertexPipelineJobJson = JSON.stringify(vertexPipelineJob, undefined, 4);
+    vertexPipelineJobUrl = URL.createObjectURL(
+      new Blob([vertexPipelineJobJson], { type: "application/json" })
+    );
+  } catch(err) {
+  }
+
   return (
     <form
       onSubmit={async (e) => {
@@ -187,6 +201,16 @@ const GoogleCloudSubmitter = () => {
       </div>
       <input type="submit" value="Submit pipeline job" />
       {pipelineJobWebUrl !== "" && <div><a href={pipelineJobWebUrl}>Job</a></div>}
+      {vertexPipelineJobUrl !== undefined && (
+        <div>
+          Download <a
+            href={vertexPipelineJobUrl}
+            download={"vertex_pipeline_job.json"}
+          >
+            vertex_pipeline_job.json
+          </a>
+        </div>
+      )}
       {error !== "" && <div>Error: {error}</div>}
     </form>
   );
