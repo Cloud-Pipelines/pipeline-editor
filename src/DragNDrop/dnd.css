@@ -1,10 +1,12 @@
 .dndflow {
-  flex-direction: column;
+  flex-direction: row;
   display: flex;
   height: 100%;
 }
 
 .dndflow aside {
+  width: 285px;
+  box-sizing: border-box;
   border-right: 1px solid #eee;
   padding: 15px 10px;
   font-size: 12px;
@@ -66,13 +68,17 @@
   min-height: 50%;
 }
 
-@media screen and (min-width: 768px) {
+@media (max-width: 640px) {
   .dndflow {
-    flex-direction: row;
+    flex-direction: column;
   }
 
   .dndflow aside {
-    width: 285px;
+    width: 100%;
+  }
+
+  .react-flow__minimap {
+    display: none;
   }
 }
 
