@@ -15,6 +15,10 @@ let xgBoostQueryTrainPredictPipeline = {
           annotations: {
             "editor.position": '{"x":100,"y":100,"width":180,"height":40}',
           },
+          arguments: {
+            Select: 'tips,trip_seconds,trip_miles,pickup_community_area,dropoff_community_area,fare,tolls,extras,trip_total',
+            Where: 'trip_start_timestamp >= "2019-01-01" AND trip_start_timestamp < "2019-02-01"'
+          }
         },
         train: {
           componentRef: {
