@@ -16,7 +16,6 @@ import ReactFlow, {
 } from 'react-flow-renderer';
 
 import Sidebar from './Sidebar';
-import MultiHandleNode from './MultiHandleNode';
 import ComponentTaskNode from './ComponentTaskNode';
 
 import './dnd.css';
@@ -24,7 +23,6 @@ import './dnd.css';
 const GRID_SIZE = 10;
 
 const nodeTypes = {
-  multihandle: MultiHandleNode,
   task: ComponentTaskNode,
 };
 
