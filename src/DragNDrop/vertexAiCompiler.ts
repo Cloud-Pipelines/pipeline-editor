@@ -147,7 +147,7 @@ const taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec = (
     const containerSpec = componentSpec.implementation.container;
 
 
-    const resolvedCommandLine = resolveCommandLine(componentSpec, {});
+    const resolvedCommandLine = resolveCommandLine(componentSpec, taskArguments);
 
     const vertexExecutorSpec = {
         container: {
