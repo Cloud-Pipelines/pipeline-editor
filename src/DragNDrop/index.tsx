@@ -36,8 +36,8 @@ const onDragOver = (event: DragEvent) => {
 };
 
 let nodeNames = new Set<string>();
-const getId = (nodeData: any): ElementId => {
-  const baseName = nodeData?.componentRef?.spec?.name ?? "task";
+const getId = (nodeType: string, nodeData: any): ElementId => {
+  const baseName = nodeData?.componentRef?.spec?.name ?? nodeType;
   let finalName = baseName;
   let index = 0;
   while (nodeNames.has(finalName)) {
@@ -80,7 +80,7 @@ const DnDFlow = () => {
       const nodeData = droppedDataObject[nodeType];
       const position = reactFlowInstance.project({ x: event.clientX, y: event.clientY - 40 });
       const newNode: Node = {
-        id: getId(nodeData),
+        id: getId(nodeType, nodeData),
         type: nodeType,
         position,
         data: nodeData,
