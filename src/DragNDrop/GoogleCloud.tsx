@@ -200,7 +200,7 @@ const GoogleCloudSubmitter = () => {
         />
       </div>
       <input type="submit" value="Submit pipeline job" />
-      {pipelineJobWebUrl !== "" && <div><a href={pipelineJobWebUrl}>Job</a></div>}
+      {pipelineJobWebUrl !== "" && <div><a href={pipelineJobWebUrl} target="_blank" rel="noreferrer">Job</a></div>}
       {vertexPipelineJobUrl !== undefined && (
         <div>
           Download <a
