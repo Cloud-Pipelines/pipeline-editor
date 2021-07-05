@@ -166,7 +166,7 @@ const GoogleCloudSubmitter = () => {
               setProjects(projectIds);
               setError("");
             } catch (err) {
-              setError(err);
+              setError(err?.result?.error?.message ?? "Error");
             }
           }}
         >
