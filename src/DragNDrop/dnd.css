@@ -54,12 +54,18 @@
   box-shadow: 0 0 0 0.5px var(--border-color);
 }
 
+/* Connecting, but the connection is not valid by default */
 .react-flow__handle-connecting {
   background: #ff6060;
 }
 
+/* Connecting, but the connection is valid */
 .react-flow__handle-valid {
   background: #55dd99;
+}
+
+.react-flow__handle.missing-argument {
+  background: #ff6060;
 }
 
 .dndflow .reactflow-wrapper {

@@ -8,11 +8,14 @@ const outputHandlePosition = Position.Bottom;
 
 type InputOrOutputSpec = InputSpec | OutputSpec;
 
+const MISSING_ARGUMENT_CLASS_NAME = "missing-argument";
+
 function generateHandles(
   ioSpecs: InputOrOutputSpec[],
   handleType: HandleType,
   position: Position,
   idPrefix: string,
+  inputsWithMissingArguments?: string[],
 ): JSX.Element[] {
   let handleComponents = [];
   const numHandles = ioSpecs.length;
@@ -25,8 +28,14 @@ function generateHandles(
       position === Position.Top || position === Position.Bottom
         ? { left: positionPercentString }
         : { top: positionPercentString };
+    // TODO: Handle complex type specs
     const ioTypeName = ioSpec.type?.toString() ?? "Any";
-    const className = ioTypeName; // Need to be sanitized
+    let classNames = [`handle_${idPrefix}${ioTypeName}`.replace(" ", "_")];
+    const isInvalid = (inputsWithMissingArguments ?? []).includes(ioSpec.name);
+    if (isInvalid) {
+      classNames.push(MISSING_ARGUMENT_CLASS_NAME);
+    }
+    classNames = classNames.map((className) => className.replace(" ", "_"));
     handleComponents.push(
       <Handle
         key={id}
@@ -36,15 +45,15 @@ function generateHandles(
         style={style}
         isConnectable={true}
         title={ioSpec.name + " : " + ioTypeName}
-        className={"handle_" + className}
+        className={classNames.join(" ")}
       />
     );
   }
   return handleComponents;
 }
 
-function generateInputHandles(inputSpecs: InputSpec[]): JSX.Element[] {
-  return generateHandles(inputSpecs, "target", inputHandlePosition, "input_");
+function generateInputHandles(inputSpecs: InputSpec[], inputsWithInvalidArguments?: string[]): JSX.Element[] {
+  return generateHandles(inputSpecs, "target", inputHandlePosition, "input_", inputsWithInvalidArguments);
 }
 
 function generateOutputHandles(outputSpecs: OutputSpec[]): JSX.Element[] {
@@ -59,7 +68,15 @@ const ComponentTaskNode = ({data}: NodeProps<TaskSpec>) => {
   }
 
   const label = componentSpec.name ?? "<component>";
-  const inputHandles = generateInputHandles(componentSpec.inputs ?? []);
+  const inputsWithInvalidArguments = (componentSpec.inputs ?? [])
+    .filter(
+      (inputSpec) =>
+        inputSpec.optional !== true &&
+        inputSpec.default === undefined &&
+        !(inputSpec.name in (taskSpec.arguments ?? {}))
+    )
+    .map((inputSpec) => inputSpec.name);
+  const inputHandles = generateInputHandles(componentSpec.inputs ?? [], inputsWithInvalidArguments);
   const outputHandles = generateOutputHandles(componentSpec.outputs ?? []);
   const handleComponents = inputHandles.concat(outputHandles);
 
