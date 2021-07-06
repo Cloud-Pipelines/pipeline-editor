@@ -229,16 +229,21 @@ const GraphComponentSpecFlow = ({
     event.dataTransfer.dropEffect = "move";
   };
 
-  const getId = (nodeType: string, nodeData: any): ElementId => {
-    const baseName: string = nodeData?.componentRef?.spec?.name ?? nodeType;
-    let finalName = baseName;
-    let index = 0;
-    const nodeNames = new Set(Object.keys(graphSpec.tasks));
-    while (nodeNames.has(finalName)) {
+  const makeNameUniqueByAddingIndex = (name: string, existingNames: Set<string>): ElementId => {
+    let finalName = name;
+    let index = 1;
+    while (existingNames.has(finalName)) {
       index++;
-      finalName = baseName + " " + index.toString();
+      finalName = name + " " + index.toString();
     }
     return finalName;
+  };
+
+  const getUniqueTaskName = (name: string = "Task") => {
+    return makeNameUniqueByAddingIndex(
+      name,
+      new Set(Object.keys(graphSpec.tasks))
+    );
   };
 
   const onDrop = (event: DragEvent) => {
@@ -256,18 +261,24 @@ const GraphComponentSpecFlow = ({
         x: event.clientX,
         y: event.clientY - 40,
       });
-
+      const nodePosition = { x: position.x, y: position.y };
+      const positionAnnotations = {
+        "editor.position": JSON.stringify(nodePosition),
+      }
       if (nodeType === "task") {
-        let taskSpec = nodeData as TaskSpec;
-        let newAnnotations: Record<string, unknown> = {
+        const taskSpec = nodeData as TaskSpec;
+        const mergedAnnotations = {
           ...taskSpec.annotations,
+          ...positionAnnotations,
         };
-        const taskPosition = { x: position.x, y: position.y };
-        newAnnotations["editor.position"] = JSON.stringify(taskPosition);
-        taskSpec.annotations = newAnnotations;
-        const taskId = getId(nodeType, nodeData);
+        taskSpec.annotations = mergedAnnotations;
+        const taskSpecWithAnnotation: TaskSpec = {
+          ...taskSpec,
+          annotations: mergedAnnotations,
+        };
+        const taskId = getUniqueTaskName(taskSpec.componentRef.spec?.name ?? "Task");
         graphSpec = { ...graphSpec, tasks: { ...graphSpec.tasks } };
-        graphSpec.tasks[taskId] = taskSpec;
+        graphSpec.tasks[taskId] = taskSpecWithAnnotation;
         replaceGraphSpec(graphSpec);
       } else if (nodeType === "input") {
         // TODO: Implement
