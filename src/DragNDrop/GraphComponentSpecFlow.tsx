@@ -15,6 +15,7 @@ import ReactFlow, {
 
 import {
   ArgumentType,
+  ComponentSpec,
   GraphSpec,
   TaskOutputArgument,
   TaskSpec,
@@ -23,7 +24,7 @@ import ComponentTaskNode from "./ComponentTaskNode";
 
 export interface GraphComponentSpecFlowProps
   extends Omit<ReactFlowProps, "elements"> {
-  initialGraphSpec?: GraphSpec;
+  initialComponentSpec?: ComponentSpec
 }
 
 const nodeTypes = {
@@ -32,14 +33,19 @@ const nodeTypes = {
 
 const GraphComponentSpecFlow = ({
   children,
-  //TODO:Replace GraphSpec with the full ComponentSpec
-  initialGraphSpec = { tasks: {} },
+  initialComponentSpec = { implementation: { graph: { tasks: {} } } },
   ...rest
 }: GraphComponentSpecFlowProps) => {
   const [reactFlowInstance, setReactFlowInstance] = useState<OnLoadParams>();
-  const [originalGraphSpec, setGraphSpec] =
-    useState<GraphSpec>(initialGraphSpec);
-  let graphSpec = originalGraphSpec;
+  const [originalComponentSpec, setComponentSpec] =
+    useState<ComponentSpec>(initialComponentSpec);
+  let componentSpec = originalComponentSpec;
+
+  if (! ('graph' in componentSpec.implementation)) {
+    // Only graph components are supported
+    return <></>;
+  }
+  let graphSpec = componentSpec.implementation.graph;
 
   const nodes = Object.entries(graphSpec.tasks).map<Node<TaskSpec>>(
     ([taskId, taskSpec]) => {
@@ -87,10 +93,15 @@ const GraphComponentSpecFlow = ({
     }
   );
   // TODO: Handle graph outputs
+  
+  const replaceComponentSpec = (newComponentSpec: ComponentSpec) => {
+    componentSpec = newComponentSpec;
+    setComponentSpec(newComponentSpec);
+  };
 
   const replaceGraphSpec = (newGraphSpec: GraphSpec) => {
     graphSpec = newGraphSpec;
-    setGraphSpec(newGraphSpec);
+    replaceComponentSpec({ ...componentSpec, implementation: { graph: graphSpec } });
   };
 
   const setTaskArgument = (

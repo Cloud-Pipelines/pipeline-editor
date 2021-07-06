@@ -6,7 +6,7 @@ import {
   MiniMap,
 } from 'react-flow-renderer';
 
-import { GraphSpec } from '../componentSpec';
+import { ComponentSpec } from '../componentSpec';
 import GraphComponentSpecFlow from './GraphComponentSpecFlow';
 import Sidebar from './Sidebar';
 import { preloadComponentReferences, xgBoostQueryTrainPredictPipeline } from "./samplePipelines";
@@ -16,21 +16,13 @@ import './dnd.css';
 const GRID_SIZE = 10;
 
 const DnDFlow = () => {
-  const [graphSpec, setGraphSpec] = useState<GraphSpec | undefined>();
+  const [componentSpec, setComponentSpec] = useState<ComponentSpec | undefined>();
 
-  if (graphSpec === undefined) {
-    try {
-      (async () => {
-        const pipeline = await preloadComponentReferences(xgBoostQueryTrainPredictPipeline);
-        if ("graph" in pipeline.implementation) {
-          setGraphSpec(pipeline.implementation.graph);
-        }
-      })();
-    } catch {
-    }
+  if (componentSpec === undefined) {
+    preloadComponentReferences(xgBoostQueryTrainPredictPipeline).then(setComponentSpec);
   };
 
-  if (graphSpec === undefined) {
+  if (componentSpec === undefined) {
     return (<></>);
   }
 
@@ -39,7 +31,7 @@ const DnDFlow = () => {
       <ReactFlowProvider>
         <div className="reactflow-wrapper">
           <GraphComponentSpecFlow
-            initialGraphSpec={graphSpec}
+            initialComponentSpec={componentSpec}
             deleteKeyCode='Delete'
             multiSelectionKeyCode='Control'
             snapToGrid={true}
