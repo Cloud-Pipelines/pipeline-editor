@@ -16,7 +16,10 @@ import ReactFlow, {
 import {
   ArgumentType,
   ComponentSpec,
+  GraphInputArgument,
   GraphSpec,
+  InputSpec,
+  OutputSpec,
   TaskOutputArgument,
   TaskSpec,
 } from "../componentSpec";
@@ -69,12 +72,56 @@ const GraphComponentSpecFlow = ({
     }
   );
 
+  const inputNodes = (componentSpec.inputs ?? []).map<Node>(
+    (inputSpec) => {
+      let position: XYPosition = { x: 0, y: 0 };
+      if (inputSpec.annotations !== undefined) {
+        try {
+          const layoutAnnotation = inputSpec.annotations[
+            "editor.position"
+          ] as string;
+          const decodedPosition = JSON.parse(layoutAnnotation);
+          position = { x: decodedPosition["x"], y: decodedPosition["y"] };
+        } catch (err) {}
+      }
+      return {
+        id: inputSpec.name,
+        data: { label: inputSpec.name },
+        position: position,
+        type: "input",
+      };
+    }
+  );
+
+  const outputNodes = (componentSpec.outputs ?? []).map<Node>(
+    (outputSpec) => {
+      let position: XYPosition = { x: 0, y: 0 };
+      if (outputSpec.annotations !== undefined) {
+        try {
+          const layoutAnnotation = outputSpec.annotations[
+            "editor.position"
+          ] as string;
+          const decodedPosition = JSON.parse(layoutAnnotation);
+          position = { x: decodedPosition["x"], y: decodedPosition["y"] };
+        } catch (err) {}
+      }
+      return {
+        id: outputSpec.name,
+        data: { label: outputSpec.name },
+        position: position,
+        type: "output",
+      };
+    }
+  );
+
   const edges: Edge[] = Object.entries(graphSpec.tasks).flatMap(
     ([taskId, taskSpec]) => {
       return Object.entries(taskSpec.arguments ?? {}).flatMap(
         ([inputName, argument]) => {
-          // TODO: Handle graph inputs
-          if (typeof argument !== "string" && "taskOutput" in argument) {
+          if (typeof argument === "string") {
+            return [];
+          }
+          if ("taskOutput" in argument) {
             const taskOutput = argument.taskOutput;
             const edge: Edge = {
               id: `${taskOutput.taskId}_${taskOutput.outputName}-${taskId}_${inputName}`,
@@ -85,14 +132,46 @@ const GraphComponentSpecFlow = ({
               arrowHeadType: ArrowHeadType.ArrowClosed,
             };
             return [edge];
+          } else if ("graphInput" in argument) {
+            const graphInput = argument.graphInput;
+            const edge: Edge = {
+              id: `Input_${graphInput.inputName}-${taskId}_${inputName}`,
+              source: graphInput.inputName,
+              //sourceHandle: undefined,
+              //sourceHandle: "Input",
+              sourceHandle: null,
+              target: taskId,
+              targetHandle: `input_${inputName}`,
+              arrowHeadType: ArrowHeadType.ArrowClosed,
+            };
+            return [edge];
           } else {
+            console.error("Impossible task input argument kind: ", argument);
             return [];
           }
         }
       );
     }
   );
-  // TODO: Handle graph outputs
+
+  const outputEdges: Edge[] = Object.entries(graphSpec.outputValues ?? {}).map(
+    ([outputName, argument]) => {
+      const taskOutput = argument.taskOutput;
+      const edge: Edge = {
+        id: `${taskOutput.taskId}_${taskOutput.outputName}-Output_${outputName}`,
+        source: taskOutput.taskId,
+        sourceHandle: `output_${taskOutput.outputName}`,
+        target: outputName,
+        //targetHandle: undefined,
+        //targetHandle: "Output",
+        targetHandle: null,
+        arrowHeadType: ArrowHeadType.ArrowClosed,
+      };
+      return edge;
+    }
+  );
+
+  const elements = (nodes as Elements).concat(inputNodes).concat(outputNodes).concat(edges).concat(outputEdges);
   
   const replaceComponentSpec = (newComponentSpec: ComponentSpec) => {
     componentSpec = newComponentSpec;
@@ -133,28 +212,80 @@ const GraphComponentSpecFlow = ({
   const removeTaskArgument = (taskId: string, inputName: string) =>
     setTaskArgument(taskId, inputName, undefined);
 
+  const setGraphOutputValue = (
+    outputName: string,
+    outputValue?: TaskOutputArgument
+  ) => {
+    let newGraphOutputValues = { ...graphSpec.outputValues };
+    if (outputValue === undefined) {
+      delete newGraphOutputValues[outputName];
+    } else {
+      newGraphOutputValues[outputName] = outputValue;
+    }
+    graphSpec = { ...graphSpec, outputValues: newGraphOutputValues };
+    replaceGraphSpec(graphSpec);
+  };
+
+  const removeGraphOutputValue = (outputName: string) =>
+    setGraphOutputValue(outputName);
+
   const addConnection = (connection: Connection | Edge) => {
-    if (
-      connection.source === null ||
-      connection.sourceHandle === null ||
-      connection.sourceHandle === undefined ||
-      connection.target === null ||
-      connection.targetHandle === null ||
-      connection.targetHandle === undefined
-    ) {
+    if (connection.source === null || connection.target === null) {
+      console.error(
+        "addConnection called with missing source or target: ",
+        connection
+      );
       return;
     }
-    const inputName = connection.targetHandle.replace(/^input_/, "");
-    const outputName = connection.sourceHandle.replace(/^output_/, "");
 
-    const argument: TaskOutputArgument = {
-      taskOutput: {
-        taskId: connection.source,
-        outputName: outputName,
-      },
-    };
+    const targetTaskInputName = connection.targetHandle?.replace(/^input_/, "");
+    const sourceTaskOutputName = connection.sourceHandle?.replace(/^output_/, "");
 
-    setTaskArgument(connection.target, inputName, argument);
+    if (sourceTaskOutputName !== undefined) {
+      // Source is task output
+      const taskOutputArgument: TaskOutputArgument = {
+        taskOutput: {
+          taskId: connection.source,
+          outputName: sourceTaskOutputName,
+        },
+      };
+
+      if (targetTaskInputName !== undefined) {
+        // Target is task input
+        setTaskArgument(
+          connection.target,
+          targetTaskInputName,
+          taskOutputArgument
+        );
+      } else {
+        // Target is graph output
+        setGraphOutputValue(connection.target, taskOutputArgument);
+        // TODO: Perhaps propagate type information
+      }
+    } else {
+      // Source is graph input
+      const graphInputName = connection.source;
+      const graphInputArgument: GraphInputArgument = {
+        graphInput: {
+          inputName: graphInputName,
+        },
+      };
+      if (targetTaskInputName !== undefined) {
+        // Target is task input
+        setTaskArgument(
+          connection.target,
+          targetTaskInputName,
+          graphInputArgument
+        );
+        // TODO: Perhaps propagate type information
+      } else {
+        // Target is graph output
+        console.error(
+          "addConnection: Cannot directly connect graph input to graph output: ",
+          connection
+        );
+      }
+    }
   };
 
   const onConnect = (params: Connection | Edge) => {
@@ -162,45 +293,94 @@ const GraphComponentSpecFlow = ({
   };
 
   const removeEdge = (edge: Edge) => {
-    // TODO: Handle graph input and output connections
-    if (
-      edge.sourceHandle === null ||
-      edge.sourceHandle === undefined ||
-      edge.targetHandle === null ||
-      edge.targetHandle === undefined
-    ) {
-      return;
-    }
-    const inputName = edge.targetHandle.replace(/^input_/, "");
+    const inputName = edge.targetHandle?.replace(/^input_/, "");
 
-    removeTaskArgument(edge.target, inputName);
+    if (inputName !== undefined) {
+      removeTaskArgument(edge.target, inputName);
+    } else {
+      removeGraphOutputValue(edge.target);
+    }
   };
 
-  const removeNode = (node: Node) => {
-    const taskIdToRemove = node.id;
+  const removeComponentInput = (inputName: string) => {
+    // Removing the outcoming edges
+    for (const [taskId, taskSpec] of Object.entries(graphSpec.tasks)) {
+      for (const [inputName, argument] of Object.entries(
+        taskSpec.arguments ?? {}
+      )) {
+        if (typeof argument !== "string" && "graphInput" in argument) {
+          if (argument.graphInput.inputName === inputName) {
+            removeTaskArgument(taskId, inputName);
+          }
+        }
+      }
+    }
+    // Not checking the sources of graph outputs, since they cannot be directly connected to the graph inputs
 
+    // Removing the input itself
+    const newInputs = (componentSpec.inputs ?? []).filter(
+      (inputSpec) => inputSpec.name !== inputName
+    );
+    componentSpec = { ...componentSpec, inputs: newInputs };
+    replaceComponentSpec(componentSpec);
+  };
+
+  const removeComponentOutput = (outputName: string) => {
+    removeGraphOutputValue(outputName);
+    // Removing the output itself
+    const newOutputs = (componentSpec.outputs ?? []).filter(
+      (outputSpec) => outputSpec.name !== outputName
+    );
+    componentSpec = { ...componentSpec, outputs: newOutputs };
+    replaceComponentSpec(componentSpec);
+  };
+
+  const removeTask = (taskId: string) => {
     // Removing the outcoming edges
     for (const [taskId, taskSpec] of Object.entries(graphSpec.tasks)) {
       for (const [inputName, argument] of Object.entries(
         taskSpec.arguments ?? {}
       )) {
         if (typeof argument !== "string" && "taskOutput" in argument) {
-          if (argument.taskOutput.taskId === taskIdToRemove) {
+          if (argument.taskOutput.taskId === taskId) {
             removeTaskArgument(taskId, inputName);
           }
         }
       }
     }
 
-    // ! TODO: Remove outcoming edges that go to graph outputs ? Delete the outputs themselves?
+    // Removing outcoming edges that go to graph outputs.
+    // ? Should we delete the outputs themselves
+    const newGraphOutputValues = Object.fromEntries(
+      Object.entries(graphSpec.outputValues ?? {}).filter(
+        ([_, argument]) => argument.taskOutput.taskId !== taskId
+      )
+    );
+    graphSpec = { ...graphSpec, outputValues: newGraphOutputValues };
 
     // Removing the task
     let newGraphSpec: GraphSpec = {
       ...graphSpec,
       tasks: { ...graphSpec.tasks },
     };
-    delete newGraphSpec.tasks[taskIdToRemove];
+    delete newGraphSpec.tasks[taskId];
     replaceGraphSpec(newGraphSpec);
+  };
+
+  const removeNode = (node: Node) => {
+    // TODO: Use global constants for node types
+    if (node.type === "input") {
+      const inputName = node.id;
+      removeComponentInput(inputName);
+    } else if (node.type === "output") {
+      const outputName = node.id;
+      removeComponentOutput(outputName);
+    } else if (node.type === "task") {
+      const taskId = node.id;
+      removeTask(taskId);
+    } else {
+      console.log("removeNode: Unexpected note type: ", node);
+    }
   };
 
   const onElementsRemove = (elementsToRemove: Elements) => {
@@ -237,6 +417,20 @@ const GraphComponentSpecFlow = ({
       finalName = name + " " + index.toString();
     }
     return finalName;
+  };
+
+  const getUniqueInputName = (name: string = "Input") => {
+    return makeNameUniqueByAddingIndex(
+      name,
+      new Set(componentSpec.inputs?.map((inputSpec) => inputSpec.name))
+    );
+  };
+
+  const getUniqueOutputName = (name: string = "Output") => {
+    return makeNameUniqueByAddingIndex(
+      name,
+      new Set(componentSpec.outputs?.map((outputSpec) => outputSpec.name))
+    );
   };
 
   const getUniqueTaskName = (name: string = "Task") => {
@@ -281,14 +475,26 @@ const GraphComponentSpecFlow = ({
         graphSpec.tasks[taskId] = taskSpecWithAnnotation;
         replaceGraphSpec(graphSpec);
       } else if (nodeType === "input") {
-        // TODO: Implement
+        const inputId = getUniqueInputName();
+        const inputSpec: InputSpec = {
+          name: inputId,
+          annotations: positionAnnotations,
+        };
+        const inputs = (componentSpec.inputs ?? []).concat([inputSpec]);
+        componentSpec = { ...componentSpec, inputs: inputs };
+        replaceComponentSpec(componentSpec);
       } else if (nodeType === "output") {
-        // TODO: Implement
+        const outputId = getUniqueOutputName();
+        const outputSpec: OutputSpec = {
+          name: outputId,
+          annotations: positionAnnotations,
+        };
+        const outputs = (componentSpec.outputs ?? []).concat([outputSpec]);
+        componentSpec = { ...componentSpec, outputs: outputs };
+        replaceComponentSpec(componentSpec);
       }
     }
   };
-
-  const elements = (nodes as Elements).concat(edges);
 
   return (
     <ReactFlow
