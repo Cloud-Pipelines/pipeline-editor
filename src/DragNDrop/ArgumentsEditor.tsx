@@ -72,6 +72,11 @@ const ArgumentsEditor = ({
             }
           }
 
+          const argumentIsRequiredButMissing =
+            !(inputName in currentArguments) &&
+            inputSpec.optional !== true &&
+            inputSpec.default === undefined;
+
           return (
             <div
               key={inputName}
@@ -92,6 +97,7 @@ const ArgumentsEditor = ({
               <input
                 style={{
                   display: "table-cell",
+                  borderColor: (argumentIsRequiredButMissing ? "red" : undefined),
                 }}
                 placeholder={placeholder}
                 // required={inputSpec.optional !== true && inputSpec.default === undefined}
