@@ -11,8 +11,13 @@ const GraphComponentExporter = ({pipelineName}: {pipelineName?: string}) => {
 
   pipelineName = pipelineName ?? "Pipeline";
 
-  const graphComponent = createGraphComponentSpecFromFlowElements(nodes, edges, pipelineName);
-  const componentText = yaml.dump(graphComponent, { lineWidth: 10000 });
+  let componentText = "";
+  try {
+    const graphComponent = createGraphComponentSpecFromFlowElements(nodes, edges, pipelineName);
+    componentText = yaml.dump(graphComponent, { lineWidth: 10000 });
+  } catch(err) {
+    componentText = String(err);
+  }
 
   const componentTextBlob = new Blob([componentText], { type: "text/yaml" }); // Or application/x-yaml (which leads to downloading)
   const downloadLink = <a href={URL.createObjectURL(componentTextBlob)} download={"component.yaml"}>component.yaml</a>
