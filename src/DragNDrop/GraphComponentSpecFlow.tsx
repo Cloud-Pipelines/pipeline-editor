@@ -23,7 +23,7 @@ import {
   TaskOutputArgument,
   TaskSpec,
 } from "../componentSpec";
-import ComponentTaskNode from "./ComponentTaskNode";
+import ComponentTaskNode, { ComponentTaskNodeProps } from "./ComponentTaskNode";
 
 export interface GraphComponentSpecFlowProps
   extends Omit<ReactFlowProps, "elements"> {
@@ -50,7 +50,7 @@ const GraphComponentSpecFlow = ({
   }
   let graphSpec = componentSpec.implementation.graph;
 
-  const nodes = Object.entries(graphSpec.tasks).map<Node<TaskSpec>>(
+  const nodes = Object.entries(graphSpec.tasks).map<Node<ComponentTaskNodeProps>>(
     ([taskId, taskSpec]) => {
       let position: XYPosition = { x: 0, y: 0 };
       if (taskSpec.annotations !== undefined) {
@@ -65,7 +65,10 @@ const GraphComponentSpecFlow = ({
 
       return {
         id: taskId,
-        data: taskSpec,
+        data: {
+          taskSpec: taskSpec,
+          setArguments: (args) => setTaskArguments(taskId, args),
+        },
         position: position,
         type: "task",
       };
@@ -183,6 +186,21 @@ const GraphComponentSpecFlow = ({
     replaceComponentSpec({ ...componentSpec, implementation: { graph: graphSpec } });
   };
 
+  const setTaskArguments = (
+    taskId: string,
+    taskArguments?: Record<string, ArgumentType>,
+  ) => {
+    let newGraphSpec: GraphSpec = {
+      ...graphSpec,
+      tasks: { ...graphSpec.tasks },
+    };
+    newGraphSpec.tasks[taskId] = {
+      ...graphSpec.tasks[taskId],
+      arguments: taskArguments,
+    };
+    replaceGraphSpec(newGraphSpec);
+  };
+
   const setTaskArgument = (
     taskId: string,
     inputName: string,
@@ -198,15 +216,7 @@ const GraphComponentSpecFlow = ({
     } else {
       newTaskSpecArguments[inputName] = argument;
     }
-    let newGraphSpec: GraphSpec = {
-      ...graphSpec,
-      tasks: { ...graphSpec.tasks },
-    };
-    newGraphSpec.tasks[taskId] = {
-      ...oldTaskSpec,
-      arguments: newTaskSpecArguments,
-    };
-    replaceGraphSpec(newGraphSpec);
+    setTaskArguments(taskId, newTaskSpecArguments);
   };
 
   const removeTaskArgument = (taskId: string, inputName: string) =>

@@ -13,6 +13,7 @@ import {
   TaskOutputArgument,
   GraphImplementation,
 } from "../componentSpec";
+import { ComponentTaskNodeProps } from "./ComponentTaskNode";
 
 const getNodePositionAnnotations = (node: Node): { [k: string]: string } => ({
   "editor.position": JSON.stringify({
@@ -42,7 +43,7 @@ const createGraphComponentSpecFromFlowElements = (
   // Task nodes. They should all be ComponentTaskNode components
   const taskNodes = nodes
     .filter((node) => node.type === "task")
-    .map((node) => node as Node<TaskSpec>);
+    .map((node) => node as Node<ComponentTaskNodeProps>);
   
   const inputSpecs = inputNodes.map<InputSpec>((node) => {
     let spec: InputSpec = { name: node.id };
@@ -61,7 +62,7 @@ const createGraphComponentSpecFromFlowElements = (
   });
 
   const taskMap = taskNodes.reduce((accumulator, node) => {
-    let taskSpec = node.data;
+    let taskSpec = node.data?.taskSpec;
     if (taskSpec !== undefined) {
       // Cloning the spec to modify it
       taskSpec = Object.assign({}, taskSpec);

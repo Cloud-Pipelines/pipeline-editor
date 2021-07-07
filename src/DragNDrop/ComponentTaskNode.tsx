@@ -1,7 +1,14 @@
-import { memo } from 'react';
-import {TaskSpec, InputSpec, OutputSpec} from '../componentSpec';
+import { memo, useState } from 'react';
+import {
+  ArgumentType,
+  InputSpec,
+  OutputSpec,
+  TaskSpec,
+} from '../componentSpec';
 
 import { Handle, Position, NodeProps, HandleType } from 'react-flow-renderer';
+
+import ArgumentsEditor from './ArgumentsEditor';
 
 const inputHandlePosition = Position.Top;
 const outputHandlePosition = Position.Bottom;
@@ -60,8 +67,15 @@ function generateOutputHandles(outputSpecs: OutputSpec[]): JSX.Element[] {
   return generateHandles(outputSpecs, "source", outputHandlePosition, "output_");
 }
 
-const ComponentTaskNode = ({data}: NodeProps<TaskSpec>) => {
-  const taskSpec = data;
+export interface ComponentTaskNodeProps {
+  taskSpec: TaskSpec,
+  setArguments?: (args: Record<string, ArgumentType>) => void;
+};
+
+const ComponentTaskNode = ({ data }: NodeProps<ComponentTaskNodeProps>) => {
+  const [isArgumentsEditorOpen, setIsArgumentsEditorOpen] = useState(false);
+
+  const taskSpec = data.taskSpec;
   const componentSpec = taskSpec.componentRef.spec;
   if (componentSpec === undefined) {
     return (<></>);
@@ -80,11 +94,26 @@ const ComponentTaskNode = ({data}: NodeProps<TaskSpec>) => {
   const outputHandles = generateOutputHandles(componentSpec.outputs ?? []);
   const handleComponents = inputHandles.concat(outputHandles);
 
+  const closeArgumentsEditor = () => {
+    setIsArgumentsEditorOpen(false);
+  }
+
   return (
-    <>
+    <div
+      onDoubleClick={() => {
+        setIsArgumentsEditorOpen(!isArgumentsEditorOpen);
+      }}
+    >
       {label}
       {handleComponents}
-    </>
+      {isArgumentsEditorOpen && (
+        <ArgumentsEditor
+          taskSpec={taskSpec}
+          closeEditor={closeArgumentsEditor}
+          setArguments={data.setArguments}
+        />
+      )}
+    </div>
   );
 };
 
