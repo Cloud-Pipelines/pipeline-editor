@@ -9,6 +9,11 @@ import {
 import {createGraphComponentSpecFromFlowElements} from './graphComponentFromFlow'
 import {generateVertexPipelineJobFromGraphComponent} from './vertexAiCompiler'
 
+const LOCAL_STORAGE_GCS_OUTPUT_DIRECTORY_KEY = "GoogleCloudSubmitter/gcsOutputDirectory";
+const LOCAL_STORAGE_PROJECT_ID_KEY = "GoogleCloudSubmitter/projectId";
+const LOCAL_STORAGE_REGION_KEY = "GoogleCloudSubmitter/region";
+const LOCAL_STORAGE_PROJECT_IDS_KEY = "GoogleCloudSubmitter/projectIds";
+
 var CLIENT_ID = '640001104961-2m8hs192tmd9f9nssbr5thr5o3uhmita.apps.googleusercontent.com';
 var API_KEY = 'AIzaSyCDPTffgYGXoit-jKsj1_1WWbSxvU7aEdQ';
      
@@ -94,11 +99,19 @@ const aiplatformCreatePipelineJob = async (projetId: string, region='us-central1
 }
 
 const GoogleCloudSubmitter = () => {
-  const [projects, setProjects] = useState<string[]>([]);
-  const [project, setProject] = useState<string>(""); // undefined causes error: https://reactjs.org/docs/forms.html#controlled-components https://stackoverflow.com/a/47012342
-  const [region, setRegion] = useState(VERTEX_AI_PIPELINES_DEFAULT_REGION);
+  const [projects, setProjects] = useState<string[]>(
+    () => JSON.parse(window.localStorage?.getItem(LOCAL_STORAGE_PROJECT_IDS_KEY) ?? "[]")
+  );
+  const [project, setProject] = useState<string>(
+    () => window.localStorage?.getItem(LOCAL_STORAGE_PROJECT_ID_KEY) ?? ""
+  ); // undefined causes error: https://reactjs.org/docs/forms.html#controlled-components https://stackoverflow.com/a/47012342
+  const [region, setRegion] = useState(
+    () => window.localStorage?.getItem(LOCAL_STORAGE_REGION_KEY) ?? VERTEX_AI_PIPELINES_DEFAULT_REGION
+  );
   const [error, setError] = useState("");
-  const [gcsOutputDirectory, setGcsOutputDirectory] = useState("");
+  const [gcsOutputDirectory, setGcsOutputDirectory] = useState(
+    () => window.localStorage?.getItem(LOCAL_STORAGE_GCS_OUTPUT_DIRECTORY_KEY) ?? ""
+  );
   const [pipelineJobWebUrl, setPipelineJobWebUrl] = useState("");
 
   const nodes = useStoreState((store) => store.nodes);
@@ -126,6 +139,14 @@ const GoogleCloudSubmitter = () => {
       onSubmit={async (e) => {
         e.preventDefault();
         try {
+          // setItem might throw exception on iOS in incognito mode
+          try {
+            window.localStorage?.setItem(LOCAL_STORAGE_GCS_OUTPUT_DIRECTORY_KEY, gcsOutputDirectory);
+            window.localStorage?.setItem(LOCAL_STORAGE_PROJECT_ID_KEY, project);
+            window.localStorage?.setItem(LOCAL_STORAGE_REGION_KEY, region);
+          } catch(err) {
+            console.error("GoogleCloudSubmitter: Error writing properties to the localStorage", err);
+          }
           const pipelineName = "Pipeline";
 
           const graphComponent = createGraphComponentSpecFromFlowElements(nodes, edges, pipelineName, undefined, false, true);
@@ -169,6 +190,11 @@ const GoogleCloudSubmitter = () => {
               );
               setProjects(projectIds);
               setError("");
+              try {
+                window.localStorage?.setItem(LOCAL_STORAGE_PROJECT_IDS_KEY, JSON.stringify(projectIds));
+              } catch(err) {
+                console.error("GoogleCloudSubmitter: Error writing properties to the localStorage", err);
+              }
             } catch (err) {
               setError(err?.result?.error?.message ?? "Error");
             }
