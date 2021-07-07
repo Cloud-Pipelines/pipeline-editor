@@ -138,6 +138,7 @@ const GoogleCloudSubmitter = () => {
     <form
       onSubmit={async (e) => {
         e.preventDefault();
+        setPipelineJobWebUrl("");
         try {
           // setItem might throw exception on iOS in incognito mode
           try {
@@ -159,7 +160,6 @@ const GoogleCloudSubmitter = () => {
           setError("");
         } catch (err) {
           console.error(err);
-          setPipelineJobWebUrl("");
           setError(err?.result?.error?.message ?? "Error");
         }
       }}
