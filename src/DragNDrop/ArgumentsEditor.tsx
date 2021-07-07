@@ -114,6 +114,7 @@ const ArgumentsEditor = ({
                     delete currentArguments[inputName];
                     setCurrentArguments({ ...currentArguments });
                   }}
+                  disabled={!(inputName in currentArguments)}
                 >
                   ⌧
                 </button>
