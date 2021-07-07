@@ -8,6 +8,13 @@ import VertexAiExporter from './VertexAiExporter'
 
 const onDragStart = (event: DragEvent, nodeData: object) => {
   event.dataTransfer.setData('application/reactflow', JSON.stringify(nodeData));
+  event.dataTransfer.setData(
+    "DragStart.offset",
+    JSON.stringify({
+      offsetX: event.nativeEvent.offsetX,
+      offsetY: event.nativeEvent.offsetY,
+    })
+  );
   event.dataTransfer.effectAllowed = 'move';
 };
 

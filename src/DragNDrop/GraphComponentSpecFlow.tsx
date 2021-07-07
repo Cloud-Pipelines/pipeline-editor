@@ -461,10 +461,25 @@ const GraphComponentSpecFlow = ({
       const droppedDataObject = JSON.parse(droppedData);
       const nodeType = Object.keys(droppedDataObject)[0];
       const nodeData = droppedDataObject[nodeType];
-      const position = reactFlowInstance.project({
-        x: event.clientX,
-        y: event.clientY - 40,
+      
+      // Correcting the position using the drag point location information
+      let dragOffsetX = 0;
+      let dragOffsetY = 0;
+      const dragStartOffsetData = event.dataTransfer.getData("DragStart.offset");
+      if (dragStartOffsetData !== "") {
+        const dragStartOffset = JSON.parse(dragStartOffsetData);
+        // Hack to work around Chrome's draggable anchor bug. TODO: Remove once Chrome is fixed
+        dragOffsetX = dragStartOffset.offsetX * 0.68 ?? 0;
+        dragOffsetY = dragStartOffset.offsetY * 0.64 ?? 0;
+      }
+
+      // Node position. Offsets should be included in projection, so that they snap to the grid.
+      // Otherwise the dropped nodes will be out of phase with the rest of the nodes even when snapping.
+      let position = reactFlowInstance.project({
+        x: event.clientX - dragOffsetX,
+        y: event.clientY - dragOffsetY,
       });
+
       const nodePosition = { x: position.x, y: position.y };
       const positionAnnotations = {
         "editor.position": JSON.stringify(nodePosition),
