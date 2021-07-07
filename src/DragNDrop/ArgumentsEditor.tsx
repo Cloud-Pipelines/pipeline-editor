@@ -84,9 +84,10 @@ const ArgumentsEditor = ({
                 style={{
                   textAlign: "right",
                   display: "table-cell",
+                  whiteSpace: "nowrap",
                 }}
               >
-                <span>{inputName}: </span>
+                <span>{inputName} ({inputSpec.type?.toString() ?? "Any"}): </span>
               </label>
               <input
                 style={{
