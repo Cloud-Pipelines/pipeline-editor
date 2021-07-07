@@ -15,7 +15,7 @@ const VertexAiExporter = ({pipelineName}: {pipelineName?: string}) => {
   try {
     const graphComponent = createGraphComponentSpecFromFlowElements(nodes, edges, pipelineName, undefined, false, true);
     const vertexPipelineSpec = graphComponentSpecToVertexPipelineSpec(graphComponent);
-    vertexPipelineSpecText = JSON.stringify(vertexPipelineSpec, undefined, 4);
+    vertexPipelineSpecText = JSON.stringify(vertexPipelineSpec, undefined, 2);
   } catch(err) {
     vertexPipelineSpecText = String(err);
   }
