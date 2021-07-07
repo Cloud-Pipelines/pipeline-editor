@@ -69,6 +69,7 @@ function generateOutputHandles(outputSpecs: OutputSpec[]): JSX.Element[] {
 
 export interface ComponentTaskNodeProps {
   taskSpec: TaskSpec,
+  taskId?: string,
   setArguments?: (args: Record<string, ArgumentType>) => void;
 };
 
@@ -103,6 +104,7 @@ const ComponentTaskNode = ({ data }: NodeProps<ComponentTaskNodeProps>) => {
       onDoubleClick={() => {
         setIsArgumentsEditorOpen(!isArgumentsEditorOpen);
       }}
+      title={data.taskId}
     >
       {label}
       {handleComponents}

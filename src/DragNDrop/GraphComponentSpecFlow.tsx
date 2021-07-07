@@ -67,6 +67,7 @@ const GraphComponentSpecFlow = ({
         id: taskId,
         data: {
           taskSpec: taskSpec,
+          taskId: taskId,
           setArguments: (args) => setTaskArguments(taskId, args),
         },
         position: position,
