@@ -64,34 +64,40 @@ const COMPONENT_LIBRARY = [
       'https://raw.githubusercontent.com/Ark-kun/pipelines/e011e4affa85542ef2b24d63fdac27f8d939bbee/components/PyTorch/Convert_to_OnnxModel_from_PyTorchScriptModule/component.yaml',
     ]
   },
-  {
-    category: "TFX",
-    componentUrls: [
-    ]
-  },
+  // {
+  //   category: "TFX",
+  //   componentUrls: [
+  //   ]
+  // },
 ];
 
 const Sidebar = () => {
   return (
     <aside className="nodeList">
-      <details open style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>
-        <summary style={{ borderWidth: "1px", padding: "8px", fontWeight: "bold" }}>Submit to Google Cloud</summary>
+      <details style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>
+        <summary style={{ borderWidth: "1px", padding: "4px", fontWeight: "bold" }}>Submit to Google Cloud</summary>
         <GoogleCloudSubmitter/>
       </details>
-      <div className="description">You can drag these nodes to the pane on the right.</div>
-      <div className="react-flow__node-input" onDragStart={(event: DragEvent) => onDragStart(event, { input: { label: "Input Node" } })} draggable>
-        Input Node
-      </div>
-      <div className="react-flow__node-output" onDragStart={(event: DragEvent) => onDragStart(event, { output: { label: "Output Node" } })} draggable>
-        Output Node
-      </div>
+      <h3>Drag components to the canvas:</h3>
+      <details style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>
+        <summary><strong>Special</strong></summary>
+        <div className="react-flow__node react-flow__node-input" onDragStart={(event: DragEvent) => onDragStart(event, { input: { label: "Input" } })} draggable>
+          Input
+        </div>
+        <div className="react-flow__node react-flow__node-output" onDragStart={(event: DragEvent) => onDragStart(event, { output: { label: "Output" } })} draggable>
+          Output
+        </div>
+      </details>
       <ComponentLibrary componentGroups={COMPONENT_LIBRARY}/>
       <details open style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>
-        <summary style={{ borderWidth: "1px", padding: "8px", fontWeight: "bold" }}>Component search</summary>
+        <summary style={{ borderWidth: "1px", padding: "4px", fontWeight: "bold" }}>Component search</summary>
         <ComponentSearch />
       </details>
-      <GraphComponentExporter/>
-      <VertexAiExporter/>
+      <details>
+        <summary>Debug</summary>
+        <GraphComponentExporter/>
+        <VertexAiExporter/>
+      </details>
     </aside>
   );
 };

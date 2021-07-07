@@ -71,7 +71,7 @@ const ComponentGroupList = ({ componentGroups }: { componentGroups: ComponentGro
 const ComponentLibrary = ({ componentGroups }: { componentGroups: ComponentGroup[] }) => {
   return (
     <details open>
-      <summary style={{ border: "1px solid #aaa", padding: "5px", borderRadius: "8px" }}>
+      <summary style={{ border: "1px solid #aaa", padding: "4px", borderRadius: "4px" }}>
         <strong>Component library</strong>
       </summary>
       <div style={{ paddingLeft: "10px" }}>
