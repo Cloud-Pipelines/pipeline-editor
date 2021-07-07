@@ -97,10 +97,9 @@ const ArgumentsEditor = ({
               <input
                 style={{
                   display: "table-cell",
-                  borderColor: (argumentIsRequiredButMissing ? "red" : undefined),
                 }}
                 placeholder={placeholder}
-                // required={inputSpec.optional !== true && inputSpec.default === undefined}
+                required={argumentIsRequiredButMissing}
                 value={value ?? ""}
                 pattern={getPatternForTypeSpec(inputSpec.type)}
                 onChange={(e) => {
