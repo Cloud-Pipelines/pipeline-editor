@@ -118,6 +118,9 @@ const GoogleCloudSubmitter = () => {
   } catch(err) {
   }
 
+  const readyToSubmit =
+    project !== "" && region !== "" && vertexPipelineJobUrl !== undefined;
+
   return (
     <form
       onSubmit={async (e) => {
@@ -200,7 +203,11 @@ const GoogleCloudSubmitter = () => {
           onChange={(e) => setGcsOutputDirectory(e.target.value)}
         />
       </div>
-      <input type="submit" value="Submit pipeline job" />
+      <input
+        type="submit"
+        disabled={!readyToSubmit}
+        value="Submit pipeline job"
+      />
       {pipelineJobWebUrl !== "" && <div><a href={pipelineJobWebUrl} target="_blank" rel="noreferrer">Job</a></div>}
       {vertexPipelineJobUrl !== undefined && (
         <div>
