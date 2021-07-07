@@ -41,6 +41,8 @@ const ArgumentsEditor = ({
       // draggable={false}
       style={{
         position: "fixed",
+        display: "table",
+        borderSpacing: "5px",
         background: "white",
         border: "1px solid black",
         borderRadius: "4px",
@@ -50,7 +52,7 @@ const ArgumentsEditor = ({
       }}
     >
       <legend>Input arguments for {componentSpec.name}</legend>
-      <fieldset style={{ display: "table", borderSpacing: "5px" }}>
+      <div>
         {inputSpecs.map((inputSpec) => {
           const inputName = inputSpec.name;
           let value: string | undefined = undefined;
@@ -118,7 +120,7 @@ const ArgumentsEditor = ({
             </div>
           );
         })}
-      </fieldset>
+      </div>
       <button type="button" onClick={closeEditor}>
         Close
       </button>
