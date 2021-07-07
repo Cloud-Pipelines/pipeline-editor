@@ -85,14 +85,15 @@ const ArgumentsEditor = ({
               }}
             >
               <label
-                key={inputName}
                 style={{
                   textAlign: "right",
                   display: "table-cell",
                   whiteSpace: "nowrap",
                 }}
               >
-                <span>{inputName} ({inputSpec.type?.toString() ?? "Any"}): </span>
+                <span>
+                  {inputName} ({inputSpec.type?.toString() ?? "Any"}):{" "}
+                </span>
               </label>
               <input
                 style={{
@@ -140,13 +141,6 @@ const ArgumentsEditor = ({
       >
         Apply
       </button>
-      {process?.env?.NODE_ENV === "development" ? (
-        <div style={{ overflow: "auto", maxWidth: "300px" }}>
-          <pre style={{ textAlign: "left" }}>
-            {JSON.stringify(currentArguments, undefined, 2)}
-          </pre>
-        </div>
-      ) : undefined}
     </form>
   );
 };
