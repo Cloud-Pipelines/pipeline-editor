@@ -132,6 +132,7 @@ const GoogleCloudSubmitter = () => {
           const pipelineJobId = pipelineJobName.split('/').slice(-1)[0];
           const pipelineJobWebUrl = `https://console.cloud.google.com/vertex-ai/locations/${region}/pipelines/runs/${pipelineJobId}?project=${project}`;
           setPipelineJobWebUrl(pipelineJobWebUrl);
+          setError("");
         } catch (err) {
           console.error(err);
           setPipelineJobWebUrl("");
