@@ -31,7 +31,8 @@ const DnDFlow = () => {
       <ReactFlowProvider>
         <div className="reactflow-wrapper">
           <GraphComponentSpecFlow
-            initialComponentSpec={componentSpec}
+            componentSpec={componentSpec}
+            setComponentSpec={setComponentSpec}
             deleteKeyCode='Delete'
             multiSelectionKeyCode='Control'
             snapToGrid={true}

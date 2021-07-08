@@ -27,7 +27,8 @@ import ComponentTaskNode, { ComponentTaskNodeProps } from "./ComponentTaskNode";
 
 export interface GraphComponentSpecFlowProps
   extends Omit<ReactFlowProps, "elements"> {
-  initialComponentSpec?: ComponentSpec
+  componentSpec: ComponentSpec,
+  setComponentSpec: (componentSpec: ComponentSpec) => void,
 }
 
 const nodeTypes = {
@@ -36,13 +37,11 @@ const nodeTypes = {
 
 const GraphComponentSpecFlow = ({
   children,
-  initialComponentSpec = { implementation: { graph: { tasks: {} } } },
+  componentSpec = { implementation: { graph: { tasks: {} } } },
+  setComponentSpec,
   ...rest
 }: GraphComponentSpecFlowProps) => {
   const [reactFlowInstance, setReactFlowInstance] = useState<OnLoadParams>();
-  const [originalComponentSpec, setComponentSpec] =
-    useState<ComponentSpec>(initialComponentSpec);
-  let componentSpec = originalComponentSpec;
 
   if (! ('graph' in componentSpec.implementation)) {
     // Only graph components are supported
