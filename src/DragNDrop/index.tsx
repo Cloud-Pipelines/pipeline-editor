@@ -9,7 +9,7 @@ import {
 import { ComponentSpec } from '../componentSpec';
 import GraphComponentSpecFlow from './GraphComponentSpecFlow';
 import Sidebar from './Sidebar';
-import { preloadComponentReferences, xgBoostQueryTrainPredictPipeline } from "./samplePipelines";
+import { loadComponentFromUrl, XGBOOST_PIPELINE_URL } from "./samplePipelines";
 
 import './dnd.css';
 
@@ -19,7 +19,7 @@ const DnDFlow = () => {
   const [componentSpec, setComponentSpec] = useState<ComponentSpec | undefined>();
 
   if (componentSpec === undefined) {
-    preloadComponentReferences(xgBoostQueryTrainPredictPipeline).then(setComponentSpec);
+    loadComponentFromUrl(XGBOOST_PIPELINE_URL).then(setComponentSpec);
   };
 
   if (componentSpec === undefined) {
