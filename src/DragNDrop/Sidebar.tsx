@@ -118,6 +118,9 @@ const Sidebar = ({
         >
           Load PyTorch pipeline
         </button>
+        <div>
+          Save as <GraphComponentLink/>
+        </div>
       </details>
       <details style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>
         <summary style={{ borderWidth: "1px", padding: "4px", fontWeight: "bold" }}>Submit to Google Cloud</summary>
