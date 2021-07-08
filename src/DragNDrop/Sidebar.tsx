@@ -67,11 +67,18 @@ const COMPONENT_LIBRARY = [
       'https://raw.githubusercontent.com/Ark-kun/pipelines/e011e4affa85542ef2b24d63fdac27f8d939bbee/components/PyTorch/Convert_to_OnnxModel_from_PyTorchScriptModule/component.yaml',
     ]
   },
-  // {
-  //   category: "TFX",
-  //   componentUrls: [
-  //   ]
-  // },
+  {
+    category: "TFX",
+    componentUrls: [
+      'https://raw.githubusercontent.com/kubeflow/pipelines/9b0d47a226c61f96e1ebe7a8ba427df38f8734e1/components/deprecated/tfx/ExampleGen/CsvExampleGen/component.yaml',
+      'https://raw.githubusercontent.com/kubeflow/pipelines/9b0d47a226c61f96e1ebe7a8ba427df38f8734e1/components/deprecated/tfx/StatisticsGen/component.yaml',
+      'https://raw.githubusercontent.com/kubeflow/pipelines/9b0d47a226c61f96e1ebe7a8ba427df38f8734e1/components/deprecated/tfx/SchemaGen/component.yaml',
+      'https://raw.githubusercontent.com/kubeflow/pipelines/9b0d47a226c61f96e1ebe7a8ba427df38f8734e1/components/deprecated/tfx/ExampleValidator/component.yaml',
+      'https://raw.githubusercontent.com/kubeflow/pipelines/9b0d47a226c61f96e1ebe7a8ba427df38f8734e1/components/deprecated/tfx/Transform/component.yaml',
+      'https://raw.githubusercontent.com/kubeflow/pipelines/9b0d47a226c61f96e1ebe7a8ba427df38f8734e1/components/deprecated/tfx/Trainer/component.yaml',
+      'https://raw.githubusercontent.com/kubeflow/pipelines/9b0d47a226c61f96e1ebe7a8ba427df38f8734e1/components/deprecated/tfx/Evaluator/component.yaml',
+    ]
+  },
 ];
 
 interface SidebarProps {
