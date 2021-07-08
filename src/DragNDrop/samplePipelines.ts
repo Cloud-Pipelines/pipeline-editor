@@ -1,6 +1,10 @@
 import { ComponentSpec } from "../componentSpec";
 import { downloadComponentDataWithCache } from "../github";
 
+const TFX_PIPELINE_URL = "https://raw.githubusercontent.com/Ark-kun/pipelines/62c1ea4d854f0e0a1ebcd8cffaa9543f4f0f1937/components/deprecated/tfx/_samples/TFX.pipeline.component.yaml"
+const XGBOOST_PIPELINE_URL = "https://raw.githubusercontent.com/Ark-kun/pipelines/77df9c97191a181fcd3cded83f147799d46eca20/components/XGBoost/_samples/sample_pipeline.pipeline.component.yaml"
+const PYTORCH_PIPELINE_URL = "https://raw.githubusercontent.com/Ark-kun/pipelines/7d40cbf2dee91f14b7f37725aeedb43bc208ac22/components/PyTorch/_samples/Train_fully-connected_network.pipeline.component.yaml"
+
 let xgBoostQueryTrainPredictPipeline = {
   name: "XGBoost query train predict pipeline",
   inputs: [],
@@ -96,4 +100,15 @@ const preloadComponentReferences = async (
   return componentSpec;
 };
 
-export { preloadComponentReferences, xgBoostQueryTrainPredictPipeline };
+const loadComponentFromUrl = async (
+  url: string,
+  preloadChildComponentSpecs = true
+) => {
+  let componentSpec = await downloadComponentDataWithCache(url);
+  if (preloadChildComponentSpecs) {
+    componentSpec = await preloadComponentReferences(componentSpec);
+  }
+  return componentSpec;
+};
+
+export { loadComponentFromUrl, preloadComponentReferences, xgBoostQueryTrainPredictPipeline, XGBOOST_PIPELINE_URL, PYTORCH_PIPELINE_URL, TFX_PIPELINE_URL };
