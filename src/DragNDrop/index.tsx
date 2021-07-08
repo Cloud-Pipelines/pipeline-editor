@@ -43,7 +43,10 @@ const DnDFlow = () => {
             <Background gap={GRID_SIZE}/>
           </GraphComponentSpecFlow>
         </div>
-        <Sidebar />
+        <Sidebar
+          componentSpec={componentSpec}
+          setComponentSpec={setComponentSpec}
+        />
       </ReactFlowProvider>
     </div>
   );

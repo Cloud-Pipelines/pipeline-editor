@@ -5,6 +5,9 @@ import ComponentSearch from './ComponentSearch'
 import GraphComponentExporter from './GraphComponentExporter'
 import GoogleCloudSubmitter from './GoogleCloud'
 import VertexAiExporter from './VertexAiExporter'
+import { ComponentSpec } from '../componentSpec';
+import { loadComponentFromUrl, XGBOOST_PIPELINE_URL, PYTORCH_PIPELINE_URL, TFX_PIPELINE_URL } from './samplePipelines';
+import GraphComponentLink from './GraphComponentLink';
 
 const onDragStart = (event: DragEvent, nodeData: object) => {
   event.dataTransfer.setData('application/reactflow', JSON.stringify(nodeData));
@@ -71,9 +74,44 @@ const COMPONENT_LIBRARY = [
   // },
 ];
 
-const Sidebar = () => {
+interface SidebarProps {
+  componentSpec?: ComponentSpec,
+  setComponentSpec?: (componentSpec: ComponentSpec) => void,
+}
+
+const Sidebar = ({
+  componentSpec,
+  setComponentSpec
+}: SidebarProps) => {
   return (
     <aside className="nodeList">
+      <details style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>
+        <summary style={{ borderWidth: "1px", padding: "4px", fontWeight: "bold" }}>Save/Load pipeline</summary>
+        <button
+          type="button"
+          onClick={(e) => {
+            loadComponentFromUrl(TFX_PIPELINE_URL).then(setComponentSpec)
+          }}
+        >
+          Load TFX pipeline
+        </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            loadComponentFromUrl(XGBOOST_PIPELINE_URL).then(setComponentSpec)
+          }}
+        >
+          Load XGBoost pipeline
+        </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            loadComponentFromUrl(PYTORCH_PIPELINE_URL).then(setComponentSpec)
+          }}
+        >
+          Load PyTorch pipeline
+        </button>
+      </details>
       <details style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>
         <summary style={{ borderWidth: "1px", padding: "4px", fontWeight: "bold" }}>Submit to Google Cloud</summary>
         <GoogleCloudSubmitter/>
