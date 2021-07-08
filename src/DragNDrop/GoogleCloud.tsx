@@ -164,7 +164,7 @@ const GoogleCloudSubmitter = () => {
         }
       }}
     >
-      <div>
+      <div style={{ whiteSpace: "nowrap" }}>
         <label htmlFor="project">Project: </label>
         <input
           id="project"
