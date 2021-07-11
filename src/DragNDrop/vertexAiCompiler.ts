@@ -291,7 +291,8 @@ const taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec = (
     
     const vertexTaskSpec = {
         taskInfo: {
-            name: "<set later>",
+            // This is the task display name, not an ID
+            name: componentSpec.name ?? "Component",
         },
         inputs: {
             parameters: vertexTaskParameterArguments,
@@ -353,7 +354,8 @@ const graphComponentSpecToVertexPipelineSpec = (componentSpec: ComponentSpec) =>
         vertexComponentSpec.executorLabel = vertexExecutorId;
         vertexComponents[vertexComponentId] = vertexComponentSpec;
         vertexTaskSpec.componentRef.name = vertexComponentId;
-        vertexTaskSpec.taskInfo.name = vertexTaskId;
+        // This is the task display name, not an ID. It's already set to the component name
+        //vertexTaskSpec.taskInfo.name = vertexTaskId;
         vertexTasks[vertexTaskId] = vertexTaskSpec;
     }
 
