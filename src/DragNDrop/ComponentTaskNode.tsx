@@ -1,4 +1,4 @@
-import { memo, useState } from 'react';
+import { CSSProperties, memo, useState } from 'react';
 import {
   ArgumentType,
   InputSpec,
@@ -43,6 +43,8 @@ function generateHandles(
       classNames.push(MISSING_ARGUMENT_CLASS_NAME);
     }
     classNames = classNames.map((className) => className.replace(" ", "_"));
+
+    const labelStyle = generateLabelStyle(position, numHandles);
     handleComponents.push(
       <Handle
         key={id}
@@ -53,10 +55,67 @@ function generateHandles(
         isConnectable={true}
         title={ioSpec.name + " : " + ioTypeName}
         className={classNames.join(" ")}
-      />
+      >
+        <div style={labelStyle}>
+          {ioSpec.name}
+        </div>
+      </Handle>
     );
   }
   return handleComponents;
+}
+
+function generateLabelStyle(position: Position, numHandles: number) {
+  const nodeWidthPx = 180;
+  let maxLabelWidthPx = nodeWidthPx / (numHandles + 1);
+  let angle = "0deg";
+  if (numHandles > 4) {
+    angle = "30deg";
+    maxLabelWidthPx = 50;
+  }
+  // By default, we want to place the label on the same side of the handle as the handle is on the side of the node.
+  let labelPosition = position;
+  // When there are too many inputs/outputs, we need to move the label so it starts from the handle.
+  // Based on my tests, we always want this for >4 handles, so the default placement is never used at all.
+  if (numHandles > 4) {
+    angle = "45deg";
+    if (position === Position.Top) {
+      labelPosition = Position.Right;
+    }
+    if (position === Position.Bottom) {
+      labelPosition = Position.Left;
+    }
+  }
+  let labelPositionStyle: CSSProperties = {
+    position: "absolute",
+    left: "50%",
+    top: "50%",
+    transform: `translate(-50%, -50%) rotate(-${angle}) ${labelPositionToTranslation(labelPosition)}`,
+    textOverflow: "ellipsis",
+  };
+  let labelOverflowStyle: CSSProperties = {
+    overflow: "hidden",
+    whiteSpace: "nowrap",
+    maxWidth: `${maxLabelWidthPx}px`,
+  };
+  const labelStyle = { ...labelPositionStyle, ...labelOverflowStyle };
+  return labelStyle;
+}
+
+const labelPositionToTranslation = (
+  position: Position,
+  handleRadius = "4px",
+) => {
+  switch(position) {
+    case Position.Top:
+      return `translateY(calc(-50% - ${handleRadius}))`;
+    case Position.Bottom:
+      return `translateY(calc(50% + ${handleRadius}))`;
+    case Position.Left:
+      return `translateX(calc(-50% - ${handleRadius}))`;
+    case Position.Right:
+      return `translateX(calc(50% + ${handleRadius}))`;
+  }
 }
 
 function generateInputHandles(inputSpecs: InputSpec[], inputsWithInvalidArguments?: string[]): JSX.Element[] {
