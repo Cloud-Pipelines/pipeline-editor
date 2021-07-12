@@ -143,7 +143,7 @@ const Sidebar = ({
       </details>
       <details>
         <summary>Debug</summary>
-        <GraphComponentExporter/>
+        {componentSpec && <GraphComponentExporter componentSpec={componentSpec}/>}
         <VertexAiExporter/>
       </details>
     </aside>
