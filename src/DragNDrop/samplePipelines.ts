@@ -1,9 +1,9 @@
 import { ComponentSpec } from "../componentSpec";
 import { downloadComponentDataWithCache } from "../github";
 
-const TFX_PIPELINE_URL = "https://raw.githubusercontent.com/Ark-kun/pipelines/62c1ea4d854f0e0a1ebcd8cffaa9543f4f0f1937/components/deprecated/tfx/_samples/TFX.pipeline.component.yaml"
+const TFX_PIPELINE_URL = "https://raw.githubusercontent.com/Ark-kun/pipelines/2765b13699ac28de523f499eeaa9eb2ed9b8798a/components/deprecated/tfx/_samples/TFX.pipeline.component.yaml"
 const XGBOOST_PIPELINE_URL = "https://raw.githubusercontent.com/Ark-kun/pipelines/77df9c97191a181fcd3cded83f147799d46eca20/components/XGBoost/_samples/sample_pipeline.pipeline.component.yaml"
-const PYTORCH_PIPELINE_URL = "https://raw.githubusercontent.com/Ark-kun/pipelines/7d40cbf2dee91f14b7f37725aeedb43bc208ac22/components/PyTorch/_samples/Train_fully-connected_network.pipeline.component.yaml"
+const PYTORCH_PIPELINE_URL = "https://raw.githubusercontent.com/Ark-kun/pipelines/322c0c75f32d87acfd5da9c390dee0b5799bfdaf/components/PyTorch/_samples/Train_fully-connected_network.pipeline.component.yaml"
 
 let xgBoostQueryTrainPredictPipeline = {
   name: "XGBoost query train predict pipeline",
