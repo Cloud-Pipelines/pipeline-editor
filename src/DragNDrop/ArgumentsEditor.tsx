@@ -12,6 +12,16 @@ const getPatternForTypeSpec = (typeSpec?: TypeSpecType) => {
   return undefined;
 };
 
+const typeSpecToString = (typeSpec?: TypeSpecType): string => {
+  if (typeSpec === undefined) {
+    return "Any";
+  }
+  if (typeof typeSpec === "string") {
+    return typeSpec
+  }
+  return JSON.stringify(typeSpec);
+};
+
 const ArgumentsEditor = ({
   taskSpec,
   closeEditor,
@@ -76,6 +86,8 @@ const ArgumentsEditor = ({
             !(inputName in currentArguments) &&
             inputSpec.optional !== true &&
             inputSpec.default === undefined;
+          
+          const typeSpecString = typeSpecToString(inputSpec.type);
 
           return (
             <div
@@ -92,7 +104,20 @@ const ArgumentsEditor = ({
                 }}
               >
                 <span>
-                  {inputName} ({inputSpec.type?.toString() ?? "Any"}):{" "}
+                  {inputName} (
+                  <span
+                    style={{
+                      textOverflow: "ellipsis",
+                      overflow: "hidden",
+                      maxWidth: "90px",
+                      display: "inline-block",
+                      verticalAlign: "bottom",
+                    }}
+                    title={typeSpecString}
+                  >
+                    {typeSpecString}
+                  </span>
+                  )
                 </span>
               </label>
               <input
