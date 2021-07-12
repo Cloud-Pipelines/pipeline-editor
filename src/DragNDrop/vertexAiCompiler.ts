@@ -344,19 +344,23 @@ const graphComponentSpecToVertexPipelineSpec = (componentSpec: ComponentSpec, pi
         if (taskSpec.componentRef.spec === undefined) {
             throw Error(`Task "${taskId}" does not have taskSpec.componentRef.spec.`)
         }
-        const {vertexTaskSpec, vertexComponentSpec, vertexExecutorSpec} = taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec(taskSpec.componentRef.spec, taskSpec.arguments ?? {});
-        // task IDs are expected to be unique
-        // TODO: Fix  this to work for multi-dag pipelines where task IDs are not globally unique
-        const vertexExecutorId = taskId + "_executor";
-        const vertexComponentId = taskId + "_component";
-        const vertexTaskId = taskId; // + "_task";
-        vertexExecutors[vertexExecutorId] = vertexExecutorSpec;
-        vertexComponentSpec.executorLabel = vertexExecutorId;
-        vertexComponents[vertexComponentId] = vertexComponentSpec;
-        vertexTaskSpec.componentRef.name = vertexComponentId;
-        // This is the task display name, not an ID. It's already set to the component name
-        //vertexTaskSpec.taskInfo.name = vertexTaskId;
-        vertexTasks[vertexTaskId] = vertexTaskSpec;
+        try {
+            const {vertexTaskSpec, vertexComponentSpec, vertexExecutorSpec} = taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec(taskSpec.componentRef.spec, taskSpec.arguments ?? {});
+            // task IDs are expected to be unique
+            // TODO: Fix  this to work for multi-dag pipelines where task IDs are not globally unique
+            const vertexExecutorId = taskId + "_executor";
+            const vertexComponentId = taskId + "_component";
+            const vertexTaskId = taskId; // + "_task";
+            vertexExecutors[vertexExecutorId] = vertexExecutorSpec;
+            vertexComponentSpec.executorLabel = vertexExecutorId;
+            vertexComponents[vertexComponentId] = vertexComponentSpec;
+            vertexTaskSpec.componentRef.name = vertexComponentId;
+            // This is the task display name, not an ID. It's already set to the component name
+            //vertexTaskSpec.taskInfo.name = vertexTaskId;
+            vertexTasks[vertexTaskId] = vertexTaskSpec;
+        } catch(err) {
+            throw Error(`Error compiling task ${taskId}: ` + err.toString());
+        }
     }
 
     const vertexPipelineSpec = {
