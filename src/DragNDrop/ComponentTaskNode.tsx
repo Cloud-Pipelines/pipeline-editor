@@ -75,14 +75,17 @@ function generateLabelStyle(
   position: Position,
   numHandles: number
 ): [string, CSSProperties] {
-  let maxLabelWidthPx = NODE_WIDTH_IN_PX / (numHandles + 1);
+  let maxLabelWidthPx = NODE_WIDTH_IN_PX;
   // By default, we want to place the label on the same side of the handle as the handle is on the side of the node.
   let labelClasses = "label";
   // When there are too many inputs/outputs, we need to move the label so it starts from the handle.
   // Based on my tests, we always want this for >4 handles (top/bottom), so the rotated default placement is never used at all.
 
   if (position === Position.Top || position === Position.Bottom) {
-    maxLabelWidthPx = NODE_WIDTH_IN_PX / (numHandles + 1);
+    if (numHandles > 1) {
+      // For single handle max width is the node width, while the formula would give half of that
+      maxLabelWidthPx = NODE_WIDTH_IN_PX / (numHandles + 1);
+    }
     //if (numHandles > 4) {
     if (maxLabelWidthPx < 35) {
       maxLabelWidthPx = 50;
