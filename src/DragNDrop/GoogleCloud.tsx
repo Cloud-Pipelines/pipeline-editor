@@ -115,18 +115,30 @@ const GoogleCloudSubmitter = ({
     () => window.localStorage?.getItem(LOCAL_STORAGE_GCS_OUTPUT_DIRECTORY_KEY) ?? ""
   );
   const [pipelineJobWebUrl, setPipelineJobWebUrl] = useState("");
+  const [compilationError, setCompilationError] = useState("");
 
   let vertexPipelineJobJson: string | undefined = undefined;
   let vertexPipelineJob: Record<string, any> | undefined = undefined;
 
+  //useEffect(() => {
   if (componentSpec !== undefined) {
     try {
       vertexPipelineJob = generateVertexPipelineJobFromGraphComponent(componentSpec, gcsOutputDirectory);
       vertexPipelineJobJson = JSON.stringify(vertexPipelineJob, undefined, 2);
-    } catch(err) {
-      console.error(err);
+      // Prevent inifinite re-renders
+      if (compilationError !== "") {
+        setCompilationError("");
+      }
+    } catch (err) {
+      const errorMessage = err.toString();
+      // Prevent inifinite re-renders
+      if (errorMessage !== compilationError) {
+        setCompilationError(err.toString());
+      }
     }
   }
+  //}, [componentSpec, gcsOutputDirectory]);
+
   const vertexPipelineJobUrl = vertexPipelineJobJson && URL.createObjectURL(
     new Blob([vertexPipelineJobJson], { type: "application/json" })
   );
@@ -244,6 +256,7 @@ const GoogleCloudSubmitter = ({
           </a>
         </div>
       )}
+      {compilationError !== "" && <div>{compilationError}</div>}
       {error !== "" && <div>Error: {error}</div>}
     </form>
   );
