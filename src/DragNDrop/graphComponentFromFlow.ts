@@ -13,7 +13,7 @@ import {
   TaskOutputArgument,
   GraphImplementation,
 } from "../componentSpec";
-import { ComponentTaskNodeProps } from "./ComponentTaskNode";
+import { isComponentTaskNode } from "./ComponentTaskNode";
 
 const getNodePositionAnnotations = (node: Node): { [k: string]: string } => ({
   "editor.position": JSON.stringify({
@@ -42,8 +42,7 @@ const createGraphComponentSpecFromFlowElements = (
   const outputNodes = nodes.filter((node) => node.type === "output").sort(nodeOrderComparer);
   // Task nodes. They should all be ComponentTaskNode components
   const taskNodes = nodes
-    .filter((node) => node.type === "task")
-    .map((node) => node as Node<ComponentTaskNodeProps>);
+    .filter(isComponentTaskNode);
   
   const inputSpecs = inputNodes.map<InputSpec>((node) => {
     let spec: InputSpec = { name: node.id };

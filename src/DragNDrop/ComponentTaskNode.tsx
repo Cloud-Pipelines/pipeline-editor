@@ -6,7 +6,7 @@ import {
   TaskSpec,
 } from '../componentSpec';
 
-import { Handle, Position, NodeProps, HandleType } from 'react-flow-renderer';
+import { Handle, Position, Node, NodeProps, HandleType } from 'react-flow-renderer';
 
 import ArgumentsEditor from './ArgumentsEditor';
 
@@ -16,6 +16,9 @@ const outputHandlePosition = Position.Bottom;
 type InputOrOutputSpec = InputSpec | OutputSpec;
 
 const MISSING_ARGUMENT_CLASS_NAME = "missing-argument";
+
+export const isComponentTaskNode = (node: Node): node is Node<ComponentTaskNodeProps> =>
+  node.type === "task" && node.data !== undefined && "taskSpec" in node.data;
 
 function generateHandles(
   ioSpecs: InputOrOutputSpec[],
