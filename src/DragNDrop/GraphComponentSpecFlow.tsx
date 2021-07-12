@@ -23,7 +23,198 @@ import {
   TaskOutputArgument,
   TaskSpec,
 } from "../componentSpec";
-import ComponentTaskNode, { ComponentTaskNodeProps } from "./ComponentTaskNode";
+import ComponentTaskNode, { ComponentTaskNodeProps, isComponentTaskNode } from "./ComponentTaskNode";
+
+
+const NODE_LAYOUT_ANNOTATION_KEY = "editor.position";
+
+export const augmentComponentSpec = (
+  componentSpec: ComponentSpec,
+  nodes: Node[],
+  includeSpecs = false,
+  includePositions = true
+) => {
+  componentSpec = { ...componentSpec };
+
+  const getNodePositionAnnotation = (node: Node) =>
+    JSON.stringify({
+      // node.position cannot be used since set at 1st drop and never updated
+      x: node.__rf.position.x,
+      y: node.__rf.position.y,
+      width: node.__rf.width,
+      height: node.__rf.height,
+    });
+
+  const nodeXPositionComparer = (n1: Node, n2: Node) => {
+    const deltaX = n1.__rf.position.x - n2.__rf.position.x;
+    const deltaY = n1.__rf.position.y - n2.__rf.position.y;
+    return deltaX !== 0 ? deltaX : deltaY;
+  };
+  const nodeYPositionComparer = (n1: Node, n2: Node) => {
+    const deltaX = n1.__rf.position.x - n2.__rf.position.x;
+    const deltaY = n1.__rf.position.y - n2.__rf.position.y;
+    return deltaY !== 0 ? deltaY : deltaX;
+  };
+
+  // Input and output nodes
+  // Sorting them by horisontal position to make reordering inputs and outputs easy.
+  const inputNodes = nodes
+    .filter((node) => node.type === "input")
+    .sort(nodeXPositionComparer);
+  const outputNodes = nodes
+    .filter((node) => node.type === "output")
+    .sort(nodeXPositionComparer);
+  const taskNodes = nodes
+    .filter(isComponentTaskNode)
+    .sort(nodeYPositionComparer);
+
+  // TODO: Remove "input_" prefixes
+  const inputPositionMap = new Map<string, string>(
+    inputNodes.map((node) => [node.id, getNodePositionAnnotation(node)])
+  );
+  const inputOrderMap = new Map<string, number>(
+    inputNodes.map((node, index) => [node.id, index])
+  );
+  const inputOrderComparer = (a: InputSpec, b: InputSpec) =>
+    (inputOrderMap.get(a.name) ?? Infinity) -
+    (inputOrderMap.get(b.name) ?? Infinity);
+  // TODO: Remove "output_" prefixes
+  const outputPositionMap = new Map<string, string>(
+    outputNodes.map((node) => [node.id, getNodePositionAnnotation(node)])
+  );
+  const outputOrderMap = new Map<string, number>(
+    outputNodes.map((node, index) => [node.id, index])
+  );
+  const outputOrderComparer = (a: OutputSpec, b: OutputSpec) =>
+    (outputOrderMap.get(a.name) ?? Infinity) -
+    (outputOrderMap.get(b.name) ?? Infinity);
+  // TODO: Remove "task_" prefixes
+  const taskPositionMap = new Map<string, string>(
+    taskNodes.map((node) => [node.id, getNodePositionAnnotation(node)])
+  );
+  const taskOrderMap = new Map<string, number>(
+    taskNodes.map((node, index) => [node.id, index])
+  );
+  const taskOrderComparer = (
+    pairA: [string, TaskSpec],
+    pairB: [string, TaskSpec]
+  ) =>
+    (taskOrderMap.get(pairA[0]) ?? Infinity) -
+    (taskOrderMap.get(pairB[0]) ?? Infinity);
+
+  componentSpec.inputs = componentSpec.inputs
+    ?.map((inputSpec) => {
+      let newAnnotations = { ...inputSpec.annotations };
+      if (includePositions) {
+        newAnnotations[NODE_LAYOUT_ANNOTATION_KEY] = inputPositionMap.get(
+          inputSpec.name
+        );
+      } else {
+        delete newAnnotations[NODE_LAYOUT_ANNOTATION_KEY];
+      }
+      let newInputSpec: InputSpec = {
+        ...inputSpec,
+        annotations: newAnnotations,
+      };
+      if (Object.keys(newAnnotations).length === 0) {
+        delete newInputSpec.annotations;
+      }
+      return newInputSpec;
+    })
+    .sort(inputOrderComparer);
+
+  componentSpec.outputs = componentSpec.outputs
+    ?.map((outputSpec) => {
+      let newAnnotations = { ...outputSpec.annotations };
+      if (includePositions) {
+        newAnnotations[NODE_LAYOUT_ANNOTATION_KEY] = outputPositionMap.get(
+          outputSpec.name
+        );
+      } else {
+        delete newAnnotations[NODE_LAYOUT_ANNOTATION_KEY];
+      }
+      let newOutputSpec: OutputSpec = {
+        ...outputSpec,
+        annotations: newAnnotations,
+      };
+      if (
+        newAnnotations === undefined ||
+        Object.keys(newAnnotations).length === 0
+      ) {
+        delete newOutputSpec.annotations;
+      }
+      return newOutputSpec;
+    })
+    .sort(outputOrderComparer);
+
+  if (!("graph" in componentSpec.implementation)) {
+    return componentSpec;
+  }
+
+  let graphSpec: GraphSpec = { ...componentSpec.implementation.graph };
+  const newTasks = Object.fromEntries(
+    Object.entries(graphSpec.tasks || {})
+      .map(([taskId, taskSpec]) => {
+        let newAnnotations = { ...taskSpec.annotations };
+        if (includePositions) {
+          newAnnotations[NODE_LAYOUT_ANNOTATION_KEY] =
+            taskPositionMap.get(taskId);
+        } else {
+          delete newAnnotations[NODE_LAYOUT_ANNOTATION_KEY];
+        }
+        let newTaskSpec: TaskSpec = {
+          ...taskSpec,
+          annotations: newAnnotations,
+        };
+        if (
+          newAnnotations === undefined ||
+          Object.keys(newAnnotations).length === 0
+        ) {
+          delete newTaskSpec.annotations;
+        }
+        // TODO: Sort the arguments based on the ordering of the component inputs.
+        if (
+          !includeSpecs &&
+          newTaskSpec.componentRef.spec !== undefined &&
+          newTaskSpec.componentRef.url !== undefined
+        ) {
+          newTaskSpec.componentRef = { ...newTaskSpec.componentRef };
+          delete newTaskSpec.componentRef.spec;
+        }
+        return [taskId, newTaskSpec] as [string, TaskSpec];
+      })
+      .sort(taskOrderComparer)
+  );
+  if (newTasks !== undefined) {
+    graphSpec.tasks = newTasks;
+  }
+  componentSpec = {
+    ...componentSpec,
+    implementation: { ...componentSpec.implementation, graph: graphSpec },
+  };
+
+  // Reordering the attributes and removing the undefined ones
+  const rebuildComponentSpec = ({
+    name,
+    description,
+    metadata,
+    inputs,
+    outputs,
+    implementation,
+    ...rest
+  }: ComponentSpec): ComponentSpec => ({
+    ...(name && { name: name }),
+    ...(description && { description: description }),
+    ...(metadata && { metadata: metadata }),
+    ...(inputs && { inputs: inputs }),
+    ...(outputs && { outputs: outputs }),
+    implementation: implementation,
+    ...rest,
+  });
+  componentSpec = rebuildComponentSpec(componentSpec);
+
+  return componentSpec;
+};
 
 export interface GraphComponentSpecFlowProps
   extends Omit<ReactFlowProps, "elements"> {
