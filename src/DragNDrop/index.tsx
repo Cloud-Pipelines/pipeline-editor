@@ -22,6 +22,9 @@ const SAVED_COMPONENT_SPEC_KEY = "autosaved.component.yaml";
 const saveComponentSpec = (componentSpec: ComponentSpec, nodes?: Node[]) => {
   try {
     if (nodes !== undefined) {
+      if (nodes.length === 0) {
+        console.warn("saveComponentSpec: nodes.length === 0");
+      }
       componentSpec = augmentComponentSpec(componentSpec, nodes, true, true);
     }
     const componentText = yaml.dump(componentSpec, { lineWidth: 10000 });
@@ -57,7 +60,11 @@ const ComponentSpecAutoSaver = ({
   componentSpec: ComponentSpec;
 }) => {
   const nodes = useStoreState((store) => store.nodes);
-  saveComponentSpec(componentSpec, nodes);
+  // Fixing issue where a React error would cause all node positions to be recorded as undefined (`!<tag:yaml.org,2002:js/undefined>`)
+  // nodes should never be undefined in normal situation.
+  if (nodes !== undefined && nodes.length > 0) {
+    saveComponentSpec(componentSpec, nodes);
+  }
   return null;
 };
 

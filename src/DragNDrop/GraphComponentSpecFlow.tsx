@@ -104,6 +104,9 @@ export const augmentComponentSpec = (
 
   componentSpec.inputs = componentSpec.inputs
     ?.map((inputSpec) => {
+      if (!inputPositionMap.has(inputSpec.name) || !inputOrderMap.has(inputSpec.name)) {
+        throw Error(`The nodes array does not have input node ${inputSpec.name}`);
+      }
       let newAnnotations = { ...inputSpec.annotations };
       if (includePositions) {
         newAnnotations[NODE_LAYOUT_ANNOTATION_KEY] = inputPositionMap.get(
@@ -125,6 +128,9 @@ export const augmentComponentSpec = (
 
   componentSpec.outputs = componentSpec.outputs
     ?.map((outputSpec) => {
+      if (!outputPositionMap.has(outputSpec.name) || !outputOrderMap.has(outputSpec.name)) {
+        throw Error(`The nodes array does not have output node ${outputSpec.name}`);
+      }
       let newAnnotations = { ...outputSpec.annotations };
       if (includePositions) {
         newAnnotations[NODE_LAYOUT_ANNOTATION_KEY] = outputPositionMap.get(
@@ -155,6 +161,9 @@ export const augmentComponentSpec = (
   const newTasks = Object.fromEntries(
     Object.entries(graphSpec.tasks || {})
       .map(([taskId, taskSpec]) => {
+        if (!taskPositionMap.has(taskId) || !taskOrderMap.has(taskId)) {
+          throw Error(`The nodes array does not have task node ${taskId}`);
+        }
         let newAnnotations = { ...taskSpec.annotations };
         if (includePositions) {
           newAnnotations[NODE_LAYOUT_ANNOTATION_KEY] =
