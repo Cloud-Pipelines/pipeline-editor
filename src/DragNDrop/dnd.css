@@ -75,6 +75,43 @@
   min-height: 50%;
 }
 
+.dndflow .react-flow__handle .label {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  /* max-width: 50px; */
+}
+
+.dndflow .react-flow__handle.react-flow__handle-top .label {
+  transform: translate(-50%, -50%) translateY(calc(-50% - 4px));
+}
+
+.dndflow .react-flow__handle.react-flow__handle-bottom .label {
+  transform: translate(-50%, -50%) translateY(calc(50% + 4px));
+}
+
+.dndflow .react-flow__handle.react-flow__handle-left .label {
+  transform: translate(-50%, -50%) translateX(calc(-50% - 4px));
+}
+
+.dndflow .react-flow__handle.react-flow__handle-right .label {
+  transform: translate(-50%, -50%) translateX(calc(50% + 4px));
+}
+
+.dndflow .react-flow__handle.react-flow__handle-bottom .label-angled {
+  --angle: -45deg;
+  transform: translate(-50%, -50%) rotate(var(--angle)) translateX(calc(-50% - 4px));
+}
+
+.dndflow .react-flow__handle.react-flow__handle-top .label-angled {
+  --angle: -45deg;
+  transform: translate(-50%, -50%) rotate(var(--angle)) translateX(calc(50% + 4px));
+}
+
 @media (max-width: 640px) {
   .dndflow {
     flex-direction: column;
