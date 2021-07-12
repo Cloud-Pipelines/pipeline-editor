@@ -124,7 +124,7 @@ const Sidebar = ({
       </details>
       <details style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>
         <summary style={{ borderWidth: "1px", padding: "4px", fontWeight: "bold" }}>Submit to Google Cloud</summary>
-        <GoogleCloudSubmitter/>
+        <GoogleCloudSubmitter componentSpec={componentSpec}/>
       </details>
       <h3>Drag components to the canvas:</h3>
       <details style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>

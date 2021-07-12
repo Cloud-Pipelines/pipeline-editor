@@ -2,11 +2,7 @@
 
 import { useState } from 'react';
 
-import {
-  useStoreState,
-} from "react-flow-renderer";
-
-import {createGraphComponentSpecFromFlowElements} from './graphComponentFromFlow'
+import { ComponentSpec } from '../componentSpec';
 import {generateVertexPipelineJobFromGraphComponent} from './vertexAiCompiler'
 
 const LOCAL_STORAGE_GCS_OUTPUT_DIRECTORY_KEY = "GoogleCloudSubmitter/gcsOutputDirectory";
@@ -98,7 +94,13 @@ const aiplatformCreatePipelineJob = async (projetId: string, region='us-central1
   return response.result;
 }
 
-const GoogleCloudSubmitter = () => {
+interface GoogleCloudSubmitterProps {
+  componentSpec?: ComponentSpec,
+};
+
+const GoogleCloudSubmitter = ({
+  componentSpec,
+}: GoogleCloudSubmitterProps) => {
   const [projects, setProjects] = useState<string[]>(
     () => JSON.parse(window.localStorage?.getItem(LOCAL_STORAGE_PROJECT_IDS_KEY) ?? "[]")
   );
@@ -114,30 +116,31 @@ const GoogleCloudSubmitter = () => {
   );
   const [pipelineJobWebUrl, setPipelineJobWebUrl] = useState("");
 
-  const nodes = useStoreState((store) => store.nodes);
-  const edges = useStoreState((store) => store.edges);
-
   let vertexPipelineJobJson: string | undefined = undefined;
-  let vertexPipelineJobUrl: string | undefined = undefined;
-  try {
-    const pipelineName = "Pipeline";
-  
-    const graphComponent = createGraphComponentSpecFromFlowElements(nodes, edges, pipelineName, undefined, false, true);
-    const vertexPipelineJob = generateVertexPipelineJobFromGraphComponent(graphComponent, gcsOutputDirectory);
-    vertexPipelineJobJson = JSON.stringify(vertexPipelineJob, undefined, 4);
-    vertexPipelineJobUrl = URL.createObjectURL(
-      new Blob([vertexPipelineJobJson], { type: "application/json" })
-    );
-  } catch(err) {
+  let vertexPipelineJob: Record<string, any> | undefined = undefined;
+
+  if (componentSpec !== undefined) {
+    try {
+      vertexPipelineJob = generateVertexPipelineJobFromGraphComponent(componentSpec, gcsOutputDirectory);
+      vertexPipelineJobJson = JSON.stringify(vertexPipelineJob, undefined, 2);
+    } catch(err) {
+      console.error(err);
+    }
   }
+  const vertexPipelineJobUrl = vertexPipelineJobJson && URL.createObjectURL(
+    new Blob([vertexPipelineJobJson], { type: "application/json" })
+  );
 
   const readyToSubmit =
-    project !== "" && region !== "" && vertexPipelineJobUrl !== undefined;
+    project !== "" && region !== "" && vertexPipelineJob !== undefined;
 
   return (
     <form
       onSubmit={async (e) => {
         e.preventDefault();
+        if (vertexPipelineJob === undefined) {
+          return;
+        }
         setPipelineJobWebUrl("");
         try {
           // setItem might throw exception on iOS in incognito mode
@@ -148,10 +151,6 @@ const GoogleCloudSubmitter = () => {
           } catch(err) {
             console.error("GoogleCloudSubmitter: Error writing properties to the localStorage", err);
           }
-          const pipelineName = "Pipeline";
-
-          const graphComponent = createGraphComponentSpecFromFlowElements(nodes, edges, pipelineName, undefined, false, true);
-          const vertexPipelineJob = generateVertexPipelineJobFromGraphComponent(graphComponent, gcsOutputDirectory);
           const result = await aiplatformCreatePipelineJob(project, region, vertexPipelineJob);
           const pipelineJobName: string = result.name;
           const pipelineJobId = pipelineJobName.split('/').slice(-1)[0];
