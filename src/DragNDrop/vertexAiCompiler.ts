@@ -7,8 +7,8 @@ import { ComponentSpec, ContainerImplementation, ImplementationType, StringOrPla
 // [ ] downstream input parameter => spread "parameterness" upstream - add output parameters when needed (AFAIK, the paths are the same - required)
 // [ ] const argument or pipeline parameter + artifact input => need to insert uploader task
 
-const sanitizePipelineInfoName = (componentName: string) => {
-    return componentName.toLowerCase().replace(/\W/, '-')
+const sanitizePipelineInfoName = (pipelineContextName: string) => {
+    return pipelineContextName.toLowerCase().replace(/\W/, '-')
 }
 
 type ResolvedCommandLineAndArgs = {
@@ -318,7 +318,7 @@ const taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec = (
     return { vertexTaskSpec, vertexComponentSpec, vertexExecutorSpec };
 }
 
-const graphComponentSpecToVertexPipelineSpec = (componentSpec: ComponentSpec) => {
+const graphComponentSpecToVertexPipelineSpec = (componentSpec: ComponentSpec, pipelineContextName = "pipeline") => {
     if (! ('graph' in componentSpec.implementation)) {
         throw Error("Only graph components are supported for now")
     }
@@ -359,11 +359,9 @@ const graphComponentSpecToVertexPipelineSpec = (componentSpec: ComponentSpec) =>
         vertexTasks[vertexTaskId] = vertexTaskSpec;
     }
 
-    const pipelineName = componentSpec.name ?? "pipeline";
-
     const vertexPipelineSpec = {
         pipelineInfo: {
-            name: sanitizePipelineInfoName(pipelineName)
+            name: sanitizePipelineInfoName(pipelineContextName)
         },
         sdkVersion: "Cloud-Pipelines",
         schemaVersion: "2.0.0",
@@ -384,8 +382,11 @@ const graphComponentSpecToVertexPipelineSpec = (componentSpec: ComponentSpec) =>
 const generateVertexPipelineJobFromGraphComponent = (
   componentSpec: ComponentSpec,
   gcsOutputDirectory: string,
-  pipelineArguments?: Map<string, string>
+  pipelineArguments?: Map<string, string>,
+  pipelineContextName = "pipeline",
 ) => {
+  // The pipelineContextName affects caching
+
   // TODO: FIX: Do proper conversion of integers
   //let convertedPipelineArguments = new Map<String, object>(Array.from(pipelineArguments.entries()).map((key, value) => [key, value]));
   let convertedPipelineArguments: Record<string, any> = {};
@@ -399,11 +400,12 @@ const generateVertexPipelineJobFromGraphComponent = (
     }
   }
 
-  const pipelineSpec = graphComponentSpecToVertexPipelineSpec(componentSpec);
+  const pipelineSpec = graphComponentSpecToVertexPipelineSpec(componentSpec, pipelineContextName);
 
   const pipelineJob = {
     // name: "<>",
-    // displayName: "<>",
+    // Does not show up in the UX
+    displayName: componentSpec.name ?? "Pipeline",
     // labels: {},
     runtimeConfig: {
       parameters: convertedPipelineArguments,
