@@ -133,7 +133,16 @@ const GoogleCloudSubmitter = ({
   //useEffect(() => {
   if (componentSpec !== undefined) {
     try {
-      vertexPipelineJob = generateVertexPipelineJobFromGraphComponent(componentSpec, gcsOutputDirectory);
+      const defaultInputValues = new Map<string, string>(
+        (componentSpec.inputs ?? [])
+          .filter((inputSpec) => inputSpec.default !== undefined)
+          .map((inputSpec) => [inputSpec.name, inputSpec.default as string])
+      );
+      vertexPipelineJob = generateVertexPipelineJobFromGraphComponent(
+        componentSpec,
+        gcsOutputDirectory,
+        defaultInputValues
+      );
       vertexPipelineJobJson = JSON.stringify(vertexPipelineJob, undefined, 2);
       // Prevent inifinite re-renders
       if (compilationError !== "") {
