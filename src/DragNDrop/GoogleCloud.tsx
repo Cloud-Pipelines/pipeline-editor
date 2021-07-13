@@ -48,8 +48,18 @@ const authorizeGoogleCloudClient = async (
             );
             reject(authResult.error);
           } else {
-            resolve(authResult);
             // console.debug("authorizeGoogleCloudClient: Success");
+            // Working around the Google Auth bug: The request succeeds, but the returned token does not have the requested scopes.
+            // See https://github.com/google/google-api-javascript-client/issues/743
+            const receivedScopesString = (authResult as any).scope as string | undefined;
+            const receivedScopes = receivedScopesString?.split(" ");
+            if (receivedScopes === undefined || !scopes.every((scope) => receivedScopes.includes(scope))) {
+              const errorMessage = `Authorization call succeeded, but the returned scopes are ${receivedScopesString}`;
+              console.error(errorMessage);
+              reject(errorMessage);
+            } else {
+              resolve(authResult);
+            }
           }
         }
       );
