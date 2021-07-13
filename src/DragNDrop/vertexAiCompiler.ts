@@ -16,7 +16,7 @@ import * as vertex from "./vertexPipelineSpec";
 //   Solution 3): Insert a "Downloader" task between upstream and downstream.
 //      Cons: Extra container task
 // 2) Parameter (pipeline input or constant value) is consumed as artifact (as file).
-//   Solution 1) (need to implement): Insert a "Uploader" task to convert parameter to artifact.
+//   Solution 1): Insert a "Uploader" task to convert parameter to artifact.
 //      Cons: Extra container task
 
 const sanitizePipelineInfoName = (pipelineContextName: string) => {
@@ -151,11 +151,63 @@ const typeSpecToVertexArtifactSpec = (typeSpec: TypeSpecType | undefined): verte
 //     return typeof typeSpec === "string" && ["String", "Integer", "Float", "Double", "Boolean", ]
 // }
 
+const MAKE_ARTIFACT_COMPONENT_ID = "_make_artifact";
+const MAKE_ARTIFACT_EXECUTOR_ID = "_make_artifact";
+const MAKE_ARTIFACT_INPUT_NAME = "parameter";
+const MAKE_ARTIFACT_OUTPUT_NAME = "artifact";
+
+const makeArtifactTaskSpecTemplate: vertex.PipelineTaskSpec = {
+    componentRef: {
+        name: MAKE_ARTIFACT_COMPONENT_ID
+    },
+    taskInfo: {
+        name: "Make artifact"
+    },
+    inputs: {
+        parameters: {}
+    },
+    cachingOptions: {
+        enableCache: true
+    }
+};
+
+const makeArtifactComponentSpec: vertex.ComponentSpec = {
+    executorLabel: MAKE_ARTIFACT_EXECUTOR_ID,
+    inputDefinitions: {
+        parameters: {
+            [MAKE_ARTIFACT_INPUT_NAME]: {
+                type: vertex.PrimitiveTypeEnum.STRING
+            }
+        }
+    },
+    outputDefinitions: {
+        artifacts: {
+            [MAKE_ARTIFACT_OUTPUT_NAME]: {
+                artifactType: {
+                    schemaTitle: "system.Artifact"
+                }
+            }
+        }
+    }
+};
+
+const makeArtifactExecutorSpec: vertex.ExecutorSpec = {
+    container: {
+        image: "alpine",
+        command: [
+            "sh", "-ec", 'mkdir -p "$(dirname "$1")"; printf "%s" "$0" > "$1"',
+            `{{$.inputs.parameters['${MAKE_ARTIFACT_INPUT_NAME}']}}`,
+            `{{$.outputs.artifacts['${MAKE_ARTIFACT_OUTPUT_NAME}'].path}}`
+        ]
+    }
+}
 
 const taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec = (
     componentSpec: ComponentSpec,
     //passedArgumentNames: string[],
-    taskArguments: Record<string, ArgumentType>
+    taskArguments: Record<string, ArgumentType>,
+    generateTaskID: (prefix: string) => string,
+    isRoot = false,
 ) => {
     // TODO: Investigate how to properly narrow the ImplementationTyppe union type
     // Type guard!
@@ -275,6 +327,8 @@ const taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec = (
         }
     })(inputName)]));
 
+    let vertexMakeArtifactTaskSpecs: Record<string, vertex.PipelineTaskSpec> = {};
+
     const vertexTaskArtifactArguments: Record<string, vertex.ArtifactArgumentSpec> = Object.fromEntries(Array.from(resolvedCommandLine.inputsConsumedAsPath.values()).map(inputName => [inputName, (inputName => {
         // TODO: Check that this works
         let taskArgument = taskArguments[inputName];
@@ -300,12 +354,57 @@ const taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec = (
         }
         let result: vertex.ArtifactArgumentSpec;
         if (typeof taskArgument === "string" ) {
-            // TODO: Work around and make this possible
-            throw Error("Constant arguments for artifact inputs are not supported yet.");
-        } else if ('graphInput' in taskArgument) {
-            result = {
-                componentInputArtifact: taskArgument.graphInput.inputName,
+            const makeArtifactTaskId = generateTaskID("Make artifact");
+            const makeArtifactTaskSpec: vertex.PipelineTaskSpec = {
+                ...makeArtifactTaskSpecTemplate,
+                inputs: {
+                    parameters: {
+                        [MAKE_ARTIFACT_INPUT_NAME]: {
+                            runtimeValue: {
+                                constantValue: {
+                                    stringValue: taskArgument
+                                }
+                            }
+                        }
+                    }
+                }
             };
+            vertexMakeArtifactTaskSpecs[makeArtifactTaskId] = makeArtifactTaskSpec;
+            result = {
+                taskOutputArtifact: {
+                    producerTask: makeArtifactTaskId,
+                    outputArtifactKey: MAKE_ARTIFACT_OUTPUT_NAME
+                }
+            };
+            return result;
+        } else if ('graphInput' in taskArgument) {
+            // Workaround for root DAG where all inputs must be parameters
+            if (isRoot) {
+                // We only need one task for each pipeline input parameter
+                //const makeArtifactTaskId = generateTaskID("Make artifact");
+                const makeArtifactTaskId = "Make artifact for " + taskArgument.graphInput.inputName;
+                const makeArtifactTaskSpec: vertex.PipelineTaskSpec = {
+                    ...makeArtifactTaskSpecTemplate,
+                    inputs: {
+                        parameters: {
+                            [MAKE_ARTIFACT_INPUT_NAME]: {
+                                componentInputParameter: taskArgument.graphInput.inputName
+                            }
+                        }
+                    }
+                };
+                vertexMakeArtifactTaskSpecs[makeArtifactTaskId] = makeArtifactTaskSpec;
+                result = {
+                    taskOutputArtifact: {
+                        producerTask: makeArtifactTaskId,
+                        outputArtifactKey: MAKE_ARTIFACT_OUTPUT_NAME
+                    }
+                };
+            } else {
+                result = {
+                    componentInputArtifact: taskArgument.graphInput.inputName,
+                };
+            }
             return result;
         } else if ('taskOutput' in taskArgument) {
             result = {
@@ -346,8 +445,18 @@ const taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec = (
         // },
     }
     
-    return { vertexTaskSpec, vertexComponentSpec, vertexExecutorSpec };
+    return { vertexTaskSpec, vertexComponentSpec, vertexExecutorSpec, vertexMakeArtifactTaskSpecs };
 }
+
+const makeNameUniqueByAddingIndex = (name: string, existingNames: Set<string>): string => {
+    let finalName = name;
+    let index = 1;
+    while (existingNames.has(finalName)) {
+      index++;
+      finalName = name + " " + index.toString();
+    }
+    return finalName;
+  };
 
 const graphComponentSpecToVertexPipelineSpec = (componentSpec: ComponentSpec, pipelineContextName = "pipeline") => {
     if (! ('graph' in componentSpec.implementation)) {
@@ -371,17 +480,25 @@ const graphComponentSpecToVertexPipelineSpec = (componentSpec: ComponentSpec, pi
     let vertexComponents: Record<string, vertex.ComponentSpec> = {};
     let vertexTasks: Record<string, vertex.PipelineTaskSpec> = {};
 
+    let usedTaskIds = new Set<string>(Object.keys(graphSpec.tasks));
+    const generateTaskId = (prefix: string) => {
+        const taskId = makeNameUniqueByAddingIndex(prefix, usedTaskIds);
+        usedTaskIds.add(taskId);
+        return taskId;
+    };
+
     for (const [taskId, taskSpec] of Object.entries(graphSpec.tasks)) {
         if (taskSpec.componentRef.spec === undefined) {
             throw Error(`Task "${taskId}" does not have taskSpec.componentRef.spec.`)
         }
         try {
-            const {vertexTaskSpec, vertexComponentSpec, vertexExecutorSpec} = taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec(taskSpec.componentRef.spec, taskSpec.arguments ?? {});
+            const { vertexTaskSpec, vertexComponentSpec, vertexExecutorSpec, vertexMakeArtifactTaskSpecs } = taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec(taskSpec.componentRef.spec, taskSpec.arguments ?? {}, generateTaskId, true);
             // task IDs are expected to be unique
             // TODO: Fix  this to work for multi-dag pipelines where task IDs are not globally unique
             const vertexExecutorId = taskId + "_executor";
             const vertexComponentId = taskId + "_component";
             const vertexTaskId = taskId; // + "_task";
+            usedTaskIds.add(vertexTaskId);
             vertexExecutors[vertexExecutorId] = vertexExecutorSpec;
             vertexComponentSpec.executorLabel = vertexExecutorId;
             vertexComponents[vertexComponentId] = vertexComponentSpec;
@@ -389,6 +506,13 @@ const graphComponentSpecToVertexPipelineSpec = (componentSpec: ComponentSpec, pi
             // This is the task display name, not an ID. It's already set to the component name
             //vertexTaskSpec.taskInfo.name = vertexTaskId;
             vertexTasks[vertexTaskId] = vertexTaskSpec;
+            // Processing the additional MakeArtifact tasks
+            for (const [additionalTaskId, additionalTaskSpec] of Object.entries(vertexMakeArtifactTaskSpecs)) {
+                usedTaskIds.add(additionalTaskId);
+                vertexExecutors[MAKE_ARTIFACT_EXECUTOR_ID] = makeArtifactExecutorSpec;
+                vertexComponents[MAKE_ARTIFACT_COMPONENT_ID] = makeArtifactComponentSpec;
+                vertexTasks[additionalTaskId] = additionalTaskSpec;
+            }
         } catch(err) {
             throw Error(`Error compiling task ${taskId}: ` + err.toString());
         }
