@@ -1,11 +1,21 @@
 import { ComponentSpec, ContainerImplementation, ImplementationType, StringOrPlaceholder, ArgumentType, TypeSpecType } from "../componentSpec";
 
 // # How to handle I/O:
+// Rules (might have exceptions)
 // output = output artifact
 // inputValue => input parameter
 // inputPath => input artifact
-// [ ] downstream input parameter => spread "parameterness" upstream - add output parameters when needed (AFAIK, the paths are the same - required)
-// [ ] const argument or pipeline parameter + artifact input => need to insert uploader task
+// # Fixing conflicts:
+// 1) Artifact (may only come from task output) is consumed as value.
+//   Solution 1) (implemented): Change input from parameter to artifact and use the input.artifact.value placeholder.
+//      Cons: The downstream component input definitions depend on arguments. (Some inputs are changed from parameter to artifact.)
+//   Solution 2): Add parameter output (with the same name as the artifact output) to the upstream component. The paths should be the same, so a single file will be treated as both parameter and output.
+//      Cons: The upstream component output definitions depend on downstream consumption style. (Although parameter outputs are added, not changed.)
+//   Solution 3): Insert a "Downloader" task between upstream and downstream.
+//      Cons: Extra container task
+// 2) Parameter (pipeline input or constant value) is consumed as artifact (as file).
+//   Solution 1) (need to implement): Insert a "Uploader" task to convert parameter to artifact.
+//      Cons: Extra container task
 
 const sanitizePipelineInfoName = (pipelineContextName: string) => {
     return pipelineContextName.toLowerCase().replace(/\W/, '-')
@@ -31,8 +41,20 @@ const resolveCommandLine = (componentSpec: ComponentSpec, taskArguments: Record<
             return [arg];
         } else if ('inputValue' in arg) {
             const inputName = arg.inputValue;
-            inputsConsumedAsValue.add(inputName);
-            return [`{{$.inputs.parameters['${inputName}']}}`];
+            const argument = taskArguments[inputName];
+            if (argument !== undefined && typeof argument != "string" && "taskOutput" in argument) {
+                // ! Important details:
+                // In this branch, the argument comes from task output.
+                // All outputs are artifacts by default, so this argument is an artifact argument.
+                // We can either try to change the argument to parameter or make the input to be an artifact to solve the conflict.
+                // I choose to make the input to be artifact.
+                // Adding input name to inputsConsumedAsPath to make the input rendered as an artifact input.
+                inputsConsumedAsPath.add(inputName);
+                return [`{{$.inputs.artifacts['${inputName}'].value}}`];
+            } else {
+                inputsConsumedAsValue.add(inputName);
+                return [`{{$.inputs.parameters['${inputName}']}}`];
+            }
         } else if ('inputPath' in arg) {
             const inputName = arg.inputPath;
             inputsConsumedAsPath.add(inputName);
