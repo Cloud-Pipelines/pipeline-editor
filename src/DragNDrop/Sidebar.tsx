@@ -6,7 +6,7 @@ import GraphComponentExporter from './GraphComponentExporter'
 import GoogleCloudSubmitter from './GoogleCloud'
 import VertexAiExporter from './VertexAiExporter'
 import { ComponentSpec } from '../componentSpec';
-import { loadComponentFromUrl, XGBOOST_PIPELINE_URL, PYTORCH_PIPELINE_URL, TFX_PIPELINE_URL } from './samplePipelines';
+import { loadComponentFromUrl, XGBOOST_PIPELINE_URL, PYTORCH_PIPELINE_URL, TFX_PIPELINE_URL, DATA_PASSING_PIPELINE_URL } from './samplePipelines';
 import GraphComponentLink from './GraphComponentLink';
 
 const onDragStart = (event: DragEvent, nodeData: object) => {
@@ -145,6 +145,14 @@ const Sidebar = ({
         <summary>Debug</summary>
         {componentSpec && <GraphComponentExporter componentSpec={componentSpec}/>}
         <VertexAiExporter/>
+        <button
+          type="button"
+          onClick={(e) => {
+            loadComponentFromUrl(DATA_PASSING_PIPELINE_URL).then(setComponentSpec);
+          }}
+        >
+          Load Data Passing pipeline
+        </button>
       </details>
     </aside>
   );
