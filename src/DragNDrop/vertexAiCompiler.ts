@@ -1,5 +1,7 @@
 import { ComponentSpec, ContainerImplementation, ImplementationType, StringOrPlaceholder, ArgumentType, TypeSpecType } from "../componentSpec";
 
+import * as vertex from "./vertexPipelineSpec";
+
 // # How to handle I/O:
 // Rules (might have exceptions)
 // output = output artifact
@@ -114,25 +116,25 @@ function isContainerImplementation(implementationType: ImplementationType): impl
     return 'container' in implementationType;
 }
 
-const typeSpecToVertexPrimitiveTypeEnum = (typeSpec: TypeSpecType | undefined) => {
+const typeSpecToVertexPrimitiveTypeEnum = (typeSpec: TypeSpecType | undefined): vertex.PrimitiveTypeEnum => {
     if (typeof typeSpec === "string") {
         if (["integer"].includes(typeSpec.toLowerCase())) {
-            return "INT";
+            return vertex.PrimitiveTypeEnum.INT;
         }
         if (["float", "double"].includes(typeSpec.toLowerCase())) {
-            return "DOUBLE";
+            return vertex.PrimitiveTypeEnum.DOUBLE;
         }
     }
-    return "STRING";
+    return vertex.PrimitiveTypeEnum.STRING;
 }
 
-const typeSpecToVertexParameterSpec = (typeSpec: TypeSpecType | undefined) => {
+const typeSpecToVertexParameterSpec = (typeSpec: TypeSpecType | undefined): vertex.InputParameterSpec => {
     return {
         type: typeSpecToVertexPrimitiveTypeEnum(typeSpec)
     }
 }
 
-const typeSpecToVertexArtifactTypeSchema = (typeSpec: TypeSpecType | undefined) => {
+const typeSpecToVertexArtifactTypeSchema = (typeSpec: TypeSpecType | undefined): vertex.ArtifactTypeSchema => {
     // TODO: Implement better mapping
     const artifactTypeSchema = {
         schemaTitle: "system.Artifact"
@@ -140,7 +142,7 @@ const typeSpecToVertexArtifactTypeSchema = (typeSpec: TypeSpecType | undefined) 
     return artifactTypeSchema
 }
 
-const typeSpecToVertexArtifactSpec = (typeSpec: TypeSpecType | undefined) => {
+const typeSpecToVertexArtifactSpec = (typeSpec: TypeSpecType | undefined): vertex.InputArtifactSpec => {
     return {
         artifactType: typeSpecToVertexArtifactTypeSchema(typeSpec)
     }
@@ -171,7 +173,7 @@ const taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec = (
 
     const resolvedCommandLine = resolveCommandLine(componentSpec, taskArguments);
 
-    const vertexExecutorSpec = {
+    const vertexExecutorSpec: vertex.ExecutorSpec = {
         container: {
             image: containerSpec.image,
             command: resolvedCommandLine.command,
@@ -185,7 +187,7 @@ const taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec = (
 
     // Array.from(inputMap.keys()).filter(resolvedCommandLine.inputsConsumedAsValue.has)
 
-    const vertexComponentInputsSpec = {
+    const vertexComponentInputsSpec: vertex.ComponentInputsSpec = {
       parameters: Object.fromEntries(
         Array.from(resolvedCommandLine.inputsConsumedAsValue.values()).map(
           (inputName) => [
@@ -204,7 +206,7 @@ const taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec = (
       ),
     };
 
-    const vertexComponentOutputsSpec = {
+    const vertexComponentOutputsSpec: vertex.ComponentOutputsSpec = {
       parameters: {}, // Parameters will be added later as needed
       artifacts: Object.fromEntries(
         (componentSpec.outputs ?? []).map((outputSpec) => [
@@ -214,14 +216,14 @@ const taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec = (
       ),
     };
 
-    const vertexComponentSpec = {
+    const vertexComponentSpec: vertex.ComponentSpec = {
         inputDefinitions: vertexComponentInputsSpec,
         outputDefinitions: vertexComponentOutputsSpec,
         // dag
         executorLabel: "<set later>",
     };
 
-    const vertexTaskParameterArguments = Object.fromEntries(Array.from(resolvedCommandLine.inputsConsumedAsValue.values()).map(inputName => [inputName, (inputName => {
+    const vertexTaskParameterArguments: Record<string, vertex.ParameterArgumentSpec> = Object.fromEntries(Array.from(resolvedCommandLine.inputsConsumedAsValue.values()).map(inputName => [inputName, (inputName => {
         // TODO: Check that this works
         let taskArgument = taskArguments[inputName];
         //if (! (inputName in taskArguments)) {
@@ -244,32 +246,36 @@ const taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec = (
                 }
             }
         }
+        let result: vertex.ParameterArgumentSpec;
         if (typeof taskArgument === "string" ) {
-            return {
+            result = {
                 runtimeValue: {
                     constantValue: {
                         // TODO: Fix constant arguments for non-string inputs
                         stringValue: taskArgument,
                     }
                 }
-            }
+            };
+            return result;
         } else if ('graphInput' in taskArgument) {
-            return {
+            result = {
                 componentInputParameter: taskArgument.graphInput.inputName,
-            }
+            };
+            return result;
         } else if ('taskOutput' in taskArgument) {
-            return {
+            result = {
                 taskOutputParameter: {
                     producerTask: taskArgument.taskOutput.taskId,
                     outputParameterKey: taskArgument.taskOutput.outputName,
                 }
             };
+            return result;
         } else {
             throw Error(`Unknown kind of task argument: "${taskArgument}"`);
         }
     })(inputName)]));
 
-    const vertexTaskArtifactArguments = Object.fromEntries(Array.from(resolvedCommandLine.inputsConsumedAsPath.values()).map(inputName => [inputName, (inputName => {
+    const vertexTaskArtifactArguments: Record<string, vertex.ArtifactArgumentSpec> = Object.fromEntries(Array.from(resolvedCommandLine.inputsConsumedAsPath.values()).map(inputName => [inputName, (inputName => {
         // TODO: Check that this works
         let taskArgument = taskArguments[inputName];
         //if (! (inputName in taskArguments)) {
@@ -292,26 +298,29 @@ const taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec = (
                 }
             }
         }
+        let result: vertex.ArtifactArgumentSpec;
         if (typeof taskArgument === "string" ) {
             // TODO: Work around and make this possible
             throw Error("Constant arguments for artifact inputs are not supported yet.");
         } else if ('graphInput' in taskArgument) {
-            return {
+            result = {
                 componentInputArtifact: taskArgument.graphInput.inputName,
-            }
+            };
+            return result;
         } else if ('taskOutput' in taskArgument) {
-            return {
+            result = {
                 taskOutputArtifact: {
                     producerTask: taskArgument.taskOutput.taskId,
                     outputArtifactKey: taskArgument.taskOutput.outputName,
                 }
             };
+            return result;
         } else {
             throw Error(`Unknown kind of task argument: "${taskArgument}"`);
         }
     })(inputName)]));
     
-    const vertexTaskSpec = {
+    const vertexTaskSpec: vertex.PipelineTaskSpec = {
         taskInfo: {
             // This is the task display name, not an ID
             name: componentSpec.name ?? "Component",
@@ -358,9 +367,9 @@ const graphComponentSpecToVertexPipelineSpec = (componentSpec: ComponentSpec, pi
 
     const graphSpec = componentSpec.implementation.graph;
 
-    let vertexExecutors: Record<string, any> = {};
-    let vertexComponents: Record<string, any> = {};
-    let vertexTasks: Record<string, any> = {};
+    let vertexExecutors: Record<string, vertex.ExecutorSpec> = {};
+    let vertexComponents: Record<string, vertex.ComponentSpec> = {};
+    let vertexTasks: Record<string, vertex.PipelineTaskSpec> = {};
 
     for (const [taskId, taskSpec] of Object.entries(graphSpec.tasks)) {
         if (taskSpec.componentRef.spec === undefined) {
@@ -385,7 +394,7 @@ const graphComponentSpecToVertexPipelineSpec = (componentSpec: ComponentSpec, pi
         }
     }
 
-    const vertexPipelineSpec = {
+    const vertexPipelineSpec: vertex.PipelineSpec = {
         pipelineInfo: {
             name: sanitizePipelineInfoName(pipelineContextName)
         },
@@ -428,7 +437,7 @@ const generateVertexPipelineJobFromGraphComponent = (
 
   const pipelineSpec = graphComponentSpecToVertexPipelineSpec(componentSpec, pipelineContextName);
 
-  const pipelineJob = {
+  const pipelineJob: vertex.PipelineJob = {
     // name: "<>",
     // Does not show up in the UX
     displayName: componentSpec.name ?? "Pipeline",
