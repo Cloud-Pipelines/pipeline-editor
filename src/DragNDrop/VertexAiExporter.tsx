@@ -2,19 +2,23 @@ import {
   useStoreState,
 } from "react-flow-renderer";
 
-import {createGraphComponentSpecFromFlowElements} from './graphComponentFromFlow'
+import { ComponentSpec } from "../componentSpec";
+import { augmentComponentSpec } from "./GraphComponentSpecFlow";
 import {graphComponentSpecToVertexPipelineSpec} from './vertexAiCompiler'
 
-const VertexAiExporter = ({pipelineName}: {pipelineName?: string}) => {
-  const nodes = useStoreState((store) => store.nodes);
-  const edges = useStoreState((store) => store.edges);
+interface VertexAiExporterProps {
+  componentSpec: ComponentSpec;
+}
 
-  pipelineName = pipelineName ?? "Pipeline";
+const VertexAiExporter = ({componentSpec}: VertexAiExporterProps) => {
+  const nodes = useStoreState((store) => store.nodes);
 
   let vertexPipelineSpecText = "";
   try {
-    const graphComponent = createGraphComponentSpecFromFlowElements(nodes, edges, pipelineName, undefined, false, true);
-    const vertexPipelineSpec = graphComponentSpecToVertexPipelineSpec(graphComponent);
+    // Augmenting the componentSpec might be useless right now, but it can stabilize the output (e.g. ordering).
+    // Also, in the future, the original spec might be included in the vertexPipelineSpec
+    componentSpec = augmentComponentSpec(componentSpec, nodes, true, true);
+    const vertexPipelineSpec = graphComponentSpecToVertexPipelineSpec(componentSpec);
     vertexPipelineSpecText = JSON.stringify(vertexPipelineSpec, undefined, 2);
   } catch(err) {
     vertexPipelineSpecText = String(err);

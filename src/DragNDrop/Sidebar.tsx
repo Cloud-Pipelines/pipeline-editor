@@ -144,7 +144,7 @@ const Sidebar = ({
       <details>
         <summary>Debug</summary>
         {componentSpec && <GraphComponentExporter componentSpec={componentSpec}/>}
-        <VertexAiExporter/>
+        {componentSpec && <VertexAiExporter componentSpec={componentSpec}/>}
         <button
           type="button"
           onClick={(e) => {
