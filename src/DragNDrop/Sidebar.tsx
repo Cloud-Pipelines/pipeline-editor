@@ -119,7 +119,7 @@ const Sidebar = ({
           Load PyTorch pipeline
         </button>
         <div>
-          Save as <GraphComponentLink/>
+          Save as {componentSpec && <GraphComponentLink componentSpec={componentSpec}/>}
         </div>
       </details>
       <details style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>

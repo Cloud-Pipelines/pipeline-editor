@@ -2,31 +2,27 @@ import { useStoreState } from "react-flow-renderer";
 import yaml from "js-yaml";
 
 import { createGraphComponentSpecFromFlowElements } from "./graphComponentFromFlow";
+import { ComponentSpec } from "../componentSpec";
+import { augmentComponentSpec } from "./GraphComponentSpecFlow";
 
 interface GraphComponentLinkProps {
-  pipelineName?: string;
+  componentSpec: ComponentSpec;
   downloadFileName?: string;
   linkText?: string;
 }
 
 const GraphComponentLink = ({
-  pipelineName,
+  componentSpec,
   downloadFileName = "component.yaml",
   linkText = "component.yaml",
 }: GraphComponentLinkProps) => {
   const nodes = useStoreState((store) => store.nodes);
-  const edges = useStoreState((store) => store.edges);
 
-  pipelineName = pipelineName ?? "Pipeline";
 
   let componentText = "";
   try {
-    const graphComponent = createGraphComponentSpecFromFlowElements(
-      nodes,
-      edges,
-      pipelineName
-    );
-    componentText = yaml.dump(graphComponent, { lineWidth: 10000 });
+    componentSpec = augmentComponentSpec(componentSpec, nodes, false, true);
+    componentText = yaml.dump(componentSpec, { lineWidth: 10000 });
   } catch (err) {
     componentText = String(err);
   }
