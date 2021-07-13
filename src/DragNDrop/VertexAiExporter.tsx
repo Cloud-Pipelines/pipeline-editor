@@ -25,7 +25,7 @@ const VertexAiExporter = ({pipelineName}: {pipelineName?: string}) => {
   const vertexPipelineSpecTextBlobUrl = URL.createObjectURL(vertexPipelineSpecTextBlob);
 
   return (
-    <details open>
+    <details>
       <summary>
         Cloud IR <a
           href={vertexPipelineSpecTextBlobUrl}
