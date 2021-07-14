@@ -27,6 +27,8 @@ import ComponentTaskNode, { ComponentTaskNodeProps, isComponentTaskNode } from "
 
 
 const NODE_LAYOUT_ANNOTATION_KEY = "editor.position";
+const SDK_ANNOTATION_KEY = "sdk";
+const SDK_ANNOTATION_VALUE = "https://cloud-pipelines.github.io/pipeline-editor/";
 
 export const augmentComponentSpec = (
   componentSpec: ComponentSpec,
@@ -201,6 +203,17 @@ export const augmentComponentSpec = (
     ...componentSpec,
     implementation: { ...componentSpec.implementation, graph: graphSpec },
   };
+
+  componentSpec = {
+    ...componentSpec,
+    metadata: {
+      ...componentSpec.metadata,
+      annotations: {
+        ...componentSpec.metadata?.annotations,
+        [SDK_ANNOTATION_KEY]: SDK_ANNOTATION_VALUE
+      }
+    }
+  }
 
   // Reordering the attributes and removing the undefined ones
   const rebuildComponentSpec = ({
