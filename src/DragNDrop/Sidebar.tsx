@@ -8,6 +8,7 @@ import VertexAiExporter from './VertexAiExporter'
 import { ComponentSpec } from '../componentSpec';
 import { loadComponentFromUrl, XGBOOST_PIPELINE_URL, PYTORCH_PIPELINE_URL, TFX_PIPELINE_URL, DATA_PASSING_PIPELINE_URL } from './samplePipelines';
 import GraphComponentLink from './GraphComponentLink';
+import UserComponentLibrary from "./UserComponentLibrary";
 
 const onDragStart = (event: DragEvent, nodeData: object) => {
   event.dataTransfer.setData('application/reactflow', JSON.stringify(nodeData));
@@ -137,6 +138,10 @@ const Sidebar = ({
         </div>
       </details>
       <ComponentLibrary componentGroups={COMPONENT_LIBRARY}/>
+      <details style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>
+        <summary style={{ borderWidth: "1px", padding: "4px", fontWeight: "bold" }}>User components</summary>
+        <UserComponentLibrary/>
+      </details>
       <details open style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>
         <summary style={{ borderWidth: "1px", padding: "4px", fontWeight: "bold" }}>Component search</summary>
         <ComponentSearch />
