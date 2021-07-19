@@ -1,19 +1,8 @@
-import { DragEvent, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import {downloadComponentDataWithCache} from '../github'
-import {ComponentSpec, TaskSpec} from '../componentSpec'
-
-const onDragStart = (event: DragEvent, nodeData: object) => {
-  event.dataTransfer.setData('application/reactflow', JSON.stringify(nodeData));
-  event.dataTransfer.setData(
-    "DragStart.offset",
-    JSON.stringify({
-      offsetX: event.nativeEvent.offsetX,
-      offsetY: event.nativeEvent.offsetY,
-    })
-  );
-  event.dataTransfer.effectAllowed = 'move';
-};
+import { ComponentSpec } from '../componentSpec'
+import DraggableComponent from "./DraggableComponent";
 
 type ComponentGroup = {
   category: string;
@@ -30,21 +19,12 @@ const DraggableComponentRow = ({componentUrl}: {componentUrl: string}) => {
     return <span>Loading...</span>
   } else {
     return (
-      <div
-        className="react-flow__node react-flow__node-task"
-        draggable
-        onDragStart={(event: DragEvent) => {
-          const taskSpec: TaskSpec = {
-            componentRef: {
-              url: componentUrl,
-              spec: componentSpec,
-            },
-          };
-          return onDragStart(event, { task: taskSpec });
+      <DraggableComponent
+        componentReference={{
+          url: componentUrl,
+          spec: componentSpec,
         }}
-      >
-        {componentSpec.name}
-      </div>
+      />
     );
   }
 };
