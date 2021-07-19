@@ -186,7 +186,7 @@ export interface OutputParameterSpec {
 //export interface TaskInputsSpec {
 export interface TaskArgumentsSpec {
   // A map of input parameters which are small values, stored by the system and
-  // can be queriable.
+  // can be queried.
   parameters?: { [k: string]: ParameterArgumentSpec };
   // A map of input artifacts.
   artifacts?: { [k: string]: ArtifactArgumentSpec };
@@ -223,7 +223,7 @@ export interface ParameterArgumentSpec {
   runtimeValue?: ValueOrRuntimeParameter;
   // Pass the input parameter from parent component input parameter.
   componentInputParameter?: string;
-  // The final status of an uptream task.
+  // The final status of an upstream task.
   taskFinalStatus?: TaskFinalStatus;
   //}
 
@@ -276,7 +276,7 @@ export interface TaskFinalStatus {
 // The spec of task outputs.
 export interface TaskOutputsSpec {
   // A map of output parameters which are small values, stored by the system and
-  // can be queriable. The output key is used
+  // can be queried. The output key is used
   // by [TaskInputsSpec.InputParameterSpec][] of the downstream task to specify
   // the data dependency. The same key will also be used by
   // [ExecutorInput.Inputs][] to reference the output parameter.
@@ -357,7 +357,7 @@ export interface PipelineTaskSpec {
   // t2.outputs.parameters = { 'p': 'v2' }
   // t2.outputs.artifacts = { 'a': [a2] }
   // parent_task.outputs.parameters = { 'p': '["v1", "v2"]' }
-  // parent_task.outputs.aritfacts = { 'a': [a1, a2] }
+  // parent_task.outputs.artifacts = { 'a': [a1, a2] }
   //oneof iterator {
   // Iterator to iterate over an artifact input.
   artifactIterator?: ArtifactIteratorSpec;
@@ -386,7 +386,7 @@ export interface TriggerPolicy {
   // The trigger strategy of this task.  The `strategy` and `condition` are
   // in logic "AND", as a task will only be tested for the `condition` when
   // the `strategy` is meet.
-  // Unset or set to default value of TRIGGER_STATEGY_UNDEFINED behaves the
+  // Unset or set to default value of TRIGGER_STRATEGY_UNSPECIFIED behaves the
   // same as ALL_UPSTREAM_TASKS_SUCCEEDED.
   strategy: TriggerStrategy;
 }
@@ -436,7 +436,7 @@ export interface ParameterIteratorSpec {
   itemInput: string;
 }
 
-// Specifies the spec to decribe the parameter items to iterate.
+// Specifies the spec to describe the parameter items to iterate.
 export type ParameterItemsSpec =
   // Specifies where to get the collection of items to iterate. The iterator
   // will create a sub-task for each item of the collection and pass the item

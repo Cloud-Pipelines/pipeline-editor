@@ -34,7 +34,7 @@ export const httpGetWithCache = async (
   await cache.add(urlOrRequest);
   const response2 = await cache.match(urlOrRequest);
   if (response2 === undefined) {
-    return Promise.reject("Added object to cache, but counld not find it");
+    return Promise.reject("Added object to cache, but could not find it");
   }
   return response2;
 };
@@ -113,6 +113,7 @@ export const downloadComponentDataWithCache = async (url: string) => {
   const response = await httpGetWithCache(url, BLOB_CACHE_NAME)
   const data = await response.blob();
   const componentText = await data.text();
+  // TODO: Validate the data
   const componentSpec = yaml.load(componentText) as ComponentSpec;
   return componentSpec;
 }
@@ -187,13 +188,14 @@ export const cacheAllComponents = async (users = ["kubeflow", "Ark-kun"]) => {
       try {
         const data = await response.blob();
         componentText = await data.text();
+        // TODO: Validate the data
         componentSpec = yaml.load(componentText) as ComponentSpec;
       } catch(err) {
         badHashesDb.setItem(hash, err.name + ": " + err.message);
         continue;
       }
       if (componentSpec.implementation === undefined) {
-        badHashesDb.setItem(hash, 'Component lacks the "impelmentation" section.');
+        badHashesDb.setItem(hash, 'Component lacks the "implementation" section.');
         continue;
       }
 
@@ -276,7 +278,7 @@ export const getAllComponentsAsRefs = async (users = ["kubeflow", "Ark-kun"]) =>
     }
   });
   let componentRefs: ComponentReference[] = [];
-  // TODO: Improve the iteration onve TypeScript propertly supports it
+  // TODO: Improve the iteration once TypeScript property supports it
   hashToComponentRef.forEach((componentRef, hash) => {
     if (componentRef.url === undefined) {
       console.error(

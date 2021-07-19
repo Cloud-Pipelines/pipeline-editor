@@ -37,7 +37,7 @@ const createGraphComponentSpecFromFlowElements = (
   includeSpecs: boolean = false
 ): ComponentSpec => {
   // Input and output nodes
-  // Sorting them by horisontal position to make reordering inputs and outputs easy.
+  // Sorting them by horizontal position to make reordering inputs and outputs easy.
   const inputNodes = nodes.filter((node) => node.type === "input").sort(nodeOrderComparer);
   const outputNodes = nodes.filter((node) => node.type === "output").sort(nodeOrderComparer);
   // Task nodes. They should all be ComponentTaskNode components
@@ -86,7 +86,7 @@ const createGraphComponentSpecFromFlowElements = (
     const targetInputName = edge.targetHandle?.replace(/^input_/, '');
 
     // if (!sourceOutputName || !targetInputName) {
-    //   console.error("Enexpected edge without a source or target handle:", edge);
+    //   console.error("Unexpected edge without a source or target handle:", edge);
     //   continue;
     // }
 

@@ -92,12 +92,12 @@ const cloudresourcemanagerListProjects = async (isAuthenticated = false) => {
   return response.result;
 }
 
-const aiplatformCreatePipelineJob = async (projetId: string, region='us-central1', pipelineJob: Record<string, any>) => {
+const aiplatformCreatePipelineJob = async (projectId: string, region='us-central1', pipelineJob: Record<string, any>) => {
   await ensureGoogleCloudAuthorizesScopes(
     ["https://www.googleapis.com/auth/cloud-platform"]
   );
   const response = await gapi.client.request({
-    path: `https://${region}-aiplatform.googleapis.com/v1beta1/projects/${projetId}/locations/${region}/pipelineJobs`,
+    path: `https://${region}-aiplatform.googleapis.com/v1beta1/projects/${projectId}/locations/${region}/pipelineJobs`,
     method: "POST",
     body: JSON.stringify(pipelineJob),
   });
@@ -144,13 +144,13 @@ const GoogleCloudSubmitter = ({
         defaultInputValues
       );
       vertexPipelineJobJson = JSON.stringify(vertexPipelineJob, undefined, 2);
-      // Prevent inifinite re-renders
+      // Prevent infinite re-renders
       if (compilationError !== "") {
         setCompilationError("");
       }
     } catch (err) {
       const errorMessage = err.toString();
-      // Prevent inifinite re-renders
+      // Prevent infinite re-renders
       if (errorMessage !== compilationError) {
         setCompilationError(err.toString());
       }

@@ -95,7 +95,7 @@ const resolveCommandLine = (componentSpec: ComponentSpec, taskArguments: Record<
                 }
               }
             } else {
-                throw Error("Unexpected contition kind: " + ifCond);
+                throw Error("Unexpected condition kind: " + ifCond);
             }
             const unresolvedArgs = condEvaluatesToTrue ? ifThen : ifElse;
             if (unresolvedArgs === undefined) {

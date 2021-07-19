@@ -51,7 +51,7 @@ const loadComponentSpec = () => {
   return undefined;
 }
 
-// Auto-saver is extracted to its own child component since useStoreState in the parent causes inifinite re-rendering
+// Auto-saver is extracted to its own child component since useStoreState in the parent causes infinite re-rendering
 // (each render of GraphComponentSpecFlow seems to change the Redux store).
 // This component seems to be triggered for every node movement, so even pure layout changes are saved.
 const ComponentSpecAutoSaver = ({

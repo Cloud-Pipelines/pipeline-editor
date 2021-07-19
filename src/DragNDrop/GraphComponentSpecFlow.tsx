@@ -60,7 +60,7 @@ export const augmentComponentSpec = (
   };
 
   // Input and output nodes
-  // Sorting them by horisontal position to make reordering inputs and outputs easy.
+  // Sorting them by horizontal position to make reordering inputs and outputs easy.
   const inputNodes = nodes
     .filter((node) => node.type === "input")
     .sort(nodeXPositionComparer);
