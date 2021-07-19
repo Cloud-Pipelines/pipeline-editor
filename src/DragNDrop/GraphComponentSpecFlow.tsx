@@ -22,6 +22,7 @@ import {
   OutputSpec,
   TaskOutputArgument,
   TaskSpec,
+  isGraphImplementation,
 } from "../componentSpec";
 import ComponentTaskNode, { ComponentTaskNodeProps, isComponentTaskNode } from "./ComponentTaskNode";
 
@@ -155,7 +156,7 @@ export const augmentComponentSpec = (
     })
     .sort(outputOrderComparer);
 
-  if (!("graph" in componentSpec.implementation)) {
+  if (!isGraphImplementation(componentSpec.implementation)) {
     return componentSpec;
   }
 

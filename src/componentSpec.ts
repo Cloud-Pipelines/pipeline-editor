@@ -277,3 +277,15 @@ export interface GraphSpec {
 export interface GraphImplementation {
   graph: GraphSpec;
 }
+
+// Type guards
+export const isValidComponentSpec = (obj: object): obj is ComponentSpec =>
+  "implementation" in obj;
+
+export const isContainerImplementation = (
+  implementation: ImplementationType
+): implementation is ContainerImplementation => "container" in implementation;
+
+export const isGraphImplementation = (
+  implementation: ImplementationType
+): implementation is GraphImplementation => "graph" in implementation;

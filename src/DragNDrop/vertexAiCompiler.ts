@@ -1,4 +1,11 @@
-import { ComponentSpec, ContainerImplementation, ImplementationType, StringOrPlaceholder, ArgumentType, TypeSpecType } from "../componentSpec";
+import {
+    ArgumentType,
+    ComponentSpec,
+    StringOrPlaceholder,
+    TypeSpecType,
+    isContainerImplementation,
+    isGraphImplementation
+} from "../componentSpec";
 
 import * as vertex from "./vertexPipelineSpec";
 
@@ -31,7 +38,7 @@ type ResolvedCommandLineAndArgs = {
 };
 
 const resolveCommandLine = (componentSpec: ComponentSpec, taskArguments: Record<string, ArgumentType>): ResolvedCommandLineAndArgs => {
-    if (! ('container' in componentSpec.implementation)) {
+    if (!isContainerImplementation(componentSpec.implementation)) {
       throw Error("resolveCommandLine only supports container components");
     }
     const containerSpec = componentSpec.implementation.container;
@@ -110,10 +117,6 @@ const resolveCommandLine = (componentSpec: ComponentSpec, taskArguments: Record<
         inputsConsumedAsPath: inputsConsumedAsPath,
     };
     return result;
-}
-
-function isContainerImplementation(implementationType: ImplementationType): implementationType is ContainerImplementation {
-    return 'container' in implementationType;
 }
 
 const typeSpecToVertexPrimitiveTypeEnum = (typeSpec: TypeSpecType | undefined): vertex.PrimitiveTypeEnum => {
@@ -209,17 +212,10 @@ const taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec = (
     generateTaskID: (prefix: string) => string,
     isRoot = false,
 ) => {
-    // TODO: Investigate how to properly narrow the ImplementationTyppe union type
-    // Type guard!
-
     if (!isContainerImplementation(componentSpec.implementation)) {
+        // TODO: Support nested graph components
         throw Error("Nested graph components are not supported yet");
     }
-    // Also works
-    // if ('container' in componentSpec.implementation) {
-    //     componentSpec.implementation
-    // }
-
     const containerSpec = componentSpec.implementation.container;
 
 
@@ -459,7 +455,7 @@ const makeNameUniqueByAddingIndex = (name: string, existingNames: Set<string>): 
   };
 
 const graphComponentSpecToVertexPipelineSpec = (componentSpec: ComponentSpec, pipelineContextName = "pipeline") => {
-    if (! ('graph' in componentSpec.implementation)) {
+    if (!isGraphImplementation(componentSpec.implementation)) {
         throw Error("Only graph components are supported for now")
     }
 
