@@ -1,7 +1,4 @@
-import {
-  Node,
-  Edge,
-} from "react-flow-renderer";
+import { Node, Edge } from "react-flow-renderer";
 
 import {
   ComponentSpec,
@@ -38,12 +35,15 @@ const createGraphComponentSpecFromFlowElements = (
 ): ComponentSpec => {
   // Input and output nodes
   // Sorting them by horizontal position to make reordering inputs and outputs easy.
-  const inputNodes = nodes.filter((node) => node.type === "input").sort(nodeOrderComparer);
-  const outputNodes = nodes.filter((node) => node.type === "output").sort(nodeOrderComparer);
+  const inputNodes = nodes
+    .filter((node) => node.type === "input")
+    .sort(nodeOrderComparer);
+  const outputNodes = nodes
+    .filter((node) => node.type === "output")
+    .sort(nodeOrderComparer);
   // Task nodes. They should all be ComponentTaskNode components
-  const taskNodes = nodes
-    .filter(isComponentTaskNode);
-  
+  const taskNodes = nodes.filter(isComponentTaskNode);
+
   const inputSpecs = inputNodes.map<InputSpec>((node) => {
     let spec: InputSpec = { name: node.id };
     if (includePositions) {
@@ -59,6 +59,14 @@ const createGraphComponentSpecFromFlowElements = (
     }
     return spec;
   });
+
+  // const originalTaskMap = taskNodes.reduce((map, node) => {
+  //   const taskSpec = node.data;
+  //   if (taskSpec !== undefined) {
+  //     map.set(node.id, taskSpec);
+  //   }
+  //   return map;
+  // }, new Map<string, TaskSpec>());
 
   const taskMap = taskNodes.reduce((accumulator, node) => {
     let taskSpec = node.data?.taskSpec;
@@ -81,9 +89,9 @@ const createGraphComponentSpecFromFlowElements = (
 
   for (const edge of edges) {
     const sourceTaskId = edge.source;
-    const sourceOutputName = edge.sourceHandle?.replace(/^output_/, '');
+    const sourceOutputName = edge.sourceHandle?.replace(/^output_/, "");
     const targetTaskId = edge.target;
-    const targetInputName = edge.targetHandle?.replace(/^input_/, '');
+    const targetInputName = edge.targetHandle?.replace(/^input_/, "");
 
     // if (!sourceOutputName || !targetInputName) {
     //   console.error("Unexpected edge without a source or target handle:", edge);
@@ -97,15 +105,14 @@ const createGraphComponentSpecFromFlowElements = (
     }
 
     // FIX: For now, detecting the graph inputs and outputs by sourceOutputName or targetInputName being null
-    const argument: ArgumentType =
-      !!sourceOutputName
-        ? ({
-            taskOutput: { taskId: sourceTaskId, outputName: sourceOutputName },
-          } as TaskOutputArgument)
-        : ({
-            // Using input node ID as graph input name
-            graphInput: { inputName: sourceTaskId },
-          } as GraphInputArgument);
+    const argument: ArgumentType = !!sourceOutputName
+      ? ({
+          taskOutput: { taskId: sourceTaskId, outputName: sourceOutputName },
+        } as TaskOutputArgument)
+      : ({
+          // Using input node ID as graph input name
+          graphInput: { inputName: sourceTaskId },
+        } as GraphInputArgument);
     if (!!targetInputName) {
       let targetTask = taskMap[targetTaskId];
       if (targetTask === undefined) {
@@ -124,17 +131,22 @@ const createGraphComponentSpecFromFlowElements = (
       if (!!taskOutputArgument) {
         graphOutputValues[targetTaskId] = taskOutputArgument;
       } else {
-        console.error("Graph outputs can only come from task outputs.")
+        console.error("Graph outputs can only come from task outputs.");
       }
     }
   }
+
+  // // Verify arguments
+  // // TODO: Also sort them
+  // for (const [taskId, taskSpec] of Object.entries(taskMap)) {
+  // }
 
   const graphComponent: ComponentSpec = {
     name: name,
     inputs: inputSpecs,
     outputs: outputSpecs,
     metadata: {
-      annotations: annotations
+      annotations: annotations,
     },
     implementation: {
       graph: {
@@ -157,7 +169,8 @@ const createGraphComponentSpecFromFlowElements = (
     delete graphComponent.metadata;
   }
   if (Object.keys(graphOutputValues).length === 0) {
-    delete (graphComponent.implementation as GraphImplementation).graph.outputValues;
+    delete (graphComponent.implementation as GraphImplementation).graph
+      .outputValues;
   }
   return graphComponent;
 };

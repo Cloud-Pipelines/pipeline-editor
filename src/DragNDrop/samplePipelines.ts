@@ -4,7 +4,7 @@ import { downloadComponentDataWithCache } from "../github";
 const TFX_PIPELINE_URL = "https://raw.githubusercontent.com/Ark-kun/pipelines/2765b13699ac28de523f499eeaa9eb2ed9b8798a/components/deprecated/tfx/_samples/TFX.pipeline.component.yaml"
 const XGBOOST_PIPELINE_URL = "https://raw.githubusercontent.com/Ark-kun/pipelines/77df9c97191a181fcd3cded83f147799d46eca20/components/XGBoost/_samples/sample_pipeline.pipeline.component.yaml"
 const PYTORCH_PIPELINE_URL = "https://raw.githubusercontent.com/Ark-kun/pipelines/322c0c75f32d87acfd5da9c390dee0b5799bfdaf/components/PyTorch/_samples/Train_fully-connected_network.pipeline.component.yaml"
-export const DATA_PASSING_PIPELINE_URL = "https://raw.githubusercontent.com/Ark-kun/pipelines/48cd62a5beb7ec32332711ea8aafc158ad8e12d2/samples/test/data_passing.pipeline.component.yaml"
+export const DATA_PASSING_PIPELINE_URL = "https://raw.githubusercontent.com/Ark-kun/pipelines/b45c82e42588ee0a86b8875d1908d972275bfd2f/samples/test/data_passing.pipeline.component.yaml"
 
 const preloadComponentReferences = async (
   componentSpec: ComponentSpec,

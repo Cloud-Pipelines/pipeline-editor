@@ -17,7 +17,6 @@ const URL_PROCESSING_VERSION_TABLE_NAME = "url_version";
 const CURRENT_URL_PROCESSING_VERSION = 1;
 const BAD_HASHES_TABLE_NAME = "bad_hashes";
 
-
 export const httpGetWithCache = async (
   urlOrRequest: string | RequestInfo,
   cacheName: string,
@@ -39,12 +38,11 @@ export const httpGetWithCache = async (
   return response2;
 };
 
-
 export const searchGitHubCodeWithCache = async (
   query: string,
   page = 1,
   sort = "indexed",
-  order = "desc",
+  order = "desc"
 ): Promise<any> => {
   // TODO: Paging
   const encodedQuery = encodeURIComponent(query);
@@ -55,7 +53,6 @@ export const searchGitHubCodeWithCache = async (
   return response.json();
 };
 
-
 const githubHtmlUrlToDownloadUrl = (htmlUrl: string): string => {
   // https://github.com/               kubeflow/pipelines/blob/24bc9162a56c2fe3c50947d655ef280f71ba058f/components/gcp/dataflow/launch_flex_template/component.yaml
   // https://raw.githubusercontent.com/kubeflow/pipelines     /24bc9162a56c2fe3c50947d655ef280f71ba058f/components/gcp/dataflow/launch_flex_template/component.yaml
@@ -64,14 +61,12 @@ const githubHtmlUrlToDownloadUrl = (htmlUrl: string): string => {
     .replace("/blob/", "/");
 };
 
-
 type UrlAndHash = {
   url: string;
   hash: string;
 };
 
-
-export async function * getComponentUrlsAndHashes(
+export async function* getComponentUrlsAndHashes(
   users = ["kubeflow", "Ark-kun"]
 ) {
   let urlsAndHashes: UrlAndHash[] = [];
@@ -87,13 +82,17 @@ export async function * getComponentUrlsAndHashes(
       break;
     }
     for (let item of items) {
-      yield { url: githubHtmlUrlToDownloadUrl(item.html_url), hash: item.sha as string };
+      yield {
+        url: githubHtmlUrlToDownloadUrl(item.html_url),
+        hash: item.sha as string,
+      };
     }
-    await new Promise( resolve => setTimeout(resolve, (60 * 1000 / 10) * (1 + 0.1)));
+    await new Promise((resolve) =>
+      setTimeout(resolve, ((60 * 1000) / 10) * (1 + 0.1))
+    );
   }
   return urlsAndHashes;
-};
-
+}
 
 export const cacheComponentCandidateBlobs = async (
   users = ["kubeflow", "Ark-kun"]
@@ -110,13 +109,13 @@ export const cacheComponentCandidateBlobs = async (
 };
 
 export const downloadComponentDataWithCache = async (url: string) => {
-  const response = await httpGetWithCache(url, BLOB_CACHE_NAME)
+  const response = await httpGetWithCache(url, BLOB_CACHE_NAME);
   const data = await response.blob();
   const componentText = await data.text();
   // TODO: Validate the data
   const componentSpec = yaml.load(componentText) as ComponentSpec;
   return componentSpec;
-}
+};
 
 export const cacheAllComponents = async (users = ["kubeflow", "Ark-kun"]) => {
   console.debug("Starting cacheAllComponents");
@@ -152,13 +151,17 @@ export const cacheAllComponents = async (users = ["kubeflow", "Ark-kun"]) => {
     const htmlUrl = item.url;
     const badHashReason = await badHashesDb.getItem<string>(hash);
     if (badHashReason !== null) {
-      console.debug(`Skipping url ${htmlUrl} with hash ${hash} due to error: "${badHashReason}"`);
+      console.debug(
+        `Skipping url ${htmlUrl} with hash ${hash} due to error: "${badHashReason}"`
+      );
       continue;
     }
     try {
       const downloadUrl: string = githubHtmlUrlToDownloadUrl(htmlUrl);
       if (!downloadUrl.endsWith("component.yaml")) {
-        console.debug(`Skipping url ${downloadUrl} since it does not end with "component.yaml"`);
+        console.debug(
+          `Skipping url ${downloadUrl} since it does not end with "component.yaml"`
+        );
         continue;
       }
       // Sanity check
@@ -190,12 +193,15 @@ export const cacheAllComponents = async (users = ["kubeflow", "Ark-kun"]) => {
         componentText = await data.text();
         // TODO: Validate the data
         componentSpec = yaml.load(componentText) as ComponentSpec;
-      } catch(err) {
+      } catch (err) {
         badHashesDb.setItem(hash, err.name + ": " + err.message);
         continue;
       }
       if (componentSpec.implementation === undefined) {
-        badHashesDb.setItem(hash, 'Component lacks the "implementation" section.');
+        badHashesDb.setItem(
+          hash,
+          'Component lacks the "implementation" section.'
+        );
         continue;
       }
 
@@ -230,8 +236,9 @@ export const cacheAllComponents = async (users = ["kubeflow", "Ark-kun"]) => {
   console.debug("Finished cacheAllComponents");
 };
 
-
-export const getAllComponentsAsRefs = async (users = ["kubeflow", "Ark-kun"]) => {
+export const getAllComponentsAsRefs = async (
+  users = ["kubeflow", "Ark-kun"]
+) => {
   // Perhaps use urlProcessingVersionDb as source of truth. Hmm. It is URL-based
   const hashToUrlDb = localForage.createInstance({
     name: DB_NAME,
@@ -291,8 +298,12 @@ export const getAllComponentsAsRefs = async (users = ["kubeflow", "Ark-kun"]) =>
   return componentRefs;
 };
 
-
-export const searchComponentsByName = async (name: string, users = ["kubeflow", "Ark-kun"]) => {
+export const searchComponentsByName = async (
+  name: string,
+  users = ["kubeflow", "Ark-kun"]
+) => {
   const componentRefs = await getAllComponentsAsRefs(users);
-  return componentRefs.filter((ref) => ref.spec?.name?.toLowerCase().includes(name.toLowerCase()) ?? false);
+  return componentRefs.filter(
+    (ref) => ref.spec?.name?.toLowerCase().includes(name.toLowerCase()) ?? false
+  );
 };
