@@ -1,8 +1,8 @@
 {
   "files": {
     "main.css": "/pipeline-editor/static/css/main.eb97c483.chunk.css",
-    "main.js": "/pipeline-editor/static/js/main.04b222e9.chunk.js",
-    "main.js.map": "/pipeline-editor/static/js/main.04b222e9.chunk.js.map",
+    "main.js": "/pipeline-editor/static/js/main.769c8b36.chunk.js",
+    "main.js.map": "/pipeline-editor/static/js/main.769c8b36.chunk.js.map",
     "runtime-main.js": "/pipeline-editor/static/js/runtime-main.fbcfabec.js",
     "runtime-main.js.map": "/pipeline-editor/static/js/runtime-main.fbcfabec.js.map",
     "static/js/2.eecba799.chunk.js": "/pipeline-editor/static/js/2.eecba799.chunk.js",
@@ -19,6 +19,6 @@
     "static/js/runtime-main.fbcfabec.js",
     "static/js/2.eecba799.chunk.js",
     "static/css/main.eb97c483.chunk.css",
-    "static/js/main.04b222e9.chunk.js"
+    "static/js/main.769c8b36.chunk.js"
   ]
 }
