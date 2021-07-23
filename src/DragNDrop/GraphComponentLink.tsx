@@ -21,14 +21,15 @@ const GraphComponentLink = ({
 }: GraphComponentLinkProps) => {
   const nodes = useStoreState((store) => store.nodes);
 
-  let componentText = "";
   try {
     componentSpec = augmentComponentSpec(componentSpec, nodes, false, true);
-    componentText = yaml.dump(componentSpec, { lineWidth: 10000 });
   } catch (err) {
-    return <>err.toString()</>;
+    if (err?.message?.startsWith("The nodes array does not") !== true) {
+      console.error(err);
+      return <>err.toString()</>;
+    }
   }
-
+  const componentText = yaml.dump(componentSpec, { lineWidth: 10000 });
   const componentTextBlob = new Blob([componentText], { type: "text/yaml" }); // Or application/x-yaml (which leads to downloading)
   return (
     <a
