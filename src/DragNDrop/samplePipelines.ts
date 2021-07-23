@@ -6,6 +6,12 @@ const XGBOOST_PIPELINE_URL = "https://raw.githubusercontent.com/Ark-kun/pipeline
 const PYTORCH_PIPELINE_URL = "https://raw.githubusercontent.com/Ark-kun/pipelines/322c0c75f32d87acfd5da9c390dee0b5799bfdaf/components/PyTorch/_samples/Train_fully-connected_network.pipeline.component.yaml"
 export const DATA_PASSING_PIPELINE_URL = "https://raw.githubusercontent.com/Ark-kun/pipelines/b45c82e42588ee0a86b8875d1908d972275bfd2f/samples/test/data_passing.pipeline.component.yaml"
 
+export const PRELOADED_PIPELINE_URLS = [
+  XGBOOST_PIPELINE_URL,
+  PYTORCH_PIPELINE_URL,
+  TFX_PIPELINE_URL,
+];
+
 const preloadComponentReferences = async (
   componentSpec: ComponentSpec,
   componentMap?: Map<string, ComponentSpec>
