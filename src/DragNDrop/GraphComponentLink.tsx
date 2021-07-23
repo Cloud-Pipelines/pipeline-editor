@@ -8,12 +8,14 @@ interface GraphComponentLinkProps {
   componentSpec: ComponentSpec;
   downloadFileName?: string;
   linkText?: string;
+  linkRef?: React.Ref<HTMLAnchorElement>;
 }
 
 const GraphComponentLink = ({
   componentSpec,
   downloadFileName = "component.yaml",
   linkText = "component.yaml",
+  linkRef,
 }: GraphComponentLinkProps) => {
   const nodes = useStoreState((store) => store.nodes);
 
@@ -28,6 +30,7 @@ const GraphComponentLink = ({
   const componentTextBlob = new Blob([componentText], { type: "text/yaml" }); // Or application/x-yaml (which leads to downloading)
   return (
     <a
+      ref={linkRef}
       href={URL.createObjectURL(componentTextBlob)}
       download={downloadFileName}
     >
