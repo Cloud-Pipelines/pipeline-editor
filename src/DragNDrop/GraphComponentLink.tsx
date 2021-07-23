@@ -9,6 +9,7 @@ interface GraphComponentLinkProps {
   downloadFileName?: string;
   linkText?: string;
   linkRef?: React.Ref<HTMLAnchorElement>;
+  style?: React.CSSProperties;
 }
 
 const GraphComponentLink = ({
@@ -16,6 +17,7 @@ const GraphComponentLink = ({
   downloadFileName = "component.yaml",
   linkText = "component.yaml",
   linkRef,
+  style,
 }: GraphComponentLinkProps) => {
   const nodes = useStoreState((store) => store.nodes);
 
@@ -33,6 +35,7 @@ const GraphComponentLink = ({
       ref={linkRef}
       href={URL.createObjectURL(componentTextBlob)}
       download={downloadFileName}
+      style={style}
     >
       {linkText}
     </a>
