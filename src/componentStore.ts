@@ -50,7 +50,7 @@ const storeComponentSpec = async (
   }
 };
 
-export const storeComponentText = async (
+export const loadComponentAsRefFromText = async (
   componentText: string | ArrayBuffer
 ) => {
   const componentString =
@@ -74,16 +74,36 @@ export const storeComponentText = async (
   const componentSpec: ComponentSpec = loadedObj;
 
   const digest = await calculateHashDigestHex(componentBytes);
-  const digestToComponentTextDb = localForage.createInstance({
-    name: DB_NAME,
-    storeName: DIGEST_TO_DATA_DB_TABLE_NAME,
-  });
-  await digestToComponentTextDb.setItem(digest, componentBytes);
-  await storeComponentSpec(digest, componentSpec);
   const componentRef: ComponentReferenceWithSpec = {
     spec: componentSpec,
     digest: digest,
   };
+  return componentRef;
+};
+
+export const loadComponentAsRefFromUrl = async (url: string) => {
+  const response = await fetch(url);
+  const componentData = await response.arrayBuffer();
+  let componentRef = await loadComponentAsRefFromText(componentData);
+  componentRef.url = url;
+  return componentRef;
+};
+
+export const storeComponentText = async (
+  componentText: string | ArrayBuffer
+) => {
+  const componentBytes =
+    typeof componentText === "string"
+      ? new TextEncoder().encode(componentText)
+      : componentText;
+  const componentRef = await loadComponentAsRefFromText(componentText);
+  const digestToComponentTextDb = localForage.createInstance({
+    name: DB_NAME,
+    storeName: DIGEST_TO_DATA_DB_TABLE_NAME,
+  });
+  await digestToComponentTextDb.setItem(componentRef.digest, componentBytes);
+  await storeComponentSpec(componentRef.digest, componentRef.spec);
+
   return componentRef;
 };
 
@@ -138,7 +158,7 @@ export const searchComponentsByName = async (name: string) => {
   );
 };
 
-export const loadComponentReferenceFromUrl = async (
+export const storeComponentFromUrl = async (
   url: string,
   setUrlAsCanonical = false
 ) => {
@@ -212,11 +232,10 @@ export const loadComponentReferenceFromUrl = async (
   return componentRef;
 };
 
-export const addComponentToListByUrl = async (
+export const addComponentRefToList = async (
   listName: string,
-  url: string
+  componentRef: ComponentReferenceWithSpec
 ) => {
-  const componentRef = await loadComponentReferenceFromUrl(url);
   const componentRefListsDb = localForage.createInstance({
     name: DB_NAME,
     storeName: COMPONENT_REF_LISTS_DB_TABLE_NAME,
@@ -228,20 +247,28 @@ export const addComponentToListByUrl = async (
   return componentRef;
 };
 
+export const addComponentToListByUrl = async (
+  listName: string,
+  url: string
+) => {
+  const componentRef = await storeComponentFromUrl(url);
+  return addComponentRefToList(listName, componentRef);
+};
+
 export const addComponentToListByText = async (
   listName: string,
   componentText: string | ArrayBuffer
 ) => {
   const componentRef = await storeComponentText(componentText);
+  return addComponentRefToList(listName, componentRef);
+};
+
+export const resetComponentList = async (listName: string, componentRefs: ComponentReferenceWithSpec[]) => {
   const componentRefListsDb = localForage.createInstance({
     name: DB_NAME,
     storeName: COMPONENT_REF_LISTS_DB_TABLE_NAME,
   });
-  let componentRefList: ComponentReferenceWithSpec[] =
-    (await componentRefListsDb.getItem(listName)) ?? [];
-  componentRefList.push(componentRef);
-  await componentRefListsDb.setItem(listName, componentRefList);
-  return componentRef;
+  await componentRefListsDb.setItem(listName, componentRefs);
 };
 
 export const getAllComponentsFromList = async (listName: string) => {
