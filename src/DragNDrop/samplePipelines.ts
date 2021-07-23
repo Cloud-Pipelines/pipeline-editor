@@ -2,8 +2,8 @@ import { ComponentSpec } from "../componentSpec";
 import { downloadComponentDataWithCache } from "../github";
 
 const TFX_PIPELINE_URL = "https://raw.githubusercontent.com/Ark-kun/pipelines/2765b13699ac28de523f499eeaa9eb2ed9b8798a/components/deprecated/tfx/_samples/TFX.pipeline.component.yaml"
-const XGBOOST_PIPELINE_URL = "https://raw.githubusercontent.com/Ark-kun/pipelines/77df9c97191a181fcd3cded83f147799d46eca20/components/XGBoost/_samples/sample_pipeline.pipeline.component.yaml"
-const PYTORCH_PIPELINE_URL = "https://raw.githubusercontent.com/Ark-kun/pipelines/322c0c75f32d87acfd5da9c390dee0b5799bfdaf/components/PyTorch/_samples/Train_fully-connected_network.pipeline.component.yaml"
+const XGBOOST_PIPELINE_URL = "https://raw.githubusercontent.com/Ark-kun/pipelines/2edfd25b5ee3a4aa149c24a225a50041fbd3662d/components/XGBoost/_samples/sample_pipeline.pipeline.component.yaml"
+const PYTORCH_PIPELINE_URL = "https://raw.githubusercontent.com/Ark-kun/pipelines/237cd6bc0b6db26f615c22897be20aad77270b50/components/PyTorch/_samples/Train_fully-connected_network.pipeline.component.yaml"
 export const DATA_PASSING_PIPELINE_URL = "https://raw.githubusercontent.com/Ark-kun/pipelines/b45c82e42588ee0a86b8875d1908d972275bfd2f/samples/test/data_passing.pipeline.component.yaml"
 
 export const PRELOADED_PIPELINE_URLS = [
