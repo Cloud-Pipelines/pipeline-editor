@@ -35,6 +35,7 @@ const SearchPanel = (props: any) => {
       setFirstTime(false);
       fetchData(query);
     }
+    (window as any).gtag?.("event", "ComponentSearch_search", {});
   };
 
   let results = <span></span>;

@@ -72,12 +72,24 @@ const ensureGoogleCloudAuthorizesScopes = async (scopes: string[]) => {
     // console.debug('Before ensureGoogleCloudAuthorizesScopes(immediate=true)');
     await authorizeGoogleCloudClient(scopes, true);
     // console.debug('After ensureGoogleCloudAuthorizesScopes(immediate=true)');
+    (window as any).gtag?.("event", "GoogleCloud_auth", {
+      result: "succeeded",
+      immediate: "true"
+    });
   } catch (err) {
     // console.error('ensureGoogleCloudAuthorizesScopes(immediate=true)', err);
     try {
       await authorizeGoogleCloudClient(scopes, false);
+      (window as any).gtag?.("event", "GoogleCloud_auth", {
+        result: "succeeded",
+        immediate: "false"
+      });
     } catch (err) {
       // console.error('ensureGoogleCloudAuthorizesScopes(immediate=false)', err);
+      (window as any).gtag?.("event", "GoogleCloud_auth", {
+        result: "failed",
+        immediate: "false"
+      });
     }
   }
 };
@@ -100,6 +112,9 @@ const aiplatformCreatePipelineJob = async (projectId: string, region='us-central
     path: `https://${region}-aiplatform.googleapis.com/v1beta1/projects/${projectId}/locations/${region}/pipelineJobs`,
     method: "POST",
     body: JSON.stringify(pipelineJob),
+  });
+  (window as any).gtag?.("event", "GoogleCloud_submit_pipeline_job", {
+    result: "succeeded"
   });
   return response.result;
 }
@@ -191,6 +206,9 @@ const GoogleCloudSubmitter = ({
         } catch (err) {
           console.error(err);
           setError(err?.result?.error?.message ?? "Error");
+          (window as any).gtag?.("event", "GoogleCloud_submit_pipeline_job", {
+            result: "failed"
+          });
         }
       }}
     >
@@ -225,8 +243,10 @@ const GoogleCloudSubmitter = ({
               } catch(err) {
                 console.error("GoogleCloudSubmitter: Error writing properties to the localStorage", err);
               }
+              (window as any).gtag?.("event", "GoogleCloud_list_projects", { result: "succeeded" });
             } catch (err) {
               setError(err?.result?.error?.message ?? "Error");
+              (window as any).gtag?.("event", "GoogleCloud_list_projects", { result: "failed" });
             }
           }}
         >

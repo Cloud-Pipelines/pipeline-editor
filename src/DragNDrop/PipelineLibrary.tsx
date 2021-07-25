@@ -81,6 +81,9 @@ const PipelineLibrary = ({
             binaryStr
           );
           console.debug("storeComponentText succeeded", componentRef);
+          (window as any).gtag?.("event", "PipelineLibrary_pipeline_import", {
+            result: "succeeded",
+          });
           // setErrorMessage("");
           const allComponentRefs = await getAllComponentsFromList(
             USER_PIPELINES_LIST_NAME
@@ -91,6 +94,9 @@ const PipelineLibrary = ({
           //   `Error parsing the dropped file as component: ${err.toString()}.`
           // );
           console.error("Error parsing the dropped file as component", err);
+          (window as any).gtag?.("event", "PipelineLibrary_pipeline_import", {
+            result: "failed",
+          });
         }
       };
       reader.readAsArrayBuffer(file);
