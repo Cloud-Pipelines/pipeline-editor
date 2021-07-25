@@ -30,7 +30,10 @@ const saveComponentSpec = (componentSpec: ComponentSpec, nodes?: Node[]) => {
     const componentText = yaml.dump(componentSpec, { lineWidth: 10000 });
     window.sessionStorage.setItem(SAVED_COMPONENT_SPEC_KEY, componentText);
   } catch(err) {
-    console.error(err);
+    // TODO: Find a way to avoid the React/Redux race conditions causing this error.
+    if (err?.message?.startsWith("The nodes array does not") !== true) {
+      console.error(err);
+    }
   }
 }
 
