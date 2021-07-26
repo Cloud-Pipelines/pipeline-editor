@@ -1,3 +1,11 @@
+/* Use the proper box layout model by default, but allow elements to override */
+html {
+  box-sizing: border-box;
+}
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+
 .dndflow {
   flex-direction: row;
   display: flex;
@@ -6,7 +14,6 @@
 
 .dndflow aside {
   width: 300px;
-  box-sizing: border-box;
   border-right: 1px solid #eee;
   padding: 15px 10px;
   font-size: 12px;
@@ -32,7 +39,6 @@
 .react-flow__node {
   padding: 10px;
   border-radius: 3px;
-  box-sizing: border-box;
   width: 180px;
   min-height: 40px;
   font-size: 12px;
@@ -131,4 +137,14 @@ input:required:invalid {
   /* border-color: #c00000; */
   /* border: 2px dashed red; */
   border: 1px solid red;
+}
+
+.link-button {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  /* text-decoration: underline; */
+  display: inline;
+  margin: 0;
+  padding: 0;
 }
