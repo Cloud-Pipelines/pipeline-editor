@@ -5,6 +5,9 @@ html {
 *, *:before, *:after {
   box-sizing: inherit;
 }
+details > * {
+  box-sizing: border-box;
+}
 
 .dndflow {
   flex-direction: row;
