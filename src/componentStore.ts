@@ -201,7 +201,7 @@ export const storeComponentFromUrl = async (
     );
     return componentRef;
   }
-  if (digest !== existingDigest) {
+  if (existingDigest !== null && digest !== existingDigest) {
     console.error(
       `Component db is corrupted: Component with url ${url} previously had digest ${existingDigest} but now has digest ${digest}.`
     );
