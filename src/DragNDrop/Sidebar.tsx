@@ -104,10 +104,10 @@ const Sidebar = ({
       <h3>Drag components to the canvas:</h3>
       <details style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>
         <summary><strong>Special</strong></summary>
-        <div className="react-flow__node react-flow__node-input" onDragStart={(event: DragEvent) => onDragStart(event, { input: { label: "Input" } })} draggable>
+        <div className="react-flow__node react-flow__node-input sidebar-node" onDragStart={(event: DragEvent) => onDragStart(event, { input: { label: "Input" } })} draggable>
           Input
         </div>
-        <div className="react-flow__node react-flow__node-output" onDragStart={(event: DragEvent) => onDragStart(event, { output: { label: "Output" } })} draggable>
+        <div className="react-flow__node react-flow__node-output sidebar-node" onDragStart={(event: DragEvent) => onDragStart(event, { output: { label: "Output" } })} draggable>
           Output
         </div>
       </details>

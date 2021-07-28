@@ -31,7 +31,7 @@ details > * {
   overflow: auto;
 }
 
-.dndflow .nodeList div {
+.dndflow .sidebar-node {
   /* Resets position: absolute */
   position: relative;
   margin: 5px;

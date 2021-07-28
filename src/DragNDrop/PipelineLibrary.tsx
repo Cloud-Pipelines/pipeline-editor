@@ -114,36 +114,38 @@ const PipelineLibrary = ({
         whiteSpace: "nowrap",
       }}
     >
-      <input
-        ref={fileInput}
-        type="file"
-        accept=".yaml"
-        onChange={(e) => onDrop(Array.from(e.target.files ?? []))}
-        style={{ display: "none" }}
-      />
-      <button onClick={(e) => fileInput.current?.click()}>
-        + Import pipeline
-      </button>
-      <button
-        onClick={(e) => {
-          componentLink.current?.click();
-        }}
-      >
-        Export pipeline
-      </button>
-      {componentSpec && (
-        <GraphComponentLink
-          linkRef={componentLink}
-          componentSpec={componentSpec}
-          linkText="🔗"
-          downloadFileName={
-            (componentSpec.name ? componentSpec.name + "." : "") +
-            "pipeline.component.yaml"
-          }
-          style={{ textDecoration: "none" }}
+      <div style={{ margin: "5px" }}>
+        <input
+          ref={fileInput}
+          type="file"
+          accept=".yaml"
+          onChange={(e) => onDrop(Array.from(e.target.files ?? []))}
+          style={{ display: "none" }}
         />
-      )}
-      <div style={{ overflow: "auto" }}>
+        <button onClick={(e) => fileInput.current?.click()}>
+          + Import pipeline
+        </button>
+        <button
+          onClick={(e) => {
+            componentLink.current?.click();
+          }}
+        >
+          Export pipeline
+        </button>
+        {componentSpec && (
+          <GraphComponentLink
+            linkRef={componentLink}
+            componentSpec={componentSpec}
+            linkText="🔗"
+            downloadFileName={
+              (componentSpec.name ? componentSpec.name + "." : "") +
+              "pipeline.component.yaml"
+            }
+            style={{ textDecoration: "none" }}
+          />
+        )}
+      </div>
+      <div style={{ overflow: "auto", marginLeft: "10px" }}>
         {componentRefs.map((componentRef) => (
           <div key={componentRef.digest}>
             ⋮ {/* ⋮ ≡ ⋅ */}

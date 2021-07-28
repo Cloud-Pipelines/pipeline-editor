@@ -212,7 +212,10 @@ const GoogleCloudSubmitter = ({
         }
       }}
     >
-      <div style={{ whiteSpace: "nowrap" }}>
+      <div style={{
+        whiteSpace: "nowrap",
+        margin: "5px",
+      }}>
         <label htmlFor="project">Project: </label>
         <input
           id="project"
@@ -253,7 +256,10 @@ const GoogleCloudSubmitter = ({
           ⟳{/* 🗘⭯ ⭮ ↺ ↻ ⟲ ⟳ 🔃🔄 */}
         </button>
       </div>
-      <div>
+      <div style={{
+        whiteSpace: "nowrap",
+        margin: "5px",
+      }}>
         <label htmlFor="region">Region: </label>
         <input
           id="region"
@@ -269,7 +275,10 @@ const GoogleCloudSubmitter = ({
           ))}
         </datalist>
       </div>
-      <div>
+      <div style={{
+        whiteSpace: "nowrap",
+        margin: "5px",
+      }}>
         <label htmlFor="region">GCS dir: </label>
         <input
           id="gcsOutputDirectory"
@@ -286,7 +295,10 @@ const GoogleCloudSubmitter = ({
       />
       {pipelineJobWebUrl !== "" && <div><a href={pipelineJobWebUrl} target="_blank" rel="noreferrer">Job</a></div>}
       {vertexPipelineJobUrl !== undefined && (
-        <div>
+        <div style={{
+          whiteSpace: "nowrap",
+          margin: "5px",
+        }}>
           Download <a
             href={vertexPipelineJobUrl}
             download={"vertex_pipeline_job.json"}

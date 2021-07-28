@@ -23,7 +23,7 @@ const DraggableComponent = ({
 }: DraggableComponentProps) => {
   return (
     <div
-      className="react-flow__node react-flow__node-task"
+      className="react-flow__node react-flow__node-task sidebar-node"
       draggable
       onDragStart={(event: DragEvent) => {
         const taskSpec: TaskSpec = {
