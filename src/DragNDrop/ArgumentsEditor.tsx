@@ -123,6 +123,8 @@ const ArgumentsEditor = ({
               <input
                 style={{
                   display: "table-cell",
+                  // Prevents border flickering and disappearing on movement
+                  borderWidth: "1px",
                 }}
                 placeholder={placeholder}
                 required={argumentIsRequiredButMissing}
