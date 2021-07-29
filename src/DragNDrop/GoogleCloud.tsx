@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 
-import { ComponentSpec } from '../componentSpec';
+import { ArgumentType, ComponentSpec } from '../componentSpec';
 import {generateVertexPipelineJobFromGraphComponent} from './vertexAiCompiler'
+import ArgumentsEditor from "./ArgumentsEditor";
 
 const LOCAL_STORAGE_GCS_OUTPUT_DIRECTORY_KEY = "GoogleCloudSubmitter/gcsOutputDirectory";
 const LOCAL_STORAGE_PROJECT_ID_KEY = "GoogleCloudSubmitter/projectId";
@@ -141,22 +142,33 @@ const GoogleCloudSubmitter = ({
   );
   const [pipelineJobWebUrl, setPipelineJobWebUrl] = useState("");
   const [compilationError, setCompilationError] = useState("");
+  const [componentArguments, setComponentArguments] = useState<Record<string, ArgumentType>>({});
 
   let vertexPipelineJobJson: string | undefined = undefined;
   let vertexPipelineJob: Record<string, any> | undefined = undefined;
 
   //useEffect(() => {
   if (componentSpec !== undefined) {
+    const defaultInputValues = Object.fromEntries(
+      (componentSpec.inputs ?? [])
+        .filter((inputSpec) => inputSpec.default !== undefined)
+        .map((inputSpec) => [inputSpec.name, String(inputSpec.default)])
+    );
+    const pipelineArguments = {
+      ...defaultInputValues,
+      ...componentArguments,
+    };
+    const pipelineArgumentMap = new Map(
+      Object.entries(pipelineArguments).filter(
+        // Type guard predicate
+        (pair): pair is [string, string] => typeof pair[1] === "string"
+      )
+    );
     try {
-      const defaultInputValues = new Map<string, string>(
-        (componentSpec.inputs ?? [])
-          .filter((inputSpec) => inputSpec.default !== undefined)
-          .map((inputSpec) => [inputSpec.name, inputSpec.default as string])
-      );
       vertexPipelineJob = generateVertexPipelineJobFromGraphComponent(
         componentSpec,
         gcsOutputDirectory,
-        defaultInputValues
+        pipelineArgumentMap
       );
       vertexPipelineJobJson = JSON.stringify(vertexPipelineJob, undefined, 2);
       // Prevent infinite re-renders
@@ -212,6 +224,23 @@ const GoogleCloudSubmitter = ({
         }
       }}
     >
+      {componentSpec === undefined ||
+      (componentSpec?.inputs?.length ?? 0) === 0 ? undefined : (
+        <fieldset
+          style={{
+            // Reduce the default padding
+            padding: "2px",
+          }}
+        >
+          <legend>Arguments</legend>
+          <ArgumentsEditor
+            componentSpec={componentSpec}
+            componentArguments={componentArguments}
+            setComponentArguments={setComponentArguments}
+            shrinkToWidth={true}
+          />
+        </fieldset>
+      )}
       <div style={{
         whiteSpace: "nowrap",
         margin: "5px",
