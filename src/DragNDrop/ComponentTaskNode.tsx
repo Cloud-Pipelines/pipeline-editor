@@ -8,7 +8,7 @@ import {
 
 import { Handle, Position, Node, NodeProps, HandleType } from 'react-flow-renderer';
 
-import ArgumentsEditor from './ArgumentsEditor';
+import ArgumentsEditorDialog from './ArgumentsEditorDialog';
 
 const inputHandlePosition = Position.Top;
 const outputHandlePosition = Position.Bottom;
@@ -149,7 +149,7 @@ const ComponentTaskNode = ({ data }: NodeProps<ComponentTaskNodeProps>) => {
       {label}
       {handleComponents}
       {isArgumentsEditorOpen && (
-        <ArgumentsEditor
+        <ArgumentsEditorDialog
           taskSpec={taskSpec}
           closeEditor={closeArgumentsEditor}
           setArguments={data.setArguments}

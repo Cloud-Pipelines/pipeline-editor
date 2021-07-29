@@ -1,10 +1,9 @@
-import { useState } from "react";
-import { ArgumentType, TaskSpec, TypeSpecType } from "../componentSpec";
+import { ArgumentType, ComponentSpec, TypeSpecType } from "../componentSpec";
 
 interface ArgumentsEditorProps {
-  taskSpec: TaskSpec;
-  closeEditor?: () => void;
-  setArguments?: (args: Record<string, ArgumentType>) => void;
+  componentSpec: ComponentSpec;
+  componentArguments: Record<string, ArgumentType>;
+  setComponentArguments: (args: Record<string, ArgumentType>) => void;
 }
 
 const getPatternForTypeSpec = (typeSpec?: TypeSpecType) => {
@@ -17,160 +16,117 @@ const typeSpecToString = (typeSpec?: TypeSpecType): string => {
     return "Any";
   }
   if (typeof typeSpec === "string") {
-    return typeSpec
+    return typeSpec;
   }
   return JSON.stringify(typeSpec);
 };
 
 const ArgumentsEditor = ({
-  taskSpec,
-  closeEditor,
-  setArguments,
+  componentSpec,
+  componentArguments,
+  setComponentArguments,
 }: ArgumentsEditorProps) => {
-  const [currentArguments, setCurrentArguments] = useState<
-    Record<string, ArgumentType>
-  >({ ...taskSpec.arguments });
-
-  const componentSpec = taskSpec.componentRef.spec;
-  if (componentSpec === undefined) {
-    console.error(
-      "ArgumentsEditor called with missing taskSpec.componentRef.spec",
-      taskSpec
-    );
-    return <></>;
-  }
-
-  const inputSpecs = componentSpec.inputs ?? [];
-
   return (
-    <form
-      onSubmit={async (e) => {
-        e.preventDefault();
-      }}
-      // Does not work
-      // draggable={false}
+    <div
       style={{
-        position: "fixed",
         display: "table",
         borderSpacing: "5px",
-        background: "white",
-        border: "1px solid black",
-        borderRadius: "4px",
-        padding: "15px",
-        // Does not work
-        // zIndex: 11,
       }}
     >
-      <legend>Input arguments for {componentSpec.name}</legend>
-      <div>
-        {inputSpecs.map((inputSpec) => {
-          const inputName = inputSpec.name;
-          let value: string | undefined = undefined;
-          let placeholder: string | undefined = undefined;
-          const argument = currentArguments[inputName];
-          if (argument === undefined) {
-            value = inputSpec.default;
+      {(componentSpec.inputs ?? []).map((inputSpec) => {
+        const inputName = inputSpec.name;
+        let value: string | undefined = undefined;
+        let placeholder: string | undefined = undefined;
+        const argument = componentArguments[inputName];
+        if (argument === undefined) {
+          value = inputSpec.default;
+        } else {
+          if (typeof argument === "string") {
+            value = argument;
+          } else if ("taskOutput" in argument) {
+            placeholder = `<from task ${argument.taskOutput.taskId} / ${argument.taskOutput.outputName}>`;
+          } else if ("graphInput" in argument) {
+            placeholder = `<from graph input ${argument.graphInput.inputName}>`;
           } else {
-            if (typeof argument === "string") {
-              value = argument;
-            } else if ("taskOutput" in argument) {
-              placeholder = `<from task ${argument.taskOutput.taskId} / ${argument.taskOutput.outputName}>`;
-            } else if ("graphInput" in argument) {
-              placeholder = `<from graph input ${argument.graphInput.inputName}>`;
-            } else {
-              placeholder = "<reference>";
-            }
+            placeholder = "<reference>";
           }
+        }
 
-          const argumentIsRequiredButMissing =
-            !(inputName in currentArguments) &&
-            inputSpec.optional !== true &&
-            inputSpec.default === undefined;
-          
-          const typeSpecString = typeSpecToString(inputSpec.type);
+        const argumentIsRequiredButMissing =
+          !(inputName in componentArguments) &&
+          inputSpec.optional !== true &&
+          inputSpec.default === undefined;
 
-          return (
-            <div
-              key={inputName}
+        const typeSpecString = typeSpecToString(inputSpec.type);
+
+        return (
+          <div
+            key={inputName}
+            style={{
+              display: "table-row",
+            }}
+          >
+            <label
               style={{
-                display: "table-row",
+                textAlign: "right",
+                display: "table-cell",
+                whiteSpace: "nowrap",
               }}
             >
-              <label
-                style={{
-                  textAlign: "right",
-                  display: "table-cell",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                <span>
-                  {inputName} (
-                  <span
-                    style={{
-                      textOverflow: "ellipsis",
-                      overflow: "hidden",
-                      maxWidth: "90px",
-                      display: "inline-block",
-                      verticalAlign: "bottom",
-                    }}
-                    title={typeSpecString}
-                  >
-                    {typeSpecString}
-                  </span>
-                  )
-                </span>
-              </label>
-              <input
-                style={{
-                  display: "table-cell",
-                  // Prevents border flickering and disappearing on movement
-                  borderWidth: "1px",
-                }}
-                placeholder={placeholder}
-                required={argumentIsRequiredButMissing}
-                value={value ?? ""}
-                pattern={getPatternForTypeSpec(inputSpec.type)}
-                onChange={(e) => {
-                  currentArguments[inputName] = e.target.value;
-                  setCurrentArguments({ ...currentArguments });
-                }}
-              />
-              <div
-                style={{
-                  display: "table-cell",
-                }}
-              >
-                <button
-                  type="button"
-                  title="Reset to default"
-                  onClick={(e) => {
-                    delete currentArguments[inputName];
-                    setCurrentArguments({ ...currentArguments });
+              <span>
+                {inputName} (
+                <span
+                  style={{
+                    textOverflow: "ellipsis",
+                    overflow: "hidden",
+                    maxWidth: "90px",
+                    display: "inline-block",
+                    verticalAlign: "bottom",
                   }}
-                  disabled={!(inputName in currentArguments)}
+                  title={typeSpecString}
                 >
-                  ⌧
-                </button>
-              </div>
+                  {typeSpecString}
+                </span>
+                )
+              </span>
+            </label>
+            <input
+              style={{
+                display: "table-cell",
+                // Prevents border flickering and disappearing on movement
+                borderWidth: "1px",
+              }}
+              placeholder={placeholder}
+              required={argumentIsRequiredButMissing}
+              value={value ?? ""}
+              pattern={getPatternForTypeSpec(inputSpec.type)}
+              onChange={(e) => {
+                componentArguments[inputName] = e.target.value;
+                setComponentArguments({ ...componentArguments });
+              }}
+            />
+            <div
+              style={{
+                display: "table-cell",
+              }}
+            >
+              <button
+                type="button"
+                title="Reset to default"
+                onClick={(e) => {
+                  delete componentArguments[inputName];
+                  setComponentArguments({ ...componentArguments });
+                }}
+                disabled={!(inputName in componentArguments)}
+              >
+                ⌧
+              </button>
             </div>
-          );
-        })}
-      </div>
-      <button type="button" onClick={closeEditor}>
-        Close
-      </button>
-      <button
-        type="button"
-        onClick={(e) => {
-          setArguments?.(currentArguments);
-          closeEditor?.();
-        }}
-      >
-        Apply
-      </button>
-    </form>
+          </div>
+        );
+      })}
+    </div>
   );
 };
 
-//export default memo(ArgumentsEditor);
 export default ArgumentsEditor;
