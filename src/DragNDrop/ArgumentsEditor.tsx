@@ -4,6 +4,7 @@ interface ArgumentsEditorProps {
   componentSpec: ComponentSpec;
   componentArguments: Record<string, ArgumentType>;
   setComponentArguments: (args: Record<string, ArgumentType>) => void;
+  shrinkToWidth?: boolean;
 }
 
 const getPatternForTypeSpec = (typeSpec?: TypeSpecType) => {
@@ -25,12 +26,17 @@ const ArgumentsEditor = ({
   componentSpec,
   componentArguments,
   setComponentArguments,
+  shrinkToWidth = false,
 }: ArgumentsEditorProps) => {
   return (
     <div
       style={{
         display: "table",
         borderSpacing: "5px",
+        // Enables shrinking the table. But also makes all columns same width regardless of the content
+        tableLayout: shrinkToWidth ? "fixed" : "auto",
+        // Width is needed for table-layout: "fixed" to work
+        width: "100%",
       }}
     >
       {(componentSpec.inputs ?? []).map((inputSpec) => {
@@ -67,10 +73,13 @@ const ArgumentsEditor = ({
             }}
           >
             <label
+              title={`${inputName} (${typeSpecString})`}
               style={{
                 textAlign: "right",
                 display: "table-cell",
                 whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
               }}
             >
               <span>
@@ -95,6 +104,9 @@ const ArgumentsEditor = ({
                 display: "table-cell",
                 // Prevents border flickering and disappearing on movement
                 borderWidth: "1px",
+                // Overriding both min-width and max-width to enable the input element shrinking
+                minWidth: "50px",
+                maxWidth: "100%",
               }}
               placeholder={placeholder}
               required={argumentIsRequiredButMissing}
@@ -108,6 +120,9 @@ const ArgumentsEditor = ({
             <div
               style={{
                 display: "table-cell",
+                // Setting explicit width to make the button column smaller. Otherwise it takes 1/3 of the total width when the table-layout is set to fixed.
+                // The width should have been set to "min-content", but that does not work for some reason
+                width: "30px",
               }}
             >
               <button
