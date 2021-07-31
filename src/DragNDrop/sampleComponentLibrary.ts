@@ -26,7 +26,8 @@ export const COMPONENT_LIBRARY = [
     componentUrls: [
       "https://raw.githubusercontent.com/Ark-kun/pipelines/54ac9a6a7173aecbbb30a043b2077e790cac6953/components/web/Download/component.yaml",
       "https://raw.githubusercontent.com/Ark-kun/pipelines/2dac60c400ad8767b452649d08f328dfaf230f96/components/google-cloud/storage/download/component.yaml",
-      "https://raw.githubusercontent.com/Ark-kun/pipelines/2dac60c400ad8767b452649d08f328dfaf230f96/components/google-cloud/storage/upload_to_unique_uri/component.yaml",
+      //!!! Fix the component - it's not compatible with Vertex Pipelines
+      //"https://raw.githubusercontent.com/Ark-kun/pipelines/2dac60c400ad8767b452649d08f328dfaf230f96/components/google-cloud/storage/upload_to_unique_uri/component.yaml",
       "https://raw.githubusercontent.com/Ark-kun/pipelines/2dac60c400ad8767b452649d08f328dfaf230f96/components/google-cloud/storage/upload_to_explicit_uri/component.yaml",
     ],
   },
