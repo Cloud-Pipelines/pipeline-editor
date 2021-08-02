@@ -317,12 +317,17 @@ const GoogleCloudSubmitter = ({
           onChange={(e) => setGcsOutputDirectory(e.target.value)}
         />
       </div>
-      <input
-        type="submit"
-        disabled={!readyToSubmit}
-        value="Submit pipeline job"
-      />
-      {pipelineJobWebUrl !== "" && <div><a href={pipelineJobWebUrl} target="_blank" rel="noreferrer">Job</a></div>}
+      <div style={{
+        whiteSpace: "nowrap",
+        margin: "5px",
+      }}>
+        <input
+          type="submit"
+          disabled={!readyToSubmit}
+          value="Submit pipeline job"
+        />
+        {pipelineJobWebUrl !== "" && <a href={pipelineJobWebUrl} target="_blank" rel="noreferrer" style={{ margin: "5px" }}>Job</a>}
+      </div>
       {vertexPipelineJobUrl !== undefined && (
         <div style={{
           whiteSpace: "nowrap",
