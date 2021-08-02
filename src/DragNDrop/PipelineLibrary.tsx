@@ -1,18 +1,13 @@
 import { useCallback, useState, useEffect, useRef } from "react";
 import { ComponentSpec, isGraphImplementation } from "../componentSpec";
 import {
-  storeComponentFromUrl,
   getAllComponentsFromList,
   addComponentToListByText,
   ComponentReferenceWithSpec,
   loadComponentAsRefFromText,
-  resetComponentList,
 } from "../componentStore";
 import GraphComponentLink from "./GraphComponentLink";
-import {
-  preloadComponentReferences,
-  PRELOADED_PIPELINE_URLS,
-} from "./samplePipelines";
+import SamplePipelineLibrary from "./SamplePipelineLibrary";
 
 const USER_PIPELINES_LIST_NAME = "user_pipelines";
 
@@ -35,24 +30,6 @@ const PipelineLibrary = ({
       let componentRefs = await getAllComponentsFromList(
         USER_PIPELINES_LIST_NAME
       );
-      if (componentRefs.length === 0) {
-        // addComponentRefToList is prone to race conditions. Usually it ends up with only 2 pipelines.
-        // Plus there are race conditions that cause the last pipeline to be added twice.
-        // componentRefs = await Promise.all(
-        //   PRELOADED_PIPELINE_URLS.map(async (url) => {
-        //     const componentRef = await storeComponentFromUrl(url);
-        //     await preloadComponentReferences(componentRef.spec)
-        //     await addComponentRefToList(USER_PIPELINES_LIST_NAME, componentRef);
-        //     return componentRef;
-        //   })
-        // );
-        for (const url of PRELOADED_PIPELINE_URLS) {
-          const componentRef = await storeComponentFromUrl(url);
-          await preloadComponentReferences(componentRef.spec);
-          componentRefs.push(componentRef);
-        }
-        await resetComponentList(USER_PIPELINES_LIST_NAME, componentRefs);
-      }
       setComponentRefs(componentRefs);
     })();
   }, []);
@@ -160,6 +137,19 @@ const PipelineLibrary = ({
           </div>
         ))}
       </div>
+      <details
+        open
+        style={{
+          border: "1px solid #aaa",
+          borderRadius: "4px",
+          padding: "4px",
+        }}
+      >
+        <summary>
+          <strong>Sample pipelines</strong>
+        </summary>
+        <SamplePipelineLibrary setComponentSpec={setComponentSpec} />
+      </details>
     </div>
   );
 };
