@@ -113,7 +113,7 @@ const resolveCommandLine = (
       return unresolvedArgs.flatMap(convertArg);
     } else if ("concat" in arg) {
       const concatArgs = arg.concat;
-      return concatArgs.flatMap(convertArg);
+      return [concatArgs.flatMap(convertArg).join("")];
     } else {
       throw Error(`Unknown kind of command-line argument: ${arg}`);
     }
