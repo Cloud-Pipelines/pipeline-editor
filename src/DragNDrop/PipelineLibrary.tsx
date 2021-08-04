@@ -55,7 +55,8 @@ const PipelineLibrary = ({
 
           const componentRef = await addComponentToListByText(
             USER_PIPELINES_LIST_NAME,
-            binaryStr
+            binaryStr,
+            "Pipeline"
           );
           console.debug("storeComponentText succeeded", componentRef);
           (window as any).gtag?.("event", "PipelineLibrary_pipeline_import", {

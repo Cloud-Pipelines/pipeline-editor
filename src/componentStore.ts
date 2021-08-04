@@ -15,6 +15,8 @@ const DIGEST_TO_COMPONENT_NAME_DB_TABLE_NAME = "digest_to_component_name";
 const URL_TO_DIGEST_DB_TABLE_NAME = "url_to_digest";
 const DIGEST_TO_CANONICAL_URL_DB_TABLE_NAME = "digest_to_canonical_url";
 const COMPONENT_REF_LISTS_DB_TABLE_NAME = "component_ref_lists";
+const COMPONENT_STORE_SETTINGS_DB_TABLE_NAME = "component_store_settings";
+const FILE_STORE_DB_TABLE_NAME_PREFIX = "file_store_";
 
 export interface ComponentReferenceWithSpec extends ComponentReference {
   spec: ComponentSpec;
@@ -232,51 +234,137 @@ export const storeComponentFromUrl = async (
   return componentRef;
 };
 
+interface ComponentFileEntry {
+  componentRef: ComponentReferenceWithSpec;
+}
+
+const makeNameUniqueByAddingIndex = (
+  name: string,
+  existingNames: Set<string>
+): string => {
+  let finalName = name;
+  let index = 1;
+  while (existingNames.has(finalName)) {
+    index++;
+    finalName = name + " " + index.toString();
+  }
+  return finalName;
+};
+
 export const addComponentRefToList = async (
   listName: string,
-  componentRef: ComponentReferenceWithSpec
+  componentRef: ComponentReferenceWithSpec,
+  fileName: string = "Component"
 ) => {
-  const componentRefListsDb = localForage.createInstance({
+  await upgradeAllComponentListDbs();
+  const tableName = FILE_STORE_DB_TABLE_NAME_PREFIX + listName;
+  const componentListDb = localForage.createInstance({
     name: DB_NAME,
-    storeName: COMPONENT_REF_LISTS_DB_TABLE_NAME,
+    storeName: tableName,
   });
-  let componentRefList: ComponentReferenceWithSpec[] =
-    (await componentRefListsDb.getItem(listName)) ?? [];
-  componentRefList.push(componentRef);
-  await componentRefListsDb.setItem(listName, componentRefList);
+  const existingNames = new Set<string>(await componentListDb.keys());
+  const uniqueFileName = makeNameUniqueByAddingIndex(fileName, existingNames);
+  const fileEntry: ComponentFileEntry = {
+    componentRef: componentRef,
+  };
+  await componentListDb.setItem(uniqueFileName, fileEntry);
   return componentRef;
 };
 
 export const addComponentToListByUrl = async (
   listName: string,
-  url: string
+  url: string,
+  defaultFileName: string = "Component"
 ) => {
   const componentRef = await storeComponentFromUrl(url);
-  return addComponentRefToList(listName, componentRef);
+  return addComponentRefToList(
+    listName,
+    componentRef,
+    componentRef.spec.name ?? defaultFileName
+  );
 };
 
 export const addComponentToListByText = async (
   listName: string,
-  componentText: string | ArrayBuffer
+  componentText: string | ArrayBuffer,
+  defaultFileName: string = "Component"
 ) => {
   const componentRef = await storeComponentText(componentText);
-  return addComponentRefToList(listName, componentRef);
-};
-
-export const resetComponentList = async (listName: string, componentRefs: ComponentReferenceWithSpec[]) => {
-  const componentRefListsDb = localForage.createInstance({
-    name: DB_NAME,
-    storeName: COMPONENT_REF_LISTS_DB_TABLE_NAME,
-  });
-  await componentRefListsDb.setItem(listName, componentRefs);
+  return addComponentRefToList(
+    listName,
+    componentRef,
+    componentRef.spec.name ?? defaultFileName
+  );
 };
 
 export const getAllComponentsFromList = async (listName: string) => {
-  const componentRefListsDb = localForage.createInstance({
+  await upgradeAllComponentListDbs();
+  const tableName = FILE_STORE_DB_TABLE_NAME_PREFIX + listName;
+  const componentListDb = localForage.createInstance({
     name: DB_NAME,
-    storeName: COMPONENT_REF_LISTS_DB_TABLE_NAME,
+    storeName: tableName,
   });
-  const componentRefList: ComponentReferenceWithSpec[] =
-    (await componentRefListsDb.getItem(listName)) ?? [];
-  return componentRefList;
+  let componentRefs: ComponentReferenceWithSpec[] = [];
+  await componentListDb.iterate<ComponentFileEntry, void>(
+    (fileEntry, fileName, iterationNumber) => {
+      componentRefs.push(fileEntry.componentRef);
+    }
+  );
+  return componentRefs;
+};
+
+// TODO: Remove the upgrade code in several weeks.
+const upgradeAllComponentListDbs = async () => {
+  for (const listName of ["user_components", "user_pipelines"]) {
+    await upgradeSingleComponentListDb(listName);
+  }
+};
+
+const upgradeSingleComponentListDb = async (listName: string) => {
+  const componentListVersionKey = "component_list_format_version_" + listName;
+  const componentStoreSettingsDb = localForage.createInstance({
+    name: DB_NAME,
+    storeName: COMPONENT_STORE_SETTINGS_DB_TABLE_NAME,
+  });
+  const componentListTableName = FILE_STORE_DB_TABLE_NAME_PREFIX + listName;
+  const componentListDb = localForage.createInstance({
+    name: DB_NAME,
+    storeName: componentListTableName,
+  });
+  const listFormatVersion =
+    (await componentStoreSettingsDb.getItem<number>(componentListVersionKey)) ??
+    1;
+  if (listFormatVersion === 1) {
+    console.log(`componentStore: Upgrading the component list DB ${listName}`);
+    const componentRefListsDb = localForage.createInstance({
+      name: DB_NAME,
+      storeName: COMPONENT_REF_LISTS_DB_TABLE_NAME,
+    });
+    const componentRefList: ComponentReferenceWithSpec[] =
+      (await componentRefListsDb.getItem(listName)) ?? [];
+
+    let existingNames = new Set<string>();
+    const emptyNameReplacement =
+      listName === "user_pipelines" ? "Pipeline" : "Component";
+    for (const componentRef of componentRefList) {
+      const fileName = componentRef.spec.name ?? emptyNameReplacement;
+      const uniqueFileName = makeNameUniqueByAddingIndex(
+        fileName,
+        existingNames
+      );
+      const fileEntry: ComponentFileEntry = {
+        componentRef: componentRef,
+      };
+      await componentListDb.setItem(uniqueFileName, fileEntry);
+      existingNames.add(uniqueFileName);
+    }
+    await componentStoreSettingsDb.setItem(componentListVersionKey, 2);
+    console.log(`componentStore: Upgraded the component list DB ${listName}`);
+  } else if (listFormatVersion === 2) {
+    return;
+  } else {
+    throw Error(
+      `upgradeComponentListDb: Component list version is ${listFormatVersion} for the list ${listName}`
+    );
+  }
 };

@@ -33,7 +33,8 @@ const UserComponentLibrary = () => {
         try {
           const componentRef = await addComponentToListByText(
             USER_COMPONENTS_LIST_NAME,
-            binaryStr
+            binaryStr,
+            "Component"
           );
           console.debug("storeComponentText succeeded", componentRef);
           (window as any).gtag?.("event", "UserComponents_component_import", {
