@@ -171,6 +171,28 @@ const typeSpecToVertexArtifactSpec = (
 //     return typeof typeSpec === "string" && ["String", "Integer", "Float", "Double", "Boolean", ]
 // }
 
+const stringToMlmdValue = (
+  constantString: string,
+  primitiveType: vertex.PrimitiveTypeEnum
+): vertex.MlmdValue => {
+  switch (primitiveType) {
+    case vertex.PrimitiveTypeEnum.STRING:
+      return {
+        stringValue: constantString,
+      };
+    case vertex.PrimitiveTypeEnum.INT:
+      return {
+        intValue: parseInt(constantString),
+      };
+    case vertex.PrimitiveTypeEnum.DOUBLE:
+      return {
+        doubleValue: parseFloat(constantString),
+      };
+    default:
+      throw Error(`Unknown primitive type ${primitiveType}`);
+  }
+};
+
 const MAKE_ARTIFACT_COMPONENT_ID = "_make_artifact";
 const MAKE_ARTIFACT_EXECUTOR_ID = "_make_artifact";
 const MAKE_ARTIFACT_INPUT_NAME = "parameter";
@@ -287,6 +309,9 @@ const taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec = (
     executorLabel: "<set later>",
   };
 
+  const vertexComponentInputParametersSpec =
+    vertexComponentInputsSpec.parameters ?? {};
+
   const vertexTaskParameterArguments: Record<
     string,
     vertex.ParameterArgumentSpec
@@ -327,10 +352,10 @@ const taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec = (
           if (typeof taskArgument === "string") {
             result = {
               runtimeValue: {
-                constantValue: {
-                  // TODO: Fix constant arguments for non-string inputs
-                  stringValue: taskArgument,
-                },
+                constantValue: stringToMlmdValue(
+                  taskArgument,
+                  vertexComponentInputParametersSpec[inputName].type
+                ),
               },
             };
             return result;
@@ -403,6 +428,7 @@ const taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec = (
                   [MAKE_ARTIFACT_INPUT_NAME]: {
                     runtimeValue: {
                       constantValue: {
+                        // TODO: Check whether string is always OK here
                         stringValue: taskArgument,
                       },
                     },
@@ -619,22 +645,22 @@ export const generateVertexPipelineJobFromGraphComponent = (
 ) => {
   // The pipelineContextName affects caching
 
-  // TODO: FIX: Do proper conversion of integers
-  let convertedPipelineArguments: Record<string, any> = {};
-  if (pipelineArguments !== undefined) {
-    for (const [key, value] of Array.from(pipelineArguments.entries())) {
-      convertedPipelineArguments[key] = {
-        stringValue: value,
-        //intValue
-        //doubleValue
-      };
-    }
-  }
-
   const pipelineSpec = graphComponentSpecToVertexPipelineSpec(
     componentSpec,
     pipelineContextName
   );
+  const inputParameterDefinitions =
+    (pipelineSpec.root.inputDefinitions ?? {}).parameters ?? {};
+
+  let convertedPipelineArguments: Record<string, any> = {};
+  if (pipelineArguments !== undefined) {
+    for (const [key, value] of Array.from(pipelineArguments.entries())) {
+      convertedPipelineArguments[key] = stringToMlmdValue(
+        value,
+        inputParameterDefinitions[key].type
+      );
+    }
+  }
 
   const pipelineJob: vertex.PipelineJob = {
     // name: "<>",
