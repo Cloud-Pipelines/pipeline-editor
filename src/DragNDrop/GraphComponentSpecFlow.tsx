@@ -526,14 +526,15 @@ const GraphComponentSpecFlow = ({
     }
   };
 
-  const removeComponentInput = (inputName: string) => {
+  const removeComponentInput = (inputNameToRemove: string) => {
     // Removing the outcoming edges
+    // Not really needed since react-flow sends the node's incoming and outcoming edges for deletion when a node is deleted
     for (const [taskId, taskSpec] of Object.entries(graphSpec.tasks)) {
       for (const [inputName, argument] of Object.entries(
         taskSpec.arguments ?? {}
       )) {
         if (typeof argument !== "string" && "graphInput" in argument) {
-          if (argument.graphInput.inputName === inputName) {
+          if (argument.graphInput.inputName === inputNameToRemove) {
             removeTaskArgument(taskId, inputName);
           }
         }
@@ -543,30 +544,31 @@ const GraphComponentSpecFlow = ({
 
     // Removing the input itself
     const newInputs = (componentSpec.inputs ?? []).filter(
-      (inputSpec) => inputSpec.name !== inputName
+      (inputSpec) => inputSpec.name !== inputNameToRemove
     );
     componentSpec = { ...componentSpec, inputs: newInputs };
     replaceComponentSpec(componentSpec);
   };
 
-  const removeComponentOutput = (outputName: string) => {
-    removeGraphOutputValue(outputName);
+  const removeComponentOutput = (outputNameToRemove: string) => {
+    removeGraphOutputValue(outputNameToRemove);
     // Removing the output itself
     const newOutputs = (componentSpec.outputs ?? []).filter(
-      (outputSpec) => outputSpec.name !== outputName
+      (outputSpec) => outputSpec.name !== outputNameToRemove
     );
     componentSpec = { ...componentSpec, outputs: newOutputs };
     replaceComponentSpec(componentSpec);
   };
 
-  const removeTask = (taskId: string) => {
+  const removeTask = (taskIdToRemove: string) => {
     // Removing the outcoming edges
+    // Not really needed since react-flow sends the node's incoming and outcoming edges for deletion when a node is deleted
     for (const [taskId, taskSpec] of Object.entries(graphSpec.tasks)) {
       for (const [inputName, argument] of Object.entries(
         taskSpec.arguments ?? {}
       )) {
         if (typeof argument !== "string" && "taskOutput" in argument) {
-          if (argument.taskOutput.taskId === taskId) {
+          if (argument.taskOutput.taskId === taskIdToRemove) {
             removeTaskArgument(taskId, inputName);
           }
         }
@@ -577,7 +579,7 @@ const GraphComponentSpecFlow = ({
     // ? Should we delete the outputs themselves
     const newGraphOutputValues = Object.fromEntries(
       Object.entries(graphSpec.outputValues ?? {}).filter(
-        ([_, argument]) => argument.taskOutput.taskId !== taskId
+        ([_, argument]) => argument.taskOutput.taskId !== taskIdToRemove
       )
     );
     graphSpec = { ...graphSpec, outputValues: newGraphOutputValues };
@@ -587,7 +589,7 @@ const GraphComponentSpecFlow = ({
       ...graphSpec,
       tasks: { ...graphSpec.tasks },
     };
-    delete newGraphSpec.tasks[taskId];
+    delete newGraphSpec.tasks[taskIdToRemove];
     replaceGraphSpec(newGraphSpec);
   };
 
