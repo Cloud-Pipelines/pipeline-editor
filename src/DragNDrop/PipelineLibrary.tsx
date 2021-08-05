@@ -51,6 +51,8 @@ const PipelineLibrary = ({
             console.error("Dropped component is not a graph component");
             return;
           }
+          // Caching the child components
+          await preloadComponentReferences(componentRef1.spec);
           // TODO: Do not load the component twice
 
           const componentRef = await addComponentToListByText(
@@ -129,7 +131,10 @@ const PipelineLibrary = ({
             ⋮ {/* ⋮ ≡ ⋅ */}
             <button
               className="link-button"
-              onClick={(e) => {
+              onClick={async (e) => {
+                // Loading all child components
+                // TODO: Move this functionality to the setComponentSpec
+                await preloadComponentReferences(componentRef.spec);
                 setComponentSpec?.(componentRef.spec);
               }}
             >
