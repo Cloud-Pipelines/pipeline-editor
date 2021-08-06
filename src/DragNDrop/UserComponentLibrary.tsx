@@ -2,8 +2,9 @@ import { useCallback, useState, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import {
   getAllComponentsFromList,
-  addComponentToListByText,
   ComponentReferenceWithSpec,
+  storeComponentText,
+  addComponentRefToList,
 } from "../componentStore";
 import DraggableComponent from "./DraggableComponent";
 
@@ -31,10 +32,11 @@ const UserComponentLibrary = () => {
           return;
         }
         try {
-          const componentRef = await addComponentToListByText(
+          const componentRef = await storeComponentText(binaryStr);
+          await addComponentRefToList(
             USER_COMPONENTS_LIST_NAME,
-            binaryStr,
-            "Component"
+            componentRef,
+            componentRef.spec.name ?? "Component"
           );
           console.debug("storeComponentText succeeded", componentRef);
           (window as any).gtag?.("event", "UserComponents_component_import", {

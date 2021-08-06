@@ -2,9 +2,10 @@ import { useCallback, useState, useEffect, useRef } from "react";
 import { ComponentSpec, isGraphImplementation } from "../componentSpec";
 import {
   getAllComponentsFromList,
-  addComponentToListByText,
   ComponentReferenceWithSpec,
   loadComponentAsRefFromText,
+  storeComponentText,
+  addComponentRefToList,
 } from "../componentStore";
 import GraphComponentLink from "./GraphComponentLink";
 import SamplePipelineLibrary from "./SamplePipelineLibrary";
@@ -54,11 +55,11 @@ const PipelineLibrary = ({
           // Caching the child components
           await preloadComponentReferences(componentRef1.spec);
           // TODO: Do not load the component twice
-
-          const componentRef = await addComponentToListByText(
+          const componentRef = await storeComponentText(binaryStr);
+          await addComponentRefToList(
             USER_PIPELINES_LIST_NAME,
-            binaryStr,
-            "Pipeline"
+            componentRef,
+            file.name || "Pipeline"
           );
           console.debug("storeComponentText succeeded", componentRef);
           (window as any).gtag?.("event", "PipelineLibrary_pipeline_import", {
