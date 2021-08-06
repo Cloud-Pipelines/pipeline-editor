@@ -9,6 +9,7 @@ import {
 } from "../componentStore";
 import GraphComponentLink from "./GraphComponentLink";
 import SamplePipelineLibrary from "./SamplePipelineLibrary";
+import { preloadComponentReferences } from "./samplePipelines";
 
 const USER_PIPELINES_LIST_NAME = "user_pipelines";
 
