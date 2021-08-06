@@ -234,7 +234,7 @@ export const storeComponentFromUrl = async (
   return componentRef;
 };
 
-interface ComponentFileEntry {
+export interface ComponentFileEntry {
   componentRef: ComponentReferenceWithSpec;
 }
 
@@ -311,6 +311,22 @@ export const getAllComponentsFromList = async (listName: string) => {
     }
   );
   return componentRefs;
+};
+
+export const getAllComponentFilesFromList = async (listName: string) => {
+  await upgradeAllComponentListDbs();
+  const tableName = FILE_STORE_DB_TABLE_NAME_PREFIX + listName;
+  const componentListDb = localForage.createInstance({
+    name: DB_NAME,
+    storeName: tableName,
+  });
+  let componentFiles = new Map<string, ComponentFileEntry>();
+  await componentListDb.iterate<ComponentFileEntry, void>(
+    (fileEntry, fileName, iterationNumber) => {
+      componentFiles.set(fileName, fileEntry);
+    }
+  );
+  return componentFiles;
 };
 
 // TODO: Remove the upgrade code in several weeks.

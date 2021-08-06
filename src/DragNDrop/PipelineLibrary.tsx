@@ -1,11 +1,11 @@
 import { useCallback, useState, useEffect, useRef } from "react";
 import { ComponentSpec, isGraphImplementation } from "../componentSpec";
 import {
-  getAllComponentsFromList,
-  ComponentReferenceWithSpec,
   loadComponentAsRefFromText,
   storeComponentText,
   addComponentRefToList,
+  getAllComponentFilesFromList,
+  ComponentFileEntry,
 } from "../componentStore";
 import GraphComponentLink from "./GraphComponentLink";
 import SamplePipelineLibrary from "./SamplePipelineLibrary";
@@ -23,17 +23,14 @@ const PipelineLibrary = ({
   setComponentSpec,
 }: PipelineLibraryProps) => {
   // const [errorMessage, setErrorMessage] = useState("");
-  const [componentRefs, setComponentRefs] = useState<
-    ComponentReferenceWithSpec[]
-  >([]);
+  const [componentFiles, setComponentFiles] = useState(
+    new Map<string, ComponentFileEntry>()
+  );
 
   useEffect(() => {
-    (async () => {
-      let componentRefs = await getAllComponentsFromList(
-        USER_PIPELINES_LIST_NAME
-      );
-      setComponentRefs(componentRefs);
-    })();
+    getAllComponentFilesFromList(USER_PIPELINES_LIST_NAME).then(
+      setComponentFiles
+    );
   }, []);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -67,10 +64,10 @@ const PipelineLibrary = ({
             result: "succeeded",
           });
           // setErrorMessage("");
-          const allComponentRefs = await getAllComponentsFromList(
+          const componentFilesMap = await getAllComponentFilesFromList(
             USER_PIPELINES_LIST_NAME
           );
-          setComponentRefs(allComponentRefs);
+          setComponentFiles(componentFilesMap);
         } catch (err) {
           // setErrorMessage(
           //   `Error parsing the dropped file as component: ${err.toString()}.`
@@ -128,19 +125,19 @@ const PipelineLibrary = ({
         )}
       </div>
       <div style={{ overflow: "auto", marginLeft: "10px" }}>
-        {componentRefs.map((componentRef) => (
-          <div key={componentRef.digest}>
+        {Array.from(componentFiles.entries()).map(([fileName, fileEntry]) => (
+          <div key={fileName}>
             ⋮ {/* ⋮ ≡ ⋅ */}
             <button
               className="link-button"
               onClick={async (e) => {
                 // Loading all child components
                 // TODO: Move this functionality to the setComponentSpec
-                await preloadComponentReferences(componentRef.spec);
-                setComponentSpec?.(componentRef.spec);
+                await preloadComponentReferences(fileEntry.componentRef.spec);
+                setComponentSpec?.(fileEntry.componentRef.spec);
               }}
             >
-              {componentRef.spec.name ?? "<Pipeline>"}
+              {fileName}
             </button>
           </div>
         ))}
