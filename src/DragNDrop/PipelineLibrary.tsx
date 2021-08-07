@@ -18,6 +18,15 @@ interface PipelineLibraryProps {
   setComponentSpec?: (componentSpec: ComponentSpec) => void;
 }
 
+const removeSuffixes = (s: string, suffixes: string[]) => {
+  for (const suffix of suffixes) {
+    if (s.endsWith(suffix)) {
+      s = s.substring(0, s.length - suffix.length);
+    }
+  }
+  return s;
+};
+
 const PipelineLibrary = ({
   componentSpec,
   setComponentSpec,
@@ -44,6 +53,13 @@ const PipelineLibrary = ({
           console.error(`Dropped file reader result was ${binaryStr}`);
           return;
         }
+        const fileName =
+          removeSuffixes(file.name, [
+            ".pipeline.component.yaml",
+            ".component.yaml",
+            ".pipeline.yaml",
+            ".yaml",
+          ]) || "Pipeline";
         try {
           const componentRef1 = await loadComponentAsRefFromText(binaryStr);
           if (!isGraphImplementation(componentRef1.spec.implementation)) {
@@ -57,7 +73,7 @@ const PipelineLibrary = ({
           await addComponentRefToList(
             USER_PIPELINES_LIST_NAME,
             componentRef,
-            file.name || "Pipeline"
+            fileName
           );
           console.debug("storeComponentText succeeded", componentRef);
           (window as any).gtag?.("event", "PipelineLibrary_pipeline_import", {
