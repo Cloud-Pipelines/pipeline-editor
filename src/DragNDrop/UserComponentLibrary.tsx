@@ -32,7 +32,8 @@ const UserComponentLibrary = () => {
           return;
         }
         try {
-          const componentRef = await storeComponentText(binaryStr);
+          const componentRefPlusData = await storeComponentText(binaryStr);
+          const componentRef = componentRefPlusData.componentRef;
           await addComponentRefToList(
             USER_COMPONENTS_LIST_NAME,
             componentRef,

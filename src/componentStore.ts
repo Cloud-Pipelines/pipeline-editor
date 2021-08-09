@@ -23,6 +23,11 @@ export interface ComponentReferenceWithSpec extends ComponentReference {
   digest: string;
 }
 
+export interface ComponentReferenceWithSpecPlusData {
+  componentRef: ComponentReferenceWithSpec;
+  data: ArrayBuffer;
+}
+
 const calculateHashDigestHex = async (data: string | ArrayBuffer) => {
   const dataBytes =
     typeof data === "string" ? new TextEncoder().encode(data) : data;
@@ -80,15 +85,19 @@ export const loadComponentAsRefFromText = async (
     spec: componentSpec,
     digest: digest,
   };
-  return componentRef;
+  const componentRefPlusData: ComponentReferenceWithSpecPlusData = {
+    componentRef: componentRef,
+    data: componentBytes,
+  };
+  return componentRefPlusData;
 };
 
 export const loadComponentAsRefFromUrl = async (url: string) => {
   const response = await fetch(url);
   const componentData = await response.arrayBuffer();
-  let componentRef = await loadComponentAsRefFromText(componentData);
-  componentRef.url = url;
-  return componentRef;
+  let componentRefPlusData = await loadComponentAsRefFromText(componentData);
+  componentRefPlusData.componentRef.url = url;
+  return componentRefPlusData;
 };
 
 export const storeComponentText = async (
@@ -98,15 +107,19 @@ export const storeComponentText = async (
     typeof componentText === "string"
       ? new TextEncoder().encode(componentText)
       : componentText;
-  const componentRef = await loadComponentAsRefFromText(componentText);
+  const componentRefPlusData = await loadComponentAsRefFromText(componentText);
   const digestToComponentTextDb = localForage.createInstance({
     name: DB_NAME,
     storeName: DIGEST_TO_DATA_DB_TABLE_NAME,
   });
-  await digestToComponentTextDb.setItem(componentRef.digest, componentBytes);
+  const componentRef = componentRefPlusData.componentRef;
+  await digestToComponentTextDb.setItem(
+    componentRefPlusData.componentRef.digest,
+    componentBytes
+  );
   await storeComponentSpec(componentRef.digest, componentRef.spec);
 
-  return componentRef;
+  return componentRefPlusData;
 };
 
 export const getAllComponentsAsRefs = async () => {
@@ -172,19 +185,30 @@ export const storeComponentFromUrl = async (
     name: DB_NAME,
     storeName: DIGEST_TO_COMPONENT_SPEC_DB_TABLE_NAME,
   });
+  const digestToDataDb = localForage.createInstance({
+    name: DB_NAME,
+    storeName: DIGEST_TO_DATA_DB_TABLE_NAME,
+  });
 
   const existingDigest = await urlToDigestDb.getItem<string>(url);
   if (existingDigest !== null) {
     const componentSpec = await digestToComponentSpecDb.getItem<ComponentSpec>(
       existingDigest
     );
-    if (componentSpec !== null) {
+    const componentData = await digestToDataDb.getItem<ArrayBuffer>(
+      existingDigest
+    );
+    if (componentSpec !== null && componentData !== null) {
       const componentRef: ComponentReferenceWithSpec = {
         url: url,
         digest: existingDigest,
         spec: componentSpec,
       };
-      return componentRef;
+      const componentRefPlusData: ComponentReferenceWithSpecPlusData = {
+        componentRef: componentRef,
+        data: componentData,
+      };
+      return componentRefPlusData;
     } else {
       console.error(
         `Component db is corrupted: Component with url ${url} was added before with digest ${existingDigest} but now has no content in the DB.`
@@ -194,14 +218,15 @@ export const storeComponentFromUrl = async (
 
   const response = await fetch(url);
   const componentData = await response.arrayBuffer();
-  let componentRef = await storeComponentText(componentData);
+  let componentRefPlusData = await storeComponentText(componentData);
+  let componentRef = componentRefPlusData.componentRef;
   componentRef.url = url;
   const digest = componentRef.digest;
   if (digest === undefined) {
     console.error(
       `Cannot happen: storeComponentText has returned componentReference with digest === undefined.`
     );
-    return componentRef;
+    return componentRefPlusData;
   }
   if (existingDigest !== null && digest !== existingDigest) {
     console.error(
@@ -231,7 +256,7 @@ export const storeComponentFromUrl = async (
   // Updating the urlToDigestDb last, because it's used to check for cached entries.
   // So we need to be sure that everything has been updated correctly.
   await urlToDigestDb.setItem(url, digest);
-  return componentRef;
+  return componentRefPlusData;
 };
 
 export interface ComponentFileEntry {

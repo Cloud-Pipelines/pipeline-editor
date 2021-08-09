@@ -61,7 +61,8 @@ const PipelineLibrary = ({
             ".yaml",
           ]) || "Pipeline";
         try {
-          const componentRef1 = await loadComponentAsRefFromText(binaryStr);
+          const componentRefPlusData1 = await loadComponentAsRefFromText(binaryStr);
+          const componentRef1 = componentRefPlusData1.componentRef;
           if (!isGraphImplementation(componentRef1.spec.implementation)) {
             console.error("Dropped component is not a graph component");
             return;
@@ -69,7 +70,8 @@ const PipelineLibrary = ({
           // Caching the child components
           await preloadComponentReferences(componentRef1.spec);
           // TODO: Do not load the component twice
-          const componentRef = await storeComponentText(binaryStr);
+          const componentRefPlusData = await storeComponentText(binaryStr);
+          const componentRef = componentRefPlusData.componentRef;
           await addComponentRefToList(
             USER_PIPELINES_LIST_NAME,
             componentRef,

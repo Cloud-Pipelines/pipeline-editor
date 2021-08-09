@@ -23,7 +23,8 @@ const SamplePipelineLibrary = ({ setComponentSpec }: PipelineLibraryProps) => {
       if (componentRefs.length === 0) {
         const loadedComponentRefs = await Promise.all(
           PRELOADED_PIPELINE_URLS.map(async (url) => {
-            const componentRef = await storeComponentFromUrl(url);
+            const componentRefPlusData = await storeComponentFromUrl(url);
+            const componentRef = componentRefPlusData.componentRef;
             await preloadComponentReferences(componentRef.spec);
             return componentRef;
           })
