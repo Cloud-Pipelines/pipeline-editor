@@ -276,7 +276,7 @@ const makeNameUniqueByAddingIndex = (
   return finalName;
 };
 
-export const addComponentRefToList = async (
+const addComponentRefToList = async (
   listName: string,
   componentRef: ComponentReferenceWithSpec,
   fileName: string = "Component"
@@ -301,25 +301,30 @@ export const addComponentToListByUrl = async (
   url: string,
   defaultFileName: string = "Component"
 ) => {
-  const componentRef = await storeComponentFromUrl(url);
-  return addComponentRefToList(
+  const componentRefPlusData = await storeComponentFromUrl(url);
+  const componentRef = componentRefPlusData.componentRef;
+  await addComponentRefToList(
     listName,
     componentRef,
     componentRef.spec.name ?? defaultFileName
   );
+  return componentRefPlusData;
 };
 
 export const addComponentToListByText = async (
   listName: string,
   componentText: string | ArrayBuffer,
+  fileName?: string,
   defaultFileName: string = "Component"
 ) => {
-  const componentRef = await storeComponentText(componentText);
-  return addComponentRefToList(
+  const componentRefPlusData = await storeComponentText(componentText);
+  const componentRef = componentRefPlusData.componentRef;
+  await addComponentRefToList(
     listName,
     componentRef,
-    componentRef.spec.name ?? defaultFileName
+    fileName ?? componentRefPlusData.componentRef.spec.name ?? defaultFileName
   );
+  return componentRefPlusData;
 };
 
 export const getAllComponentsFromList = async (listName: string) => {

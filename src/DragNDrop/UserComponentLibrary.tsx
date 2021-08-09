@@ -3,8 +3,7 @@ import { useDropzone } from "react-dropzone";
 import {
   getAllComponentsFromList,
   ComponentReferenceWithSpec,
-  storeComponentText,
-  addComponentRefToList,
+  addComponentToListByText,
 } from "../componentStore";
 import DraggableComponent from "./DraggableComponent";
 
@@ -32,13 +31,11 @@ const UserComponentLibrary = () => {
           return;
         }
         try {
-          const componentRefPlusData = await storeComponentText(binaryStr);
-          const componentRef = componentRefPlusData.componentRef;
-          await addComponentRefToList(
+          const componentRefPlusData = await addComponentToListByText(
             USER_COMPONENTS_LIST_NAME,
-            componentRef,
-            componentRef.spec.name ?? "Component"
+            binaryStr,
           );
+          const componentRef = componentRefPlusData.componentRef;
           console.debug("storeComponentText succeeded", componentRef);
           (window as any).gtag?.("event", "UserComponents_component_import", {
             result: "succeeded",
