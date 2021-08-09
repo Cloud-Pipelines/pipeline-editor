@@ -259,9 +259,22 @@ export const storeComponentFromUrl = async (
   return componentRefPlusData;
 };
 
-export interface ComponentFileEntry {
+interface ComponentFileEntryV2 {
   componentRef: ComponentReferenceWithSpec;
 }
+
+interface FileEntry {
+  name: string;
+  creationTime: Date;
+  modificationTime: Date;
+  data: ArrayBuffer;
+}
+
+interface ComponentFileEntryV3
+  extends FileEntry,
+    ComponentReferenceWithSpecPlusData {}
+
+export type ComponentFileEntry = ComponentFileEntryV3;
 
 const makeNameUniqueByAddingIndex = (
   name: string,
@@ -276,9 +289,9 @@ const makeNameUniqueByAddingIndex = (
   return finalName;
 };
 
-const addComponentRefToList = async (
+const addComponentRefPlusDataToList = async (
   listName: string,
-  componentRef: ComponentReferenceWithSpec,
+  componentRefPlusData: ComponentReferenceWithSpecPlusData,
   fileName: string = "Component"
 ) => {
   await upgradeAllComponentListDbs();
@@ -289,11 +302,16 @@ const addComponentRefToList = async (
   });
   const existingNames = new Set<string>(await componentListDb.keys());
   const uniqueFileName = makeNameUniqueByAddingIndex(fileName, existingNames);
+  const currentTime = new Date();
   const fileEntry: ComponentFileEntry = {
-    componentRef: componentRef,
+    componentRef: componentRefPlusData.componentRef,
+    name: uniqueFileName,
+    creationTime: currentTime,
+    modificationTime: currentTime,
+    data: componentRefPlusData.data,
   };
   await componentListDb.setItem(uniqueFileName, fileEntry);
-  return componentRef;
+  return fileEntry;
 };
 
 export const addComponentToListByUrl = async (
@@ -302,13 +320,11 @@ export const addComponentToListByUrl = async (
   defaultFileName: string = "Component"
 ) => {
   const componentRefPlusData = await storeComponentFromUrl(url);
-  const componentRef = componentRefPlusData.componentRef;
-  await addComponentRefToList(
+  return addComponentRefPlusDataToList(
     listName,
-    componentRef,
-    componentRef.spec.name ?? defaultFileName
+    componentRefPlusData,
+    componentRefPlusData.componentRef.spec.name ?? defaultFileName
   );
-  return componentRefPlusData;
 };
 
 export const addComponentToListByText = async (
@@ -318,13 +334,11 @@ export const addComponentToListByText = async (
   defaultFileName: string = "Component"
 ) => {
   const componentRefPlusData = await storeComponentText(componentText);
-  const componentRef = componentRefPlusData.componentRef;
-  await addComponentRefToList(
+  return addComponentRefPlusDataToList(
     listName,
-    componentRef,
+    componentRefPlusData,
     fileName ?? componentRefPlusData.componentRef.spec.name ?? defaultFileName
   );
-  return componentRefPlusData;
 };
 
 export const getAllComponentsFromList = async (listName: string) => {
@@ -359,6 +373,10 @@ export const getAllComponentFilesFromList = async (listName: string) => {
   return componentFiles;
 };
 
+export const componentSpecToYaml = (componentSpec: ComponentSpec) => {
+  return yaml.dump(componentSpec, { lineWidth: 10000 });
+};
+
 // TODO: Remove the upgrade code in several weeks.
 const upgradeAllComponentListDbs = async () => {
   for (const listName of ["user_components", "user_pipelines"]) {
@@ -377,9 +395,14 @@ const upgradeSingleComponentListDb = async (listName: string) => {
     name: DB_NAME,
     storeName: componentListTableName,
   });
-  const listFormatVersion =
+  let listFormatVersion =
     (await componentStoreSettingsDb.getItem<number>(componentListVersionKey)) ??
     1;
+  if (![1, 2, 3].includes(listFormatVersion)) {
+    throw Error(
+      `upgradeComponentListDb: Unknown component list version "${listFormatVersion}" for the list ${listName}`
+    );
+  }
   if (listFormatVersion === 1) {
     console.log(`componentStore: Upgrading the component list DB ${listName}`);
     const componentRefListsDb = localForage.createInstance({
@@ -398,19 +421,68 @@ const upgradeSingleComponentListDb = async (listName: string) => {
         fileName,
         existingNames
       );
-      const fileEntry: ComponentFileEntry = {
+      const fileEntry: ComponentFileEntryV2 = {
         componentRef: componentRef,
       };
       await componentListDb.setItem(uniqueFileName, fileEntry);
       existingNames.add(uniqueFileName);
     }
     await componentStoreSettingsDb.setItem(componentListVersionKey, 2);
-    console.log(`componentStore: Upgraded the component list DB ${listName}`);
-  } else if (listFormatVersion === 2) {
-    return;
-  } else {
-    throw Error(
-      `upgradeComponentListDb: Component list version is ${listFormatVersion} for the list ${listName}`
+    listFormatVersion = 2;
+    console.log(
+      `componentStore: Upgraded the component list DB ${listName} to version ${listFormatVersion}`
+    );
+  }
+  if (listFormatVersion === 2) {
+    const digestToDataDb = localForage.createInstance({
+      name: DB_NAME,
+      storeName: DIGEST_TO_DATA_DB_TABLE_NAME,
+    });
+    const fileNames = await componentListDb.keys();
+    for (const fileName of fileNames) {
+      const fileEntry = await componentListDb.getItem<ComponentFileEntryV2>(
+        fileName
+      );
+      if (fileEntry === null) {
+        throw Error(`File "${fileName}" has disappeared during upgrade`);
+      }
+      let componentRef = fileEntry.componentRef;
+      let data = await digestToDataDb.getItem<ArrayBuffer>(
+        fileEntry.componentRef.digest
+      );
+      if (data === null) {
+        console.error(
+          `Db is corrupted: Could not find data for file "${fileName}" with digest ${fileEntry.componentRef.digest}.`
+        );
+        const componentText = componentSpecToYaml(fileEntry.componentRef.spec);
+        data = new TextEncoder().encode(componentText);
+        const newDigest = await calculateHashDigestHex(data);
+        componentRef.digest = newDigest;
+        console.warn(
+          `The component "${fileName}" was re-serialized. Old digest: ${fileEntry.componentRef.digest}. New digest ${newDigest}.`
+        );
+        // This case should not happen. Let's throw error for now.
+        throw Error(
+          `Db is corrupted: Could not find data for file "${fileName}" with digest ${fileEntry.componentRef.digest}.`
+        );
+      }
+      const currentTime = new Date();
+      const newFileEntry: ComponentFileEntryV3 = {
+        name: fileName,
+        creationTime: currentTime,
+        modificationTime: currentTime,
+        data: data,
+        componentRef: componentRef,
+      };
+      await componentListDb.setItem(fileName, newFileEntry);
+    }
+    listFormatVersion = 3;
+    await componentStoreSettingsDb.setItem(
+      componentListVersionKey,
+      listFormatVersion
+    );
+    console.log(
+      `componentStore: Upgraded the component list DB ${listName} to version ${listFormatVersion}`
     );
   }
 };
