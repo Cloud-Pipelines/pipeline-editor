@@ -294,7 +294,7 @@ const addComponentRefPlusDataToList = async (
   componentRefPlusData: ComponentReferenceWithSpecPlusData,
   fileName: string = "Component"
 ) => {
-  await upgradeAllComponentListDbs();
+  await upgradeSingleComponentListDb(listName);
   const tableName = FILE_STORE_DB_TABLE_NAME_PREFIX + listName;
   const componentListDb = localForage.createInstance({
     name: DB_NAME,
@@ -342,7 +342,7 @@ export const addComponentToListByText = async (
 };
 
 export const getAllComponentsFromList = async (listName: string) => {
-  await upgradeAllComponentListDbs();
+  await upgradeSingleComponentListDb(listName);
   const tableName = FILE_STORE_DB_TABLE_NAME_PREFIX + listName;
   const componentListDb = localForage.createInstance({
     name: DB_NAME,
@@ -358,7 +358,7 @@ export const getAllComponentsFromList = async (listName: string) => {
 };
 
 export const getAllComponentFilesFromList = async (listName: string) => {
-  await upgradeAllComponentListDbs();
+  await upgradeSingleComponentListDb(listName);
   const tableName = FILE_STORE_DB_TABLE_NAME_PREFIX + listName;
   const componentListDb = localForage.createInstance({
     name: DB_NAME,
@@ -378,12 +378,6 @@ export const componentSpecToYaml = (componentSpec: ComponentSpec) => {
 };
 
 // TODO: Remove the upgrade code in several weeks.
-const upgradeAllComponentListDbs = async () => {
-  for (const listName of ["user_components", "user_pipelines"]) {
-    await upgradeSingleComponentListDb(listName);
-  }
-};
-
 const upgradeSingleComponentListDb = async (listName: string) => {
   const componentListVersionKey = "component_list_format_version_" + listName;
   const componentStoreSettingsDb = localForage.createInstance({
