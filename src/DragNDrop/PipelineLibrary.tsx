@@ -1,12 +1,23 @@
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  TextField,
+} from "@material-ui/core";
 import { useCallback, useState, useEffect, useRef } from "react";
+import { useStoreState } from "react-flow-renderer";
 import { ComponentSpec, isGraphImplementation } from "../componentSpec";
 import {
   loadComponentAsRefFromText,
   getAllComponentFilesFromList,
   ComponentFileEntry,
   addComponentToListByText,
+  componentSpecToYaml,
 } from "../componentStore";
 import GraphComponentLink from "./GraphComponentLink";
+import { augmentComponentSpec } from "./GraphComponentSpecFlow";
 import SamplePipelineLibrary from "./SamplePipelineLibrary";
 import { preloadComponentReferences } from "./samplePipelines";
 
@@ -26,6 +37,102 @@ const removeSuffixes = (s: string, suffixes: string[]) => {
   return s;
 };
 
+interface SavePipelineAsDialogProps {
+  componentSpec: ComponentSpec;
+  isOpen: boolean;
+  onPipelineSave: (name: string, componentText: string) => void;
+  onCancel: () => void;
+}
+
+const SavePipelineAsDialog = ({
+  componentSpec,
+  isOpen,
+  onPipelineSave,
+  onCancel,
+}: SavePipelineAsDialogProps) => {
+  const nodes = useStoreState((store) => store.nodes);
+
+  const handleSave = (name: string) => {
+    let componentText = "";
+    try {
+      const graphComponent = augmentComponentSpec(
+        componentSpec,
+        nodes,
+        false,
+        true
+      );
+      graphComponent.name = name;
+      componentText = componentSpecToYaml(graphComponent);
+      onPipelineSave(name, componentText);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  return (
+    <SaveAsDialog
+      isOpen={isOpen}
+      onSave={handleSave}
+      onCancel={onCancel}
+      initialValue={componentSpec.name}
+      inputLabel="Pipeline name"
+    />
+  );
+};
+
+interface SaveAsDialogProps {
+  isOpen: boolean;
+  onSave: (name: string) => void;
+  onCancel: () => void;
+  initialValue: string | undefined;
+  inputLabel: string;
+}
+
+const SaveAsDialog = ({
+  isOpen,
+  onSave,
+  onCancel,
+  initialValue,
+  inputLabel = "Pipeline name"
+}: SaveAsDialogProps) => {
+  const nameInputRef = useRef<HTMLInputElement>();
+  return (
+    <Dialog open={isOpen} aria-labelledby="alert-dialog-title">
+      <DialogTitle id="alert-dialog-title">{"Save pipeline"}</DialogTitle>
+      <form
+        onSubmit={(e) => {
+          if (nameInputRef.current) {
+            onSave(nameInputRef.current.value);
+          }
+          e.preventDefault();
+        }}
+      >
+        <DialogContent>
+          <TextField
+            id="name"
+            type="text"
+            defaultValue={initialValue}
+            label={inputLabel}
+            inputRef={nameInputRef}
+            required
+            autoFocus
+            fullWidth
+            margin="dense"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button color="primary" type="submit" autoFocus>
+            Save
+          </Button>
+        </DialogActions>
+      </form>
+    </Dialog>
+  );
+};
+
 const PipelineLibrary = ({
   componentSpec,
   setComponentSpec,
@@ -34,12 +141,15 @@ const PipelineLibrary = ({
   const [componentFiles, setComponentFiles] = useState(
     new Map<string, ComponentFileEntry>()
   );
+  const [saveAsDialogIsOpen, setSaveAsDialogIsOpen] = useState(false);
 
-  useEffect(() => {
+  const refreshPipelines = useCallback(() => {
     getAllComponentFilesFromList(USER_PIPELINES_LIST_NAME).then(
       setComponentFiles
     );
-  }, []);
+  }, [setComponentFiles]);
+
+  useEffect(refreshPipelines, [refreshPipelines]);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     acceptedFiles.forEach((file) => {
@@ -80,10 +190,7 @@ const PipelineLibrary = ({
             result: "succeeded",
           });
           // setErrorMessage("");
-          const componentFilesMap = await getAllComponentFilesFromList(
-            USER_PIPELINES_LIST_NAME
-          );
-          setComponentFiles(componentFilesMap);
+          refreshPipelines();
         } catch (err) {
           // setErrorMessage(
           //   `Error parsing the dropped file as component: ${err.toString()}.`
@@ -96,7 +203,32 @@ const PipelineLibrary = ({
       };
       reader.readAsArrayBuffer(file);
     });
-  }, []);
+  }, [refreshPipelines]);
+
+  const openSaveAsDialog = useCallback(() => {
+    setSaveAsDialogIsOpen(true);
+  }, [setSaveAsDialogIsOpen]);
+
+  const closeSaveAsDialog = useCallback(() => {
+    setSaveAsDialogIsOpen(false);
+  }, [setSaveAsDialogIsOpen]);
+
+  const handlePipelineSave = useCallback(
+    async (name: string, componentText: string) => {
+      const fileEntry = await addComponentToListByText(
+        USER_PIPELINES_LIST_NAME,
+        componentText
+      );
+      // TODO: Move this functionality to the setComponentSpec
+      const inlinedComponentSpec = await preloadComponentReferences(
+        fileEntry.componentRef.spec
+      );
+      setComponentSpec?.(inlinedComponentSpec);
+      closeSaveAsDialog();
+      refreshPipelines();
+    },
+    [setComponentSpec, closeSaveAsDialog, refreshPipelines]
+  );
 
   const fileInput = useRef<HTMLInputElement>(null);
   const componentLink = useRef<HTMLAnchorElement>(null);
@@ -110,6 +242,15 @@ const PipelineLibrary = ({
       }}
     >
       <div style={{ margin: "5px" }}>
+        <button onClick={openSaveAsDialog}>Save as</button>
+        {componentSpec && (
+          <SavePipelineAsDialog
+            isOpen={saveAsDialogIsOpen}
+            onCancel={closeSaveAsDialog}
+            componentSpec={componentSpec}
+            onPipelineSave={handlePipelineSave}
+          />
+        )}
         <input
           ref={fileInput}
           type="file"
