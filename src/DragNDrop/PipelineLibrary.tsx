@@ -296,6 +296,11 @@ const PipelineLibrary = ({
             <button
               className="link-button"
               onClick={(e) => openPipelineFile(fileEntry)}
+              style={
+                fileName === pipelineFile?.name
+                  ? { fontWeight: "bold" }
+                  : undefined
+              }
             >
               {fileName}
             </button>
