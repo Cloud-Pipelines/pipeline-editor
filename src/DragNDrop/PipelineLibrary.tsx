@@ -141,6 +141,7 @@ const PipelineLibrary = ({
   const [componentFiles, setComponentFiles] = useState(
     new Map<string, ComponentFileEntry>()
   );
+  const [pipelineFile, setPipelineFile] = useState<ComponentFileEntry>();
   const [saveAsDialogIsOpen, setSaveAsDialogIsOpen] = useState(false);
 
   const refreshPipelines = useCallback(() => {
@@ -150,6 +151,17 @@ const PipelineLibrary = ({
   }, [setComponentFiles]);
 
   useEffect(refreshPipelines, [refreshPipelines]);
+
+  const openPipelineFile = useCallback(
+    async (fileEntry: ComponentFileEntry) => {
+      // Loading all child components
+      // TODO: Move this functionality to the setComponentSpec function
+      await preloadComponentReferences(fileEntry.componentRef.spec);
+      setComponentSpec?.(fileEntry.componentRef.spec);
+      setPipelineFile(fileEntry);
+    },
+    [setComponentSpec, setPipelineFile]
+  );
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     acceptedFiles.forEach((file) => {
@@ -219,15 +231,11 @@ const PipelineLibrary = ({
         USER_PIPELINES_LIST_NAME,
         componentText
       );
-      // TODO: Move this functionality to the setComponentSpec
-      const inlinedComponentSpec = await preloadComponentReferences(
-        fileEntry.componentRef.spec
-      );
-      setComponentSpec?.(inlinedComponentSpec);
+      await openPipelineFile(fileEntry);
       closeSaveAsDialog();
       refreshPipelines();
     },
-    [setComponentSpec, closeSaveAsDialog, refreshPipelines]
+    [openPipelineFile, closeSaveAsDialog, refreshPipelines]
   );
 
   const fileInput = useRef<HTMLInputElement>(null);
@@ -287,12 +295,7 @@ const PipelineLibrary = ({
             ⋮ {/* ⋮ ≡ ⋅ */}
             <button
               className="link-button"
-              onClick={async (e) => {
-                // Loading all child components
-                // TODO: Move this functionality to the setComponentSpec
-                await preloadComponentReferences(fileEntry.componentRef.spec);
-                setComponentSpec?.(fileEntry.componentRef.spec);
-              }}
+              onClick={(e) => openPipelineFile(fileEntry)}
             >
               {fileName}
             </button>
