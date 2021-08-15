@@ -229,7 +229,8 @@ const PipelineLibrary = ({
     async (name: string, componentText: string) => {
       const fileEntry = await addComponentToListByText(
         USER_PIPELINES_LIST_NAME,
-        componentText
+        componentText,
+        name
       );
       await openPipelineFile(fileEntry);
       closeSaveAsDialog();
