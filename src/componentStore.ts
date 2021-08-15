@@ -289,6 +289,43 @@ const makeNameUniqueByAddingIndex = (
   return finalName;
 };
 
+const writeComponentRefPlusDataToFile = async (
+  listName: string,
+  fileName: string,
+  componentRefPlusData: ComponentReferenceWithSpecPlusData
+) => {
+  await upgradeSingleComponentListDb(listName);
+  const tableName = FILE_STORE_DB_TABLE_NAME_PREFIX + listName;
+  const componentListDb = localForage.createInstance({
+    name: DB_NAME,
+    storeName: tableName,
+  });
+  const existingFile = await componentListDb.getItem<ComponentFileEntry>(
+    fileName
+  );
+  const currentTime = new Date();
+  let fileEntry: ComponentFileEntry;
+  if (existingFile === null) {
+    fileEntry = {
+      componentRef: componentRefPlusData.componentRef,
+      name: fileName,
+      creationTime: currentTime,
+      modificationTime: currentTime,
+      data: componentRefPlusData.data,
+    };
+  } else {
+    fileEntry = {
+      ...existingFile,
+      name: fileName,
+      modificationTime: currentTime,
+      data: componentRefPlusData.data,
+      componentRef: componentRefPlusData.componentRef,
+    };
+  }
+  await componentListDb.setItem(fileName, fileEntry);
+  return fileEntry;
+};
+
 const addComponentRefPlusDataToList = async (
   listName: string,
   componentRefPlusData: ComponentReferenceWithSpecPlusData,
@@ -302,16 +339,11 @@ const addComponentRefPlusDataToList = async (
   });
   const existingNames = new Set<string>(await componentListDb.keys());
   const uniqueFileName = makeNameUniqueByAddingIndex(fileName, existingNames);
-  const currentTime = new Date();
-  const fileEntry: ComponentFileEntry = {
-    componentRef: componentRefPlusData.componentRef,
-    name: uniqueFileName,
-    creationTime: currentTime,
-    modificationTime: currentTime,
-    data: componentRefPlusData.data,
-  };
-  await componentListDb.setItem(uniqueFileName, fileEntry);
-  return fileEntry;
+  return writeComponentRefPlusDataToFile(
+    listName,
+    uniqueFileName,
+    componentRefPlusData
+  );
 };
 
 export const addComponentToListByUrl = async (
@@ -338,6 +370,19 @@ export const addComponentToListByText = async (
     listName,
     componentRefPlusData,
     fileName ?? componentRefPlusData.componentRef.spec.name ?? defaultFileName
+  );
+};
+
+export const writeComponentToFileListFromText = async (
+  listName: string,
+  fileName: string,
+  componentText: string | ArrayBuffer
+) => {
+  const componentRefPlusData = await storeComponentText(componentText);
+  return writeComponentRefPlusDataToFile(
+    listName,
+    fileName,
+    componentRefPlusData
   );
 };
 
