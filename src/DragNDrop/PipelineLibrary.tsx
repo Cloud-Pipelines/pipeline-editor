@@ -15,6 +15,8 @@ import {
   ComponentFileEntry,
   addComponentToListByText,
   componentSpecToYaml,
+  writeComponentToFileListFromText,
+  getComponentFileFromList,
 } from "../componentStore";
 import GraphComponentLink from "./GraphComponentLink";
 import { augmentComponentSpec } from "./GraphComponentSpecFlow";
@@ -40,7 +42,11 @@ const removeSuffixes = (s: string, suffixes: string[]) => {
 interface SavePipelineAsDialogProps {
   componentSpec: ComponentSpec;
   isOpen: boolean;
-  onPipelineSave: (name: string, componentText: string) => void;
+  onPipelineSave: (
+    name: string,
+    componentText: string,
+    overwrite: boolean
+  ) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -50,10 +56,13 @@ const SavePipelineAsDialog = ({
   onPipelineSave,
   onCancel,
 }: SavePipelineAsDialogProps) => {
+  const [fileName, setFileName] = useState<string>();
+  const [componentText, setComponentText] = useState<string>();
+  const [isOverwriteDialogOpen, setIsOverwriteDialogOpen] = useState(false);
   const nodes = useStoreState((store) => store.nodes);
 
-  const handleSave = (name: string) => {
-    let componentText = "";
+  const handleSave = async (name: string) => {
+    setFileName(name);
     try {
       const graphComponent = augmentComponentSpec(
         componentSpec,
@@ -62,21 +71,78 @@ const SavePipelineAsDialog = ({
         true
       );
       graphComponent.name = name;
-      componentText = componentSpecToYaml(graphComponent);
-      onPipelineSave(name, componentText);
+      const componentText = componentSpecToYaml(graphComponent);
+      setComponentText(componentText);
+      try {
+        await onPipelineSave(name, componentText, false);
+      } catch {
+        setIsOverwriteDialogOpen(true);
+      }
     } catch (err) {
       console.error(err);
     }
   };
 
+  const handleOverwriteOk = async () => {
+    if (fileName && componentText) {
+      setIsOverwriteDialogOpen(false);
+      await onPipelineSave(fileName, componentText, true);
+    }
+  };
+
+  const handleOverwriteCancel = async () => {
+    setIsOverwriteDialogOpen(false);
+  };
+
   return (
-    <SaveAsDialog
-      isOpen={isOpen}
-      onSave={handleSave}
-      onCancel={onCancel}
-      initialValue={componentSpec.name}
-      inputLabel="Pipeline name"
-    />
+    <>
+      <SaveAsDialog
+        isOpen={isOpen}
+        onSave={handleSave}
+        onCancel={onCancel}
+        initialValue={componentSpec.name}
+        inputLabel="Pipeline name"
+      />
+      <OkCancelDialog
+        isOpen={isOpen && isOverwriteDialogOpen}
+        title="Overwrite?"
+        okButtonText="Overwrite"
+        onOk={handleOverwriteOk}
+        onCancel={handleOverwriteCancel}
+      />
+    </>
+  );
+};
+
+interface OkCancelDialogProps {
+  isOpen: boolean;
+  title: string;
+  okButtonText?: string;
+  cancelButtonText?: string;
+  onOk: () => void;
+  onCancel: () => void;
+}
+
+const OkCancelDialog = ({
+  isOpen,
+  title,
+  okButtonText = "OK",
+  cancelButtonText = "Cancel",
+  onOk,
+  onCancel,
+}: OkCancelDialogProps) => {
+  return (
+    <Dialog open={isOpen} aria-labelledby="alert-dialog-title">
+      <DialogTitle id="alert-dialog-title">{title}</DialogTitle>
+      <DialogActions>
+        <Button color="primary" onClick={onCancel}>
+          {cancelButtonText}
+        </Button>
+        <Button color="secondary" onClick={onOk}>
+          {okButtonText}
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 };
 
@@ -226,11 +292,20 @@ const PipelineLibrary = ({
   }, [setSaveAsDialogIsOpen]);
 
   const handlePipelineSave = useCallback(
-    async (name: string, componentText: string) => {
-      const fileEntry = await addComponentToListByText(
+    async (name: string, componentText: string, overwrite: boolean = false) => {
+      if (!overwrite) {
+        const existingFileEntry = await getComponentFileFromList(
+          USER_PIPELINES_LIST_NAME,
+          name
+        );
+        if (existingFileEntry !== null) {
+          throw Error(`File "${name}" already exists.`);
+        }
+      }
+      const fileEntry = await writeComponentToFileListFromText(
         USER_PIPELINES_LIST_NAME,
-        componentText,
-        name
+        name,
+        componentText
       );
       await openPipelineFile(fileEntry);
       closeSaveAsDialog();
