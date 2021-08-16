@@ -325,6 +325,17 @@ const PipelineLibrary = ({
       }}
     >
       <div style={{ margin: "5px" }}>
+        <button
+          onClick={(e) => {
+            if (pipelineFile) {
+              handlePipelineSave(pipelineFile?.name, true);
+            } else {
+              openSaveAsDialog();
+            }
+          }}
+        >
+          Save
+        </button>
         <button onClick={openSaveAsDialog}>Save as</button>
         {componentSpec && (
           <SavePipelineAsDialog
