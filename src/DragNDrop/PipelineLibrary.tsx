@@ -352,15 +352,13 @@ const PipelineLibrary = ({
           onChange={(e) => onDrop(Array.from(e.target.files ?? []))}
           style={{ display: "none" }}
         />
-        <button onClick={(e) => fileInput.current?.click()}>
-          + Import pipeline
-        </button>
+        <button onClick={(e) => fileInput.current?.click()}>+ Import</button>
         <button
           onClick={(e) => {
             componentLink.current?.click();
           }}
         >
-          Export pipeline
+          Export
         </button>
         {componentSpec && (
           <GraphComponentLink
