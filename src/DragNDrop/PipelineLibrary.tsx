@@ -40,57 +40,38 @@ const removeSuffixes = (s: string, suffixes: string[]) => {
 };
 
 interface SavePipelineAsDialogProps {
-  componentSpec: ComponentSpec;
   isOpen: boolean;
-  onPipelineSave: (
-    name: string,
-    componentText: string,
-    overwrite: boolean
-  ) => Promise<void>;
+  onPipelineSave: (name: string, overwrite: boolean) => Promise<void>;
   onCancel: () => void;
+  initialName?: string;
 }
 
 const SavePipelineAsDialog = ({
-  componentSpec,
   isOpen,
   onPipelineSave,
   onCancel,
+  initialName,
 }: SavePipelineAsDialogProps) => {
-  const [fileName, setFileName] = useState<string>();
-  const [componentText, setComponentText] = useState<string>();
+  const [fileName, setFileName] = useState<string | undefined>(initialName);
   const [isOverwriteDialogOpen, setIsOverwriteDialogOpen] = useState(false);
-  const nodes = useStoreState((store) => store.nodes);
 
   const handleSave = async (name: string) => {
     setFileName(name);
     try {
-      const graphComponent = augmentComponentSpec(
-        componentSpec,
-        nodes,
-        false,
-        true
-      );
-      graphComponent.name = name;
-      const componentText = componentSpecToYaml(graphComponent);
-      setComponentText(componentText);
-      try {
-        await onPipelineSave(name, componentText, false);
-      } catch {
-        setIsOverwriteDialogOpen(true);
-      }
-    } catch (err) {
-      console.error(err);
+      await onPipelineSave(name, false);
+    } catch {
+      setIsOverwriteDialogOpen(true);
     }
   };
 
-  const handleOverwriteOk = async () => {
-    if (fileName && componentText) {
+  const handleOverwriteOk = () => {
+    if (fileName) {
       setIsOverwriteDialogOpen(false);
-      await onPipelineSave(fileName, componentText, true);
+      onPipelineSave(fileName, true);
     }
   };
 
-  const handleOverwriteCancel = async () => {
+  const handleOverwriteCancel = () => {
     setIsOverwriteDialogOpen(false);
   };
 
@@ -100,7 +81,7 @@ const SavePipelineAsDialog = ({
         isOpen={isOpen}
         onSave={handleSave}
         onCancel={onCancel}
-        initialValue={componentSpec.name}
+        initialValue={fileName}
         inputLabel="Pipeline name"
       />
       <OkCancelDialog
@@ -209,6 +190,7 @@ const PipelineLibrary = ({
   );
   const [pipelineFile, setPipelineFile] = useState<ComponentFileEntry>();
   const [saveAsDialogIsOpen, setSaveAsDialogIsOpen] = useState(false);
+  const nodes = useStoreState((store) => store.nodes);
 
   const refreshPipelines = useCallback(() => {
     getAllComponentFilesFromList(USER_PIPELINES_LIST_NAME).then(
@@ -292,7 +274,7 @@ const PipelineLibrary = ({
   }, [setSaveAsDialogIsOpen]);
 
   const handlePipelineSave = useCallback(
-    async (name: string, componentText: string, overwrite: boolean = false) => {
+    async (name: string, overwrite: boolean = false) => {
       if (!overwrite) {
         const existingFileEntry = await getComponentFileFromList(
           USER_PIPELINES_LIST_NAME,
@@ -302,6 +284,17 @@ const PipelineLibrary = ({
           throw Error(`File "${name}" already exists.`);
         }
       }
+      if (!componentSpec) {
+        return;
+      }
+      const graphComponent = augmentComponentSpec(
+        componentSpec,
+        nodes,
+        false,
+        true
+      );
+      graphComponent.name = name;
+      const componentText = componentSpecToYaml(graphComponent);
       const fileEntry = await writeComponentToFileListFromText(
         USER_PIPELINES_LIST_NAME,
         name,
@@ -311,7 +304,13 @@ const PipelineLibrary = ({
       closeSaveAsDialog();
       refreshPipelines();
     },
-    [openPipelineFile, closeSaveAsDialog, refreshPipelines]
+    [
+      componentSpec,
+      closeSaveAsDialog,
+      nodes,
+      openPipelineFile,
+      refreshPipelines,
+    ]
   );
 
   const fileInput = useRef<HTMLInputElement>(null);
@@ -329,9 +328,9 @@ const PipelineLibrary = ({
         <button onClick={openSaveAsDialog}>Save as</button>
         {componentSpec && (
           <SavePipelineAsDialog
+            initialName={componentSpec.name}
             isOpen={saveAsDialogIsOpen}
             onCancel={closeSaveAsDialog}
-            componentSpec={componentSpec}
             onPipelineSave={handlePipelineSave}
           />
         )}
