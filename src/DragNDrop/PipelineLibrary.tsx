@@ -140,7 +140,7 @@ const SaveAsDialog = ({
   onSave,
   onCancel,
   initialValue,
-  inputLabel = "Pipeline name"
+  inputLabel = "Pipeline name",
 }: SaveAsDialogProps) => {
   const nameInputRef = useRef<HTMLInputElement>();
   return (
@@ -168,9 +168,7 @@ const SaveAsDialog = ({
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={onCancel}>
-            Cancel
-          </Button>
+          <Button onClick={onCancel}>Cancel</Button>
           <Button color="primary" type="submit" autoFocus>
             Save
           </Button>
@@ -211,59 +209,64 @@ const PipelineLibrary = ({
     [setComponentSpec, setPipelineFile]
   );
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    acceptedFiles.forEach((file) => {
-      const reader = new FileReader();
-      reader.onabort = () => console.log("file reading was aborted");
-      reader.onerror = () => console.log("file reading has failed");
-      reader.onload = async () => {
-        const binaryStr = reader.result;
-        if (binaryStr === null || binaryStr === undefined) {
-          console.error(`Dropped file reader result was ${binaryStr}`);
-          return;
-        }
-        const fileName =
-          removeSuffixes(file.name, [
-            ".pipeline.component.yaml",
-            ".component.yaml",
-            ".pipeline.yaml",
-            ".yaml",
-          ]) || "Pipeline";
-        try {
-          const componentRefPlusData1 = await loadComponentAsRefFromText(binaryStr);
-          const componentRef1 = componentRefPlusData1.componentRef;
-          if (!isGraphImplementation(componentRef1.spec.implementation)) {
-            console.error("Dropped component is not a graph component");
+  const onDrop = useCallback(
+    (acceptedFiles: File[]) => {
+      acceptedFiles.forEach((file) => {
+        const reader = new FileReader();
+        reader.onabort = () => console.log("file reading was aborted");
+        reader.onerror = () => console.log("file reading has failed");
+        reader.onload = async () => {
+          const binaryStr = reader.result;
+          if (binaryStr === null || binaryStr === undefined) {
+            console.error(`Dropped file reader result was ${binaryStr}`);
             return;
           }
-          // Caching the child components
-          await preloadComponentReferences(componentRef1.spec);
-          // TODO: Do not load the component twice
-          const componentRefPlusData = await addComponentToListByText(
-            USER_PIPELINES_LIST_NAME,
-            binaryStr,
-            fileName
-          );
-          const componentRef = componentRefPlusData.componentRef;
-          console.debug("storeComponentText succeeded", componentRef);
-          (window as any).gtag?.("event", "PipelineLibrary_pipeline_import", {
-            result: "succeeded",
-          });
-          // setErrorMessage("");
-          refreshPipelines();
-        } catch (err) {
-          // setErrorMessage(
-          //   `Error parsing the dropped file as component: ${err.toString()}.`
-          // );
-          console.error("Error parsing the dropped file as component", err);
-          (window as any).gtag?.("event", "PipelineLibrary_pipeline_import", {
-            result: "failed",
-          });
-        }
-      };
-      reader.readAsArrayBuffer(file);
-    });
-  }, [refreshPipelines]);
+          const fileName =
+            removeSuffixes(file.name, [
+              ".pipeline.component.yaml",
+              ".component.yaml",
+              ".pipeline.yaml",
+              ".yaml",
+            ]) || "Pipeline";
+          try {
+            const componentRefPlusData1 = await loadComponentAsRefFromText(
+              binaryStr
+            );
+            const componentRef1 = componentRefPlusData1.componentRef;
+            if (!isGraphImplementation(componentRef1.spec.implementation)) {
+              console.error("Dropped component is not a graph component");
+              return;
+            }
+            // Caching the child components
+            await preloadComponentReferences(componentRef1.spec);
+            // TODO: Do not load the component twice
+            const componentRefPlusData = await addComponentToListByText(
+              USER_PIPELINES_LIST_NAME,
+              binaryStr,
+              fileName
+            );
+            const componentRef = componentRefPlusData.componentRef;
+            console.debug("storeComponentText succeeded", componentRef);
+            (window as any).gtag?.("event", "PipelineLibrary_pipeline_import", {
+              result: "succeeded",
+            });
+            // setErrorMessage("");
+            refreshPipelines();
+          } catch (err) {
+            // setErrorMessage(
+            //   `Error parsing the dropped file as component: ${err.toString()}.`
+            // );
+            console.error("Error parsing the dropped file as component", err);
+            (window as any).gtag?.("event", "PipelineLibrary_pipeline_import", {
+              result: "failed",
+            });
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      });
+    },
+    [refreshPipelines]
+  );
 
   const openSaveAsDialog = useCallback(() => {
     setSaveAsDialogIsOpen(true);
