@@ -4,6 +4,8 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Menu,
+  MenuItem,
   TextField,
 } from "@material-ui/core";
 import { useCallback, useState, useEffect, useRef } from "react";
@@ -17,6 +19,7 @@ import {
   componentSpecToYaml,
   writeComponentToFileListFromText,
   getComponentFileFromList,
+  deleteComponentFileFromList,
 } from "../componentStore";
 import GraphComponentLink from "./GraphComponentLink";
 import { augmentComponentSpec } from "./GraphComponentSpecFlow";
@@ -190,6 +193,9 @@ const PipelineLibrary = ({
   const [saveAsDialogIsOpen, setSaveAsDialogIsOpen] = useState(false);
   const nodes = useStoreState((store) => store.nodes);
 
+  const [contextMenuFileName, setContextMenuFileName] = useState<string>();
+  const [contextMenuAnchor, setContextMenuAnchor] = useState<HTMLElement>();
+
   const refreshPipelines = useCallback(() => {
     getAllComponentFilesFromList(USER_PIPELINES_LIST_NAME).then(
       setComponentFiles
@@ -316,6 +322,17 @@ const PipelineLibrary = ({
     ]
   );
 
+  const handleContextMenuDelete = async () => {
+    if (contextMenuFileName) {
+      setContextMenuFileName(undefined);
+      await deleteComponentFileFromList(
+        USER_PIPELINES_LIST_NAME,
+        contextMenuFileName
+      );
+      refreshPipelines();
+    }
+  };
+
   const fileInput = useRef<HTMLInputElement>(null);
   const componentLink = useRef<HTMLAnchorElement>(null);
 
@@ -388,11 +405,27 @@ const PipelineLibrary = ({
                   ? { fontWeight: "bold" }
                   : undefined
               }
+              onContextMenu={(e) => {
+                e.preventDefault();
+                setContextMenuAnchor(e.currentTarget);
+                setContextMenuFileName(fileName);
+              }}
             >
               {fileName}
             </button>
           </div>
         ))}
+        <Menu
+          open={contextMenuFileName !== undefined}
+          anchorEl={contextMenuAnchor}
+          onClose={() => {
+            setContextMenuFileName(undefined);
+          }}
+        >
+          <MenuItem dense={true} onClick={handleContextMenuDelete}>
+            Delete
+          </MenuItem>
+        </Menu>
       </div>
       <details
         open

@@ -431,6 +431,19 @@ export const getComponentFileFromList = async (
   return componentListDb.getItem<ComponentFileEntry>(fileName);
 };
 
+export const deleteComponentFileFromList = async (
+  listName: string,
+  fileName: string
+) => {
+  await upgradeSingleComponentListDb(listName);
+  const tableName = FILE_STORE_DB_TABLE_NAME_PREFIX + listName;
+  const componentListDb = localForage.createInstance({
+    name: DB_NAME,
+    storeName: tableName,
+  });
+  return componentListDb.removeItem(fileName);
+};
+
 export const componentSpecToYaml = (componentSpec: ComponentSpec) => {
   return yaml.dump(componentSpec, { lineWidth: 10000 });
 };
