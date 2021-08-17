@@ -333,6 +333,23 @@ const PipelineLibrary = ({
     }
   };
 
+  const handleContextMenuOpen = async () => {
+    if (contextMenuFileName) {
+      setContextMenuFileName(undefined);
+      const fileEntry = await getComponentFileFromList(
+        USER_PIPELINES_LIST_NAME,
+        contextMenuFileName
+      );
+      if (!fileEntry) {
+        console.error(
+          `handleContextMenuOpen: File ${contextMenuFileName} does not exist.`
+        );
+        return;
+      }
+      await openPipelineFile(fileEntry);
+    }
+  };
+
   const fileInput = useRef<HTMLInputElement>(null);
   const componentLink = useRef<HTMLAnchorElement>(null);
 
@@ -422,6 +439,9 @@ const PipelineLibrary = ({
             setContextMenuFileName(undefined);
           }}
         >
+          <MenuItem dense={true} onClick={handleContextMenuOpen}>
+            Open
+          </MenuItem>
           <MenuItem dense={true} onClick={handleContextMenuDelete}>
             Delete
           </MenuItem>
