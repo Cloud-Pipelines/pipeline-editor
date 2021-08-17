@@ -14,12 +14,17 @@ const onDragStart = (event: DragEvent, nodeData: object) => {
   event.dataTransfer.effectAllowed = "move";
 };
 
-interface DraggableComponentProps {
+interface DraggableComponentProps
+  extends React.DetailedHTMLProps<
+    React.HTMLAttributes<HTMLDivElement>,
+    HTMLDivElement
+  > {
   componentReference: ComponentReference;
 }
 
 const DraggableComponent = ({
   componentReference,
+  ...props
 }: DraggableComponentProps) => {
   return (
     <div
@@ -31,6 +36,7 @@ const DraggableComponent = ({
         };
         return onDragStart(event, { task: taskSpec });
       }}
+      {...props}
     >
       {componentReference.spec?.name ?? "Component"}
     </div>
