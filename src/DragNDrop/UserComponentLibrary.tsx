@@ -1,9 +1,11 @@
+import { Menu, MenuItem } from "@material-ui/core";
 import { useCallback, useState, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import {
-  getAllComponentsFromList,
-  ComponentReferenceWithSpec,
   addComponentToListByText,
+  deleteComponentFileFromList,
+  ComponentFileEntry,
+  getAllComponentFilesFromList,
 } from "../componentStore";
 import DraggableComponent from "./DraggableComponent";
 
@@ -11,13 +13,19 @@ const USER_COMPONENTS_LIST_NAME = "user_components";
 
 const UserComponentLibrary = () => {
   const [errorMessage, setErrorMessage] = useState("");
-  const [componentRefs, setComponentRefs] = useState<
-    ComponentReferenceWithSpec[]
-  >([]);
+  const [componentFiles, setComponentFiles] = useState(
+    new Map<string, ComponentFileEntry>()
+  );
+  const [contextMenuFileName, setContextMenuFileName] = useState<string>();
+  const [contextMenuAnchor, setContextMenuAnchor] = useState<HTMLElement>();
 
-  useEffect(() => {
-    getAllComponentsFromList(USER_COMPONENTS_LIST_NAME).then(setComponentRefs);
-  }, []);
+  const refreshComponents = useCallback(() => {
+    getAllComponentFilesFromList(USER_COMPONENTS_LIST_NAME).then(
+      setComponentFiles
+    );
+  }, [setComponentFiles]);
+
+  useEffect(refreshComponents, [refreshComponents]);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     acceptedFiles.forEach((file) => {
@@ -41,10 +49,7 @@ const UserComponentLibrary = () => {
             result: "succeeded",
           });
           setErrorMessage("");
-          const allComponentRefs = await getAllComponentsFromList(
-            USER_COMPONENTS_LIST_NAME
-          );
-          setComponentRefs(allComponentRefs);
+          refreshComponents();
         } catch (err) {
           setErrorMessage(
             `Error parsing the dropped file as component: ${err.toString()}.`
@@ -57,7 +62,18 @@ const UserComponentLibrary = () => {
       };
       reader.readAsArrayBuffer(file);
     });
-  }, []);
+  }, [refreshComponents]);
+
+  const handleContextMenuDelete = async () => {
+    if (contextMenuFileName) {
+      setContextMenuFileName(undefined);
+      await deleteComponentFileFromList(
+        USER_COMPONENTS_LIST_NAME,
+        contextMenuFileName
+      );
+      refreshComponents();
+    }
+  };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
 
@@ -76,14 +92,30 @@ const UserComponentLibrary = () => {
             ? "Drop the files here ..."
             : errorMessage ||
               "Drag and drop component.yaml files or click to select files"}
-          {componentRefs.map((componentRef) => (
+          {Array.from(componentFiles.entries()).map(([fileName, fileEntry]) => (
             <DraggableComponent
-              key={componentRef.digest}
-              componentReference={componentRef}
+              key={fileName}
+              componentReference={fileEntry.componentRef}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                setContextMenuAnchor(e.currentTarget);
+                setContextMenuFileName(fileName);
+              }}
             />
           ))}
         </div>
       </div>
+      <Menu
+        open={contextMenuFileName !== undefined}
+        anchorEl={contextMenuAnchor}
+        onClose={() => {
+          setContextMenuFileName(undefined);
+        }}
+      >
+        <MenuItem dense={true} onClick={handleContextMenuDelete}>
+          Delete
+        </MenuItem>
+      </Menu>
     </div>
   );
 };
