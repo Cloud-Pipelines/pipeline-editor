@@ -329,16 +329,24 @@ const GoogleCloudSubmitter = ({
         {pipelineJobWebUrl !== "" && <a href={pipelineJobWebUrl} target="_blank" rel="noreferrer" style={{ margin: "5px" }}>Job</a>}
       </div>
       {vertexPipelineJobUrl !== undefined && (
-        <div style={{
-          whiteSpace: "nowrap",
-          margin: "5px",
-        }}>
-          Download <a
-            href={vertexPipelineJobUrl}
-            download={"vertex_pipeline_job.json"}
-          >
-            vertex_pipeline_job.json
+        <div
+          style={{
+            margin: "5px",
+          }}
+        >
+          Or download the{" "}
+          <a href={vertexPipelineJobUrl} download={"vertex_pipeline_job.json"}>
+            pipeline_job.json
+          </a>{" "}
+          file, then go to{" "}
+          <a href="https://console.cloud.google.com/vertex-ai/pipelines">
+            Vertex Pipelines
+          </a>{" "}
+          and{" "}
+          <a href="https://cloud.google.com/vertex-ai/docs/pipelines/run-pipeline#console">
+            create a new run
           </a>
+          .
         </div>
       )}
       {compilationError !== "" && <div>{compilationError}</div>}
