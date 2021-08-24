@@ -31,6 +31,14 @@ const NODE_LAYOUT_ANNOTATION_KEY = "editor.position";
 const SDK_ANNOTATION_KEY = "sdk";
 const SDK_ANNOTATION_VALUE = "https://cloud-pipelines.github.io/pipeline-editor/";
 
+const taskIdToNodeId = (id: string) => "task_" + id;
+const inputNameToNodeId = (name: string) => "input_" + name;
+const outputNameToNodeId = (name: string) => "output_" + name;
+
+const nodeIdToTaskId = (id: string) => id.replace(/^task_/, "");
+const nodeIdToInputName = (id: string) => id.replace(/^input_/, "");
+const nodeIdToOutputName = (id: string) => id.replace(/^output_/, "");
+
 export const augmentComponentSpec = (
   componentSpec: ComponentSpec,
   nodes: Node[],
@@ -71,32 +79,38 @@ export const augmentComponentSpec = (
     .filter(isComponentTaskNode)
     .sort(nodeYPositionComparer);
 
-  // TODO: Remove "input_" prefixes
   const inputPositionMap = new Map<string, string>(
-    inputNodes.map((node) => [node.id, getNodePositionAnnotation(node)])
+    inputNodes.map((node) => [
+      nodeIdToInputName(node.id),
+      getNodePositionAnnotation(node),
+    ])
   );
   const inputOrderMap = new Map<string, number>(
-    inputNodes.map((node, index) => [node.id, index])
+    inputNodes.map((node, index) => [nodeIdToInputName(node.id), index])
   );
   const inputOrderComparer = (a: InputSpec, b: InputSpec) =>
     (inputOrderMap.get(a.name) ?? Infinity) -
     (inputOrderMap.get(b.name) ?? Infinity);
-  // TODO: Remove "output_" prefixes
   const outputPositionMap = new Map<string, string>(
-    outputNodes.map((node) => [node.id, getNodePositionAnnotation(node)])
+    outputNodes.map((node) => [
+      nodeIdToOutputName(node.id),
+      getNodePositionAnnotation(node),
+    ])
   );
   const outputOrderMap = new Map<string, number>(
-    outputNodes.map((node, index) => [node.id, index])
+    outputNodes.map((node, index) => [nodeIdToOutputName(node.id), index])
   );
   const outputOrderComparer = (a: OutputSpec, b: OutputSpec) =>
     (outputOrderMap.get(a.name) ?? Infinity) -
     (outputOrderMap.get(b.name) ?? Infinity);
-  // TODO: Remove "task_" prefixes
   const taskPositionMap = new Map<string, string>(
-    taskNodes.map((node) => [node.id, getNodePositionAnnotation(node)])
+    taskNodes.map((node) => [
+      nodeIdToTaskId(node.id),
+      getNodePositionAnnotation(node),
+    ])
   );
   const taskOrderMap = new Map<string, number>(
-    taskNodes.map((node, index) => [node.id, index])
+    taskNodes.map((node, index) => [nodeIdToTaskId(node.id), index])
   );
   const taskOrderComparer = (
     pairA: [string, TaskSpec],
@@ -277,7 +291,7 @@ const GraphComponentSpecFlow = ({
       }
 
       return {
-        id: taskId,
+        id: taskIdToNodeId(taskId),
         data: {
           taskSpec: taskSpec,
           taskId: taskId,
@@ -302,7 +316,7 @@ const GraphComponentSpecFlow = ({
         } catch (err) {}
       }
       return {
-        id: inputSpec.name,
+        id: inputNameToNodeId(inputSpec.name),
         data: { label: inputSpec.name },
         position: position,
         type: "input",
@@ -323,7 +337,7 @@ const GraphComponentSpecFlow = ({
         } catch (err) {}
       }
       return {
-        id: outputSpec.name,
+        id: outputNameToNodeId(outputSpec.name),
         data: { label: outputSpec.name },
         position: position,
         type: "output",
@@ -342,9 +356,9 @@ const GraphComponentSpecFlow = ({
             const taskOutput = argument.taskOutput;
             const edge: Edge = {
               id: `${taskOutput.taskId}_${taskOutput.outputName}-${taskId}_${inputName}`,
-              source: taskOutput.taskId,
+              source: taskIdToNodeId(taskOutput.taskId),
               sourceHandle: `output_${taskOutput.outputName}`,
-              target: taskId,
+              target: taskIdToNodeId(taskId),
               targetHandle: `input_${inputName}`,
               arrowHeadType: ArrowHeadType.ArrowClosed,
             };
@@ -353,11 +367,11 @@ const GraphComponentSpecFlow = ({
             const graphInput = argument.graphInput;
             const edge: Edge = {
               id: `Input_${graphInput.inputName}-${taskId}_${inputName}`,
-              source: graphInput.inputName,
+              source: inputNameToNodeId(graphInput.inputName),
               //sourceHandle: undefined,
               //sourceHandle: "Input",
               sourceHandle: null,
-              target: taskId,
+              target: taskIdToNodeId(taskId),
               targetHandle: `input_${inputName}`,
               arrowHeadType: ArrowHeadType.ArrowClosed,
             };
@@ -376,9 +390,9 @@ const GraphComponentSpecFlow = ({
       const taskOutput = argument.taskOutput;
       const edge: Edge = {
         id: `${taskOutput.taskId}_${taskOutput.outputName}-Output_${outputName}`,
-        source: taskOutput.taskId,
+        source: taskIdToNodeId(taskOutput.taskId),
         sourceHandle: `output_${taskOutput.outputName}`,
-        target: outputName,
+        target: outputNameToNodeId(outputName),
         //targetHandle: undefined,
         //targetHandle: "Output",
         targetHandle: null,
@@ -469,7 +483,7 @@ const GraphComponentSpecFlow = ({
       // Source is task output
       const taskOutputArgument: TaskOutputArgument = {
         taskOutput: {
-          taskId: connection.source,
+          taskId: nodeIdToTaskId(connection.source),
           outputName: sourceTaskOutputName,
         },
       };
@@ -477,18 +491,21 @@ const GraphComponentSpecFlow = ({
       if (targetTaskInputName !== undefined) {
         // Target is task input
         setTaskArgument(
-          connection.target,
+          nodeIdToTaskId(connection.target),
           targetTaskInputName,
           taskOutputArgument
         );
       } else {
         // Target is graph output
-        setGraphOutputValue(connection.target, taskOutputArgument);
+        setGraphOutputValue(
+          nodeIdToOutputName(connection.target),
+          taskOutputArgument
+        );
         // TODO: Perhaps propagate type information
       }
     } else {
       // Source is graph input
-      const graphInputName = connection.source;
+      const graphInputName = nodeIdToInputName(connection.source);
       const graphInputArgument: GraphInputArgument = {
         graphInput: {
           inputName: graphInputName,
@@ -497,7 +514,7 @@ const GraphComponentSpecFlow = ({
       if (targetTaskInputName !== undefined) {
         // Target is task input
         setTaskArgument(
-          connection.target,
+          nodeIdToTaskId(connection.target),
           targetTaskInputName,
           graphInputArgument
         );
@@ -520,9 +537,9 @@ const GraphComponentSpecFlow = ({
     const inputName = edge.targetHandle?.replace(/^input_/, "");
 
     if (inputName !== undefined) {
-      removeTaskArgument(edge.target, inputName);
+      removeTaskArgument(nodeIdToTaskId(edge.target), inputName);
     } else {
-      removeGraphOutputValue(edge.target);
+      removeGraphOutputValue(nodeIdToOutputName(edge.target));
     }
   };
 
@@ -596,13 +613,13 @@ const GraphComponentSpecFlow = ({
   const removeNode = (node: Node) => {
     // TODO: Use global constants for node types
     if (node.type === "input") {
-      const inputName = node.id;
+      const inputName = nodeIdToInputName(node.id);
       removeComponentInput(inputName);
     } else if (node.type === "output") {
-      const outputName = node.id;
+      const outputName = nodeIdToOutputName(node.id);
       removeComponentOutput(outputName);
     } else if (node.type === "task") {
-      const taskId = node.id;
+      const taskId = nodeIdToTaskId(node.id);
       removeTask(taskId);
     } else {
       console.log("removeNode: Unexpected note type: ", node);

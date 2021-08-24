@@ -1,0 +1,40 @@
+name: Name collision test pipeline
+metadata:
+  annotations:
+    sdk: 'https://cloud-pipelines.github.io/pipeline-editor/'
+inputs:
+  - name: Foo
+    annotations:
+      editor.position: '{"x":40,"y":40,"width":180,"height":40}'
+outputs:
+  - name: Foo
+    annotations:
+      editor.position: '{"x":40,"y":200,"width":180,"height":40}'
+implementation:
+  graph:
+    tasks:
+      Foo:
+        componentRef:
+          spec:
+            name: Foo
+            inputs:
+              - name: Foo
+            outputs:
+              - name: Foo
+            implementation:
+              container:
+                image: alpine
+                command:
+                  - echo
+                  - Hello
+        arguments:
+          Foo:
+            graphInput:
+              inputName: Foo
+        annotations:
+          editor.position: '{"x":40,"y":120,"width":180,"height":40}'
+    outputValues:
+      Foo:
+        taskOutput:
+          taskId: Foo
+          outputName: Foo
