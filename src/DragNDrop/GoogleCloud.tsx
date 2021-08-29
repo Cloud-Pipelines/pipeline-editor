@@ -145,7 +145,7 @@ const GoogleCloudSubmitter = ({
   const [componentArguments, setComponentArguments] = useState<Record<string, ArgumentType>>({});
 
   let vertexPipelineJobJson: string | undefined = undefined;
-  let vertexPipelineJob: Record<string, any> | undefined = undefined;
+  let vertexPipelineJob: PipelineJob | undefined = undefined;
 
   //useEffect(() => {
   if (componentSpec !== undefined) {
@@ -170,6 +170,10 @@ const GoogleCloudSubmitter = ({
         gcsOutputDirectory,
         pipelineArgumentMap
       );
+      vertexPipelineJob.labels = {
+        "sdk": "cloud-pipelines-editor",
+        "cloud-pipelines-editor-version": "0-0-1",
+      };
       vertexPipelineJobJson = JSON.stringify(vertexPipelineJob, undefined, 2);
       // Prevent infinite re-renders
       if (compilationError !== "") {
