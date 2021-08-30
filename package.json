@@ -26,6 +26,8 @@
   "scripts": {
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",
+    "predeploy-prod": "npm run build",
+    "deploy-prod": "gh-pages -d build --dest pipeline-editor --repo https://github.com/Cloud-Pipelines/pipeline-editor-github-pages-prod.git",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
