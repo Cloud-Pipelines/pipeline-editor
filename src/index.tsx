@@ -4,6 +4,13 @@ import './index.css';
 import App from './App';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import reportWebVitals from './reportWebVitals';
+import { migrateUserData } from "./userDataMigration"
+
+try {
+  migrateUserData();
+} catch (err) {
+  console.error(err);
+}
 
 ReactDOM.render(
   <React.StrictMode>

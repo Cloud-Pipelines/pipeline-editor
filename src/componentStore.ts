@@ -444,6 +444,18 @@ export const deleteComponentFileFromList = async (
   return componentListDb.removeItem(fileName);
 };
 
+export const unsafeWriteFilesToList = async (listName: string, files: ComponentFileEntry[]) => {
+  await upgradeSingleComponentListDb(listName);
+  const tableName = FILE_STORE_DB_TABLE_NAME_PREFIX + listName;
+  const componentListDb = localForage.createInstance({
+    name: DB_NAME,
+    storeName: tableName,
+  });
+  for (const file of files) {
+    await componentListDb.setItem(file.name, file);
+  }
+};
+
 export const componentSpecToYaml = (componentSpec: ComponentSpec) => {
   return yaml.dump(componentSpec, { lineWidth: 10000 });
 };
