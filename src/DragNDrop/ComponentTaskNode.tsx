@@ -1,3 +1,11 @@
+/**
+ * @license
+ * Copyright 2021 Alexey Volkov
+ * SPDX-License-Identifier: Apache-2.0
+ * @author         Alexey Volkov <alexey.volkov+oss@ark-kun.com>
+ * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
+ */
+
 import { CSSProperties, memo, useState } from 'react';
 import {
   ArgumentType,
