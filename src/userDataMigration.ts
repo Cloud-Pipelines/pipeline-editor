@@ -163,6 +163,7 @@ export const migrateUserData = async () => {
     migrationSourceIFrame.src = migrationSourceUrl.toString();
     migrationSourceIFrame.name = "migration_iframe";
     migrationSourceIFrame.title = "Migration source";
+    migrationSourceIFrame.style.display = "none";
     document.body.appendChild(migrationSourceIFrame);
   }
 };
