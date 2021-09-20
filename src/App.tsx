@@ -8,11 +8,13 @@
 
 import './App.css';
 import DnDFlow from './DragNDrop/index';
+import AppFooter from "./AppFooter"
 
 function App() {
   return (
-    <div className="App" style={{width: "100%", height: "100%"}}>
-      <DnDFlow/>
+    <div className="App" style={{ width: "100%", height: "calc(100% - 30px)" }}>
+      <DnDFlow />
+      <AppFooter />
     </div>
   );
 }
