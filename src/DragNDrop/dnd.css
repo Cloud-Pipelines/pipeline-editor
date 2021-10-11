@@ -135,7 +135,7 @@ details > * {
   }
 }
 
-input:required:invalid {
+.highlight-invalid-inputs input:required:invalid {
   /* box-shadow: 0 0 0 0.5px #FF0000; */
   /* border-color: #c00000; */
   /* border: 2px dashed red; */

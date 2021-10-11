@@ -38,6 +38,7 @@ const ArgumentsEditor = ({
 }: ArgumentsEditorProps) => {
   return (
     <div
+      className="highlight-invalid-inputs"
       style={{
         display: "table",
         borderSpacing: "5px",
