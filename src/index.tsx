@@ -12,13 +12,17 @@ import './index.css';
 import App from './App';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import reportWebVitals from './reportWebVitals';
-import { migrateUserData } from "./userDataMigration"
+//import { migrateUserData } from "./userDataMigration"
 
-try {
-  migrateUserData();
-} catch (err) {
-  console.error(err);
-}
+// Migration is now disabled.
+// After 2 months of auto-migration, the redirect from cloud-pipelines.github.io
+// to cloud-pipelines.net was changed to hard redirect.
+// Accessing the data stored for cloud-pipelines.github.io is now impossible.
+// try {
+//   migrateUserData();
+// } catch (err) {
+//   console.error(err);
+// }
 
 ReactDOM.render(
   <React.StrictMode>
