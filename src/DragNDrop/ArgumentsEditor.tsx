@@ -72,7 +72,9 @@ const ArgumentsEditor = ({
           inputSpec.optional !== true &&
           inputSpec.default === undefined;
 
-        const typeSpecString = typeSpecToString(inputSpec.type);
+        const typeSpecString =
+          typeSpecToString(inputSpec.type) +
+          (inputSpec.optional === true ? "?" : "");
 
         return (
           <div
