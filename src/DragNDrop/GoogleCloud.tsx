@@ -25,8 +25,14 @@ var API_KEY = 'AIzaSyCDPTffgYGXoit-jKsj1_1WWbSxvU7aEdQ';
      
 const VERTEX_AI_PIPELINES_REGIONS = [
   'us-central1',
+  'us-east1',
+  'us-west1',
+  'europe-west1',
+  'europe-west2',
   'europe-west4',
   'asia-east1',
+  'asia-southeast1',
+  'northamerica-northeast1',
 ];
 
 const VERTEX_AI_PIPELINES_DEFAULT_REGION = 'us-central1';
