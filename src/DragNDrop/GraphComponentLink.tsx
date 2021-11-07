@@ -7,9 +7,9 @@
  */
 
 import { useStoreState } from "react-flow-renderer";
-import yaml from "js-yaml";
 
 import { ComponentSpec } from "../componentSpec";
+import { componentSpecToYaml } from "../componentStore";
 import { augmentComponentSpec } from "./GraphComponentSpecFlow";
 
 interface GraphComponentLinkProps {
@@ -37,7 +37,7 @@ const GraphComponentLink = ({
       return <>err.toString()</>;
     }
   }
-  const componentText = yaml.dump(componentSpec, { lineWidth: 10000 });
+  const componentText = componentSpecToYaml(componentSpec);
   const componentTextBlob = new Blob([componentText], { type: "text/yaml" }); // Or application/x-yaml (which leads to downloading)
   return (
     <a

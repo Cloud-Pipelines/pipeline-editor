@@ -18,6 +18,7 @@ import {
 import yaml from "js-yaml";
 
 import { ComponentSpec } from '../componentSpec';
+import { componentSpecToYaml } from '../componentStore';
 import GraphComponentSpecFlow, { augmentComponentSpec } from './GraphComponentSpecFlow';
 import Sidebar from './Sidebar';
 import { loadComponentFromUrl, XGBOOST_PIPELINE_URL } from "./samplePipelines";
@@ -35,7 +36,7 @@ const saveComponentSpec = (componentSpec: ComponentSpec, nodes?: Node[]) => {
       }
       componentSpec = augmentComponentSpec(componentSpec, nodes, true, true);
     }
-    const componentText = yaml.dump(componentSpec, { lineWidth: 10000 });
+    const componentText = componentSpecToYaml(componentSpec);
     window.sessionStorage.setItem(SAVED_COMPONENT_SPEC_KEY, componentText);
   } catch(err) {
     // TODO: Find a way to avoid the React/Redux race conditions causing this error.

@@ -12,6 +12,7 @@ import {
 
 import { ComponentSpec } from "../componentSpec";
 import { augmentComponentSpec } from './GraphComponentSpecFlow'
+import { componentSpecToYaml } from "../componentStore";
 
 interface GraphComponentExporterProps {
   componentSpec: ComponentSpec,
@@ -25,7 +26,7 @@ const GraphComponentExporter = ({
   let componentText = "";
   try {
     const graphComponent = augmentComponentSpec(componentSpec, nodes, false, true);
-    componentText = yaml.dump(graphComponent, { lineWidth: 10000 });
+    componentText = componentSpecToYaml(graphComponent);
   } catch(err) {
     componentText = String(err);
   }
