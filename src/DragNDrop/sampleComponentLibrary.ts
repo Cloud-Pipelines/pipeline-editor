@@ -27,6 +27,17 @@ export const COMPONENT_LIBRARY = [
     category: "Data manipulation",
     componentUrls: [
       "https://raw.githubusercontent.com/Ark-kun/pipeline_components/47f3621344c884666a926c8a15d77562f1cc5e0a/components/pandas/Transform_DataFrame/in_CSV_format/component.yaml",
+      "https://raw.githubusercontent.com/Ark-kun/pipeline_components/47f3621344c884666a926c8a15d77562f1cc5e0a/components/dataset_manipulation/split_data_into_folds/in_CSV/component.yaml",
+      // JSON
+      "https://raw.githubusercontent.com/Ark-kun/pipeline_components/47f3621344c884666a926c8a15d77562f1cc5e0a/components/json/Build_dict/component.yaml",
+      "https://raw.githubusercontent.com/Ark-kun/pipeline_components/47f3621344c884666a926c8a15d77562f1cc5e0a/components/json/Build_list/component.yaml",
+      "https://raw.githubusercontent.com/Ark-kun/pipeline_components/47f3621344c884666a926c8a15d77562f1cc5e0a/components/json/Build_list_of_strings/component.yaml",
+      "https://raw.githubusercontent.com/Ark-kun/pipeline_components/47f3621344c884666a926c8a15d77562f1cc5e0a/components/json/Build_list_of_integers/component.yaml",
+      "https://raw.githubusercontent.com/Ark-kun/pipeline_components/47f3621344c884666a926c8a15d77562f1cc5e0a/components/json/Build_list_of_floats/component.yaml",
+      "https://raw.githubusercontent.com/Ark-kun/pipeline_components/47f3621344c884666a926c8a15d77562f1cc5e0a/components/json/Combine_lists/component.yaml",
+      "https://raw.githubusercontent.com/Ark-kun/pipeline_components/47f3621344c884666a926c8a15d77562f1cc5e0a/components/json/Get_element_by_index/component.yaml",
+      "https://raw.githubusercontent.com/Ark-kun/pipeline_components/47f3621344c884666a926c8a15d77562f1cc5e0a/components/json/Get_element_by_key/component.yaml",
+      "https://raw.githubusercontent.com/Ark-kun/pipeline_components/47f3621344c884666a926c8a15d77562f1cc5e0a/components/json/Query/component.yaml",
     ],
   },
   {
