@@ -65,6 +65,36 @@ export const COMPONENT_LIBRARY = [
     ],
   },
   {
+    category: "Google Cloud",
+    componentUrls: [
+      // // AutoML
+      // // !!! Google Cloud AI Platform AutoML API cannot be called from Google Cloud Vertex AI Pipelines (~by design)
+      // "https://raw.githubusercontent.com/Ark-kun/pipeline_components/47f3621344c884666a926c8a15d77562f1cc5e0a/components/google-cloud/AutoML/Tables/Create_dataset/from_CSV/component.yaml",
+      // "https://raw.githubusercontent.com/Ark-kun/pipeline_components/47f3621344c884666a926c8a15d77562f1cc5e0a/components/google-cloud/AutoML/Tables/Create_dataset/from_GCS/component.yaml",
+      // "https://raw.githubusercontent.com/Ark-kun/pipeline_components/47f3621344c884666a926c8a15d77562f1cc5e0a/components/google-cloud/AutoML/Tables/Create_dataset/from_BigQuery/component.yaml",
+      // "https://raw.githubusercontent.com/Ark-kun/pipeline_components/47f3621344c884666a926c8a15d77562f1cc5e0a/components/gcp/automl/create_model_for_tables/component.yaml",
+      "https://raw.githubusercontent.com/Ark-kun/pipeline_components/47f3621344c884666a926c8a15d77562f1cc5e0a/components/google-cloud/Vertex_AI/AutoML/Tables/Create_dataset/from_CSV/component.yaml",
+      "https://raw.githubusercontent.com/Ark-kun/pipeline_components/00d020c29a144cee7fd35f2d05053addb942f536/components/google-cloud/Vertex_AI/AutoML/Tables/Create_dataset/from_GCS/component.yaml",
+      "https://raw.githubusercontent.com/Ark-kun/pipeline_components/00d020c29a144cee7fd35f2d05053addb942f536/components/google-cloud/Vertex_AI/AutoML/Tables/Create_dataset/from_BigQuery/component.yaml",
+      "https://raw.githubusercontent.com/Ark-kun/pipeline_components/47f3621344c884666a926c8a15d77562f1cc5e0a/components/google-cloud/Vertex_AI/AutoML/Tables/Train_model/component.yaml",
+      //"https://raw.githubusercontent.com/Ark-kun/pipeline_components/47f3621344c884666a926c8a15d77562f1cc5e0a/components/google-cloud/Vertex_AI/AutoML/Tables/Get_model_tuning_trials/component.yaml",
+
+      // Vertex Models
+      "https://raw.githubusercontent.com/Ark-kun/pipeline_components/2c24c0c0730c818b89f676c4dc5c9d6cb90ab01d/components/google-cloud/Vertex_AI/Models/Upload_XGBoost_model/component.yaml",
+      "https://raw.githubusercontent.com/Ark-kun/pipeline_components/b2cdd60fe93d609111729ef64e79a8b8a2713435/components/google-cloud/Vertex_AI/Models/Deploy_to_endpoint/component.yaml",
+      "https://raw.githubusercontent.com/Ark-kun/pipeline_components/d45e011ad8b62b4fe36c12289a624e5e1573c68d/components/google-cloud/Vertex_AI/Models/Export/to_GCS/component.yaml",
+
+      // Storage
+      "https://raw.githubusercontent.com/Ark-kun/pipeline_components/47f3621344c884666a926c8a15d77562f1cc5e0a/components/google-cloud/storage/download/component.yaml",
+      "https://raw.githubusercontent.com/Ark-kun/pipeline_components/47f3621344c884666a926c8a15d77562f1cc5e0a/components/google-cloud/storage/upload_to_explicit_uri/component.yaml",
+      "https://raw.githubusercontent.com/Ark-kun/pipeline_components/47f3621344c884666a926c8a15d77562f1cc5e0a/components/google-cloud/storage/upload_to_unique_uri/component.yaml",
+      "https://raw.githubusercontent.com/Ark-kun/pipeline_components/47f3621344c884666a926c8a15d77562f1cc5e0a/components/google-cloud/storage/list/component.yaml",
+
+      // Vizier
+      "https://raw.githubusercontent.com/Ark-kun/pipeline_components/47f3621344c884666a926c8a15d77562f1cc5e0a/components/google-cloud/Optimizer/Suggest_parameter_sets_based_on_measurements/component.yaml",
+    ],
+  },
+  {
     category: "TFX",
     componentUrls: [
       "https://raw.githubusercontent.com/Ark-kun/pipeline_components/47f3621344c884666a926c8a15d77562f1cc5e0a/components/deprecated/tfx/ExampleGen/CsvExampleGen/component.yaml",
