@@ -8,6 +8,7 @@
 
 import yaml from "js-yaml";
 import localForage from "localforage";
+import { httpGetWithCache } from "./cacheUtils";
 import { ComponentSpec, ComponentReference } from "./componentSpec";
 
 // const COMPONENT_FILE_NAME_SUFFIX = "component.yaml";
@@ -24,27 +25,6 @@ const HASH_TO_URL_DB_TABLE_NAME = "hash_to_url";
 const URL_PROCESSING_VERSION_TABLE_NAME = "url_version";
 const CURRENT_URL_PROCESSING_VERSION = 1;
 const BAD_HASHES_TABLE_NAME = "bad_hashes";
-
-export const httpGetWithCache = async (
-  urlOrRequest: string | RequestInfo,
-  cacheName: string,
-  updateIfInCache: boolean = false
-): Promise<Response> => {
-  const cache = await caches.open(cacheName);
-  const response = await cache.match(urlOrRequest);
-  if (response !== undefined) {
-    if (updateIfInCache) {
-      cache.add(urlOrRequest);
-    }
-    return response;
-  }
-  await cache.add(urlOrRequest);
-  const response2 = await cache.match(urlOrRequest);
-  if (response2 === undefined) {
-    return Promise.reject("Added object to cache, but could not find it");
-  }
-  return response2;
-};
 
 export const searchGitHubCodeWithCache = async (
   query: string,
@@ -259,9 +239,12 @@ export const getAllComponentsAsRefs = async (
   let hashToComponentRef = new Map<string, ComponentReference>();
 
   const cachePromise = cacheAllComponents(users);
+  console.debug("getAllComponentsAsRefs: Started async cacheAllComponents");
   if ((await hashToContentDb.length()) === 0) {
+    console.debug("getAllComponentsAsRefs: Before await cachePromise");
     await cachePromise;
   }
+  console.debug("getAllComponentsAsRefs: After");
 
   // !!! Iterating using hashToContentDb.iterate<string, void> causes all values to be `[object Blob]`
   //await hashToContentDb.iterate<Blob, void>(
