@@ -1,0 +1,40 @@
+# Variants: Latest-only
+# Variants: Latest-data-only
+#
+components: 
+- 
+  path: ?<repo>?components?/XGBoost/Train/from_CSV?/component.yaml? # key
+  metadata:
+    name:
+    author:
+  git:
+    gitBlobSha:
+    commitDate:
+    commitSha:
+  componentRef:
+    url:
+    digest:
+    ?spec: ?
+  data:
+  interface:
+    inputs:
+    outputs:
+
+---
+
+components:
+-
+  componentRef:
+    url:
+    digest: a7bc...178a
+    spec:
+      inputs:
+      outputs:
+      implementation?:
+  data: <blob>
+  annotations:
+    git:
+      gitBlobSha:
+      commitDate:
+      commitSha:
+
