@@ -6,25 +6,42 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import { useEffect, useState } from 'react';
+import yaml from "js-yaml";
+import { useEffect, useState } from "react";
 
-import {downloadComponentDataWithCache} from '../github'
-import { ComponentSpec } from '../componentSpec'
+import { downloadComponentDataWithCache } from "../github";
+import { httpGetWithCache } from "../cacheUtils";
+import { ComponentReference, ComponentSpec } from "../componentSpec";
 import DraggableComponent from "./DraggableComponent";
 
-type ComponentGroup = {
-  category: string;
-  componentUrls: string[];
+type ComponentLibraryFolder = {
+  name: string;
+  folders: ComponentLibraryFolder[];
+  components: ComponentReference[];
 };
 
-const DraggableComponentRow = ({componentUrl}: {componentUrl: string}) => {
-  const [componentSpec, setComponentSpec] = useState<ComponentSpec | undefined>(undefined);
+type ComponentLibraryStruct = {
+  annotations?: {
+    [k: string]: unknown;
+  };
+  folders: ComponentLibraryFolder[];
+};
+
+export const isValidComponentLibraryStruct = (
+  obj: object
+): obj is ComponentLibraryStruct => "folders" in obj;
+
+const DraggableComponentRow = ({ componentUrl }: { componentUrl: string }) => {
+  const [componentSpec, setComponentSpec] = useState<ComponentSpec | undefined>(
+    undefined
+  );
   useEffect(() => {
+    // TODO: Validate the component
     downloadComponentDataWithCache(componentUrl).then(setComponentSpec);
   }, [componentUrl]);
 
   if (componentSpec === undefined) {
-    return <span>Loading...</span>
+    return <div>Loading...</div>;
   } else {
     return (
       <DraggableComponent
@@ -37,36 +54,116 @@ const DraggableComponentRow = ({componentUrl}: {componentUrl: string}) => {
   }
 };
 
-const ComponentGroupList = ({ componentGroups }: { componentGroups: ComponentGroup[] }) => {
+const SingleFolderVis = ({
+  folder,
+  isOpen = false,
+}: {
+  folder: ComponentLibraryFolder;
+  isOpen?: boolean;
+}) => {
   return (
-    <>
-      {Array.from(componentGroups).map(
-        ({ category, componentUrls }, index) => (
-          <details key={category} open={index === 0} style={{ border: "1px solid #aaa", borderRadius: "4px" }}>
-            <summary style={{ borderWidth: "1px", padding: "8px" }}>
-              <strong>{category}</strong>
-            </summary>
-            {componentUrls.map((componentUrl) => (
-              <DraggableComponentRow key={componentUrl} componentUrl={componentUrl} />
-            ))}
-          </details>
-        )
-      )}
-    </>
+    <details
+      key={folder.name}
+      open={isOpen}
+      style={{
+        border: "1px solid #aaa",
+        borderRadius: "4px",
+        padding: "4px",
+        paddingLeft: "10px",
+      }}
+    >
+      <summary style={{ borderWidth: "1px", padding: "4px" }}>
+        <strong>{folder.name}</strong>
+      </summary>
+      {folder.folders &&
+        Array.from(folder.folders).map((componentFolder, index) => (
+          <SingleFolderVis
+            key={componentFolder.name}
+            folder={componentFolder}
+            isOpen={isOpen && index === 0}
+          />
+        ))}
+      {folder.components &&
+        Array.from(folder.components).map(
+          (componentReference) =>
+            componentReference.url && (
+              <DraggableComponentRow
+                key={componentReference.url}
+                componentUrl={componentReference.url}
+              />
+            )
+        )}
+    </details>
   );
 };
 
-const ComponentLibrary = ({ componentGroups }: { componentGroups: ComponentGroup[] }) => {
+const ComponentLibraryVisFromStruct = ({
+  componentLibraryStruct,
+}: {
+  componentLibraryStruct?: ComponentLibraryStruct;
+}) => {
   return (
     <details open>
-      <summary style={{ border: "1px solid #aaa", padding: "4px", borderRadius: "4px" }}>
+      <summary
+        style={{
+          border: "1px solid #aaa",
+          padding: "4px",
+          borderRadius: "4px",
+        }}
+      >
         <strong>Component library</strong>
       </summary>
       <div style={{ paddingLeft: "10px" }}>
-        <ComponentGroupList componentGroups={componentGroups}/>
+        {componentLibraryStruct &&
+          Array.from(componentLibraryStruct.folders).map(
+            (componentFolder, index) => (
+              <SingleFolderVis
+                key={componentFolder.name}
+                folder={componentFolder}
+                isOpen={index === 0}
+              />
+            )
+          )}
       </div>
     </details>
   );
 };
 
-export default ComponentLibrary;
+const loadComponentLibraryStruct = async (url: string) => {
+  const response = await httpGetWithCache(url, "cache", true);
+  const data = await response.arrayBuffer();
+  const componentLibrary = yaml.load(new TextDecoder().decode(data));
+  if (typeof componentLibrary !== "object" || componentLibrary === null) {
+    throw Error(
+      `Component library data is not a YAML-encoded object: ${componentLibrary}`
+    );
+  }
+  if (!isValidComponentLibraryStruct(componentLibrary)) {
+    throw Error(
+      `Invalid Component library data structure: ${componentLibrary}`
+    );
+  }
+  return componentLibrary;
+};
+
+const ComponentLibraryVisFromUrl = ({ url }: { url: string }) => {
+  const [componentLibraryStruct, setComponentLibraryStruct] =
+    useState<ComponentLibraryStruct>();
+
+  useEffect(() => {
+    if (componentLibraryStruct === undefined) {
+      (async () => {
+        const loadedComponentLibrary = await loadComponentLibraryStruct(url);
+        setComponentLibraryStruct(loadedComponentLibrary);
+      })();
+    }
+  }, [componentLibraryStruct, url]);
+
+  return componentLibraryStruct === undefined ? null : (
+    <ComponentLibraryVisFromStruct
+      componentLibraryStruct={componentLibraryStruct}
+    />
+  );
+};
+
+export default ComponentLibraryVisFromUrl;
