@@ -42,8 +42,8 @@ const sanitizePipelineInfoName = (pipelineContextName: string) => {
 type ResolvedCommandLineAndArgs = {
   command?: string[];
   args?: string[];
-  inputsConsumedAsValue: Set<string>;
-  inputsConsumedAsPath: Set<string>;
+  inputsConsumedAsParameter: Set<string>;
+  inputsConsumedAsArtifact: Set<string>;
 };
 
 const resolveCommandLine = (
@@ -56,8 +56,8 @@ const resolveCommandLine = (
   }
   const containerSpec = componentSpec.implementation.container;
 
-  const inputsConsumedAsValue = new Set<string>();
-  const inputsConsumedAsPath = new Set<string>();
+  const inputsConsumedAsParameter = new Set<string>();
+  const inputsConsumedAsArtifact = new Set<string>();
   const convertArg = (arg: StringOrPlaceholder): string[] => {
     if (typeof arg == "string") {
       return [arg];
@@ -70,15 +70,15 @@ const resolveCommandLine = (
         // We can either try to change the argument to parameter or make the input to be an artifact to solve the conflict.
         // I choose to make the input to be artifact.
         // Adding input name to inputsConsumedAsPath to make the input rendered as an artifact input.
-        inputsConsumedAsPath.add(inputName);
+        inputsConsumedAsArtifact.add(inputName);
         return [`{{$.inputs.artifacts['${inputName}'].value}}`];
       } else {
-        inputsConsumedAsValue.add(inputName);
+        inputsConsumedAsParameter.add(inputName);
         return [`{{$.inputs.parameters['${inputName}']}}`];
       }
     } else if ("inputPath" in arg) {
       const inputName = arg.inputPath;
-      inputsConsumedAsPath.add(inputName);
+      inputsConsumedAsArtifact.add(inputName);
       return [`{{$.inputs.artifacts['${inputName}'].path}}`];
     } else if ("outputPath" in arg) {
       const outputName = arg.outputPath;
@@ -127,8 +127,8 @@ const resolveCommandLine = (
   const result = {
     command: containerSpec.command?.flatMap(convertArg),
     args: containerSpec.args?.flatMap(convertArg),
-    inputsConsumedAsValue: inputsConsumedAsValue,
-    inputsConsumedAsPath: inputsConsumedAsPath,
+    inputsConsumedAsParameter: inputsConsumedAsParameter,
+    inputsConsumedAsArtifact: inputsConsumedAsArtifact,
   };
   return result;
 };
@@ -472,7 +472,7 @@ const taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec = (
 
   const vertexComponentInputsSpec: vertex.ComponentInputsSpec = {
     parameters: Object.fromEntries(
-      Array.from(resolvedCommandLine.inputsConsumedAsValue.values()).map(
+      Array.from(resolvedCommandLine.inputsConsumedAsParameter.values()).map(
         (inputName) => [
           inputName,
           typeSpecToVertexParameterSpec(inputMap.get(inputName)?.type),
@@ -480,7 +480,7 @@ const taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec = (
       )
     ),
     artifacts: Object.fromEntries(
-      Array.from(resolvedCommandLine.inputsConsumedAsPath.values()).map(
+      Array.from(resolvedCommandLine.inputsConsumedAsArtifact.values()).map(
         (inputName) => [
           inputName,
           typeSpecToVertexArtifactSpec(inputMap.get(inputName)?.type),
