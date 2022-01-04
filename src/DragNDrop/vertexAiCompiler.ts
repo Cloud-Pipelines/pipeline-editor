@@ -570,7 +570,9 @@ export const graphComponentSpecToVertexPipelineSpec = (
   const graphSpec = componentSpec.implementation.graph;
 
   let vertexExecutors: Record<string, vertex.ExecutorSpec> = {};
+  const executorStringToExecutorId = new Map<string, string>();
   let vertexComponents: Record<string, vertex.ComponentSpec> = {};
+  const componentStringToComponentId = new Map<string, string>();
   let vertexTasks: Record<string, vertex.PipelineTaskSpec> = {};
   const taskStringToTaskId = new Map<string, string>();
 
@@ -578,9 +580,14 @@ export const graphComponentSpecToVertexPipelineSpec = (
     executor: vertex.ExecutorSpec,
     namePrefix: string = "Executor"
   ) => {
-    // TODO: De-duplicate executors
+    const serializedSpec = JSON.stringify(executor);
+    const existingId = executorStringToExecutorId.get(serializedSpec);
+    if (existingId !== undefined) {
+      return existingId;
+    }
     const usedIds = new Set(Object.keys(vertexExecutors));
     const id = makeNameUniqueByAddingIndex(namePrefix, usedIds);
+    executorStringToExecutorId.set(serializedSpec, id);
     vertexExecutors[id] = executor;
     return id;
   };
@@ -589,9 +596,14 @@ export const graphComponentSpecToVertexPipelineSpec = (
     component: vertex.ComponentSpec,
     namePrefix: string = "Component"
   ) => {
-    // TODO: De-duplicate components
+    const serializedSpec = JSON.stringify(component);
+    const existingId = componentStringToComponentId.get(serializedSpec);
+    if (existingId !== undefined) {
+      return existingId;
+    }
     const usedIds = new Set(Object.keys(vertexComponents));
     const id = makeNameUniqueByAddingIndex(namePrefix, usedIds);
+    componentStringToComponentId.set(serializedSpec, id);
     vertexComponents[id] = component;
     return id;
   };
@@ -600,9 +612,14 @@ export const graphComponentSpecToVertexPipelineSpec = (
     task: vertex.PipelineTaskSpec,
     namePrefix: string = "Task"
   ) => {
-    // TODO: De-duplicate tasks
+    const serializedSpec = JSON.stringify(task);
+    const existingId = taskStringToTaskId.get(serializedSpec);
+    if (existingId !== undefined) {
+      return existingId;
+    }
     const usedIds = new Set(Object.keys(vertexTasks));
     const id = makeNameUniqueByAddingIndex(namePrefix, usedIds);
+    taskStringToTaskId.set(serializedSpec, id);
     vertexTasks[id] = task;
     return id;
   };
@@ -618,13 +635,7 @@ export const graphComponentSpecToVertexPipelineSpec = (
     const makeArtifactTaskSpec = buildMakeArtifactTaskSpec(
       parameterArgumentSpec
     );
-    // Need to de-duplicate converter tasks
-    const serializedSpec = JSON.stringify(makeArtifactTaskSpec);
-    let taskId = taskStringToTaskId.get(serializedSpec);
-    if (taskId === undefined) {
-      taskId = addTaskAndGetId(makeArtifactTaskSpec, namePrefix);
-      taskStringToTaskId.set(serializedSpec, taskId);
-    }
+    const taskId = addTaskAndGetId(makeArtifactTaskSpec, namePrefix);
     const artifactArgumentSpec: vertex.ArtifactArgumentSpec = {
       taskOutputArtifact: {
         producerTask: taskId,

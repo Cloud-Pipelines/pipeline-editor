@@ -97,66 +97,6 @@
             ]
           }
         },
-        "Consume anything as value 2": {
-          "container": {
-            "image": "python:3.7",
-            "command": [
-              "sh",
-              "-ec",
-              "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
-              "def consume_anything_as_value(data):\n    print(\"consume_anything_as_value: \" + data)\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Consume anything as value', description='')\n_parser.add_argument(\"--data\", dest=\"data\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = consume_anything_as_value(**_parsed_args)\n"
-            ],
-            "args": [
-              "--data",
-              "{{$.inputs.artifacts['data'].value}}"
-            ]
-          }
-        },
-        "Consume anything as file 2": {
-          "container": {
-            "image": "python:3.7",
-            "command": [
-              "sh",
-              "-ec",
-              "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
-              "def consume_anything_as_file(data_path):\n    with open(data_path) as f:\n        print(\"consume_anything_as_file: \" + f.read())\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Consume anything as file', description='')\n_parser.add_argument(\"--data\", dest=\"data_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = consume_anything_as_file(**_parsed_args)\n"
-            ],
-            "args": [
-              "--data",
-              "{{$.inputs.artifacts['data'].path}}"
-            ]
-          }
-        },
-        "Consume anything as value 3": {
-          "container": {
-            "image": "python:3.7",
-            "command": [
-              "sh",
-              "-ec",
-              "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
-              "def consume_anything_as_value(data):\n    print(\"consume_anything_as_value: \" + data)\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Consume anything as value', description='')\n_parser.add_argument(\"--data\", dest=\"data\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = consume_anything_as_value(**_parsed_args)\n"
-            ],
-            "args": [
-              "--data",
-              "{{$.inputs.artifacts['data'].value}}"
-            ]
-          }
-        },
-        "Consume anything as file 3": {
-          "container": {
-            "image": "python:3.7",
-            "command": [
-              "sh",
-              "-ec",
-              "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
-              "def consume_anything_as_file(data_path):\n    with open(data_path) as f:\n        print(\"consume_anything_as_file: \" + f.read())\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Consume anything as file', description='')\n_parser.add_argument(\"--data\", dest=\"data_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = consume_anything_as_file(**_parsed_args)\n"
-            ],
-            "args": [
-              "--data",
-              "{{$.inputs.artifacts['data'].path}}"
-            ]
-          }
-        },
         "Consume something as value": {
           "container": {
             "image": "python:3.7",
@@ -173,36 +113,6 @@
           }
         },
         "Consume something as file": {
-          "container": {
-            "image": "python:3.7",
-            "command": [
-              "sh",
-              "-ec",
-              "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
-              "def consume_something_as_file(data_path):\n    with open(data_path) as f:\n        print(\"consume_something_as_file: \" + f.read())\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Consume something as file', description='')\n_parser.add_argument(\"--data\", dest=\"data_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = consume_something_as_file(**_parsed_args)\n"
-            ],
-            "args": [
-              "--data",
-              "{{$.inputs.artifacts['data'].path}}"
-            ]
-          }
-        },
-        "Consume something as value 2": {
-          "container": {
-            "image": "python:3.7",
-            "command": [
-              "sh",
-              "-ec",
-              "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
-              "def consume_something_as_value(data):\n    print(\"consume_something_as_value: \" + data)\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Consume something as value', description='')\n_parser.add_argument(\"--data\", dest=\"data\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = consume_something_as_value(**_parsed_args)\n"
-            ],
-            "args": [
-              "--data",
-              "{{$.inputs.artifacts['data'].value}}"
-            ]
-          }
-        },
-        "Consume something as file 2": {
           "container": {
             "image": "python:3.7",
             "command": [
@@ -247,37 +157,7 @@
             ]
           }
         },
-        "Consume string as value 2": {
-          "container": {
-            "image": "python:3.7",
-            "command": [
-              "sh",
-              "-ec",
-              "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
-              "def consume_string_as_value(data):\n    print(\"consume_string_as_value: \" + data)\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Consume string as value', description='')\n_parser.add_argument(\"--data\", dest=\"data\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = consume_string_as_value(**_parsed_args)\n"
-            ],
-            "args": [
-              "--data",
-              "{{$.inputs.artifacts['data'].value}}"
-            ]
-          }
-        },
-        "Consume string as file 2": {
-          "container": {
-            "image": "python:3.7",
-            "command": [
-              "sh",
-              "-ec",
-              "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
-              "def consume_string_as_file(data_path):\n    with open(data_path) as f:\n        print(\"consume_string_as_file: \" + f.read())\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Consume string as file', description='')\n_parser.add_argument(\"--data\", dest=\"data_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = consume_string_as_file(**_parsed_args)\n"
-            ],
-            "args": [
-              "--data",
-              "{{$.inputs.artifacts['data'].path}}"
-            ]
-          }
-        },
-        "Consume anything as value 4": {
+        "Consume anything as value 2": {
           "container": {
             "image": "python:3.7",
             "command": [
@@ -289,21 +169,6 @@
             "args": [
               "--data",
               "{{$.inputs.parameters['data']}}"
-            ]
-          }
-        },
-        "Consume anything as file 4": {
-          "container": {
-            "image": "python:3.7",
-            "command": [
-              "sh",
-              "-ec",
-              "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
-              "def consume_anything_as_file(data_path):\n    with open(data_path) as f:\n        print(\"consume_anything_as_file: \" + f.read())\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Consume anything as file', description='')\n_parser.add_argument(\"--data\", dest=\"data_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = consume_anything_as_file(**_parsed_args)\n"
-            ],
-            "args": [
-              "--data",
-              "{{$.inputs.artifacts['data'].path}}"
             ]
           }
         },
@@ -319,67 +184,7 @@
             ]
           }
         },
-        "Consume anything as value 5": {
-          "container": {
-            "image": "python:3.7",
-            "command": [
-              "sh",
-              "-ec",
-              "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
-              "def consume_anything_as_value(data):\n    print(\"consume_anything_as_value: \" + data)\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Consume anything as value', description='')\n_parser.add_argument(\"--data\", dest=\"data\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = consume_anything_as_value(**_parsed_args)\n"
-            ],
-            "args": [
-              "--data",
-              "{{$.inputs.parameters['data']}}"
-            ]
-          }
-        },
-        "Consume anything as file 5": {
-          "container": {
-            "image": "python:3.7",
-            "command": [
-              "sh",
-              "-ec",
-              "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
-              "def consume_anything_as_file(data_path):\n    with open(data_path) as f:\n        print(\"consume_anything_as_file: \" + f.read())\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Consume anything as file', description='')\n_parser.add_argument(\"--data\", dest=\"data_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = consume_anything_as_file(**_parsed_args)\n"
-            ],
-            "args": [
-              "--data",
-              "{{$.inputs.artifacts['data'].path}}"
-            ]
-          }
-        },
-        "Consume anything as value 6": {
-          "container": {
-            "image": "python:3.7",
-            "command": [
-              "sh",
-              "-ec",
-              "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
-              "def consume_anything_as_value(data):\n    print(\"consume_anything_as_value: \" + data)\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Consume anything as value', description='')\n_parser.add_argument(\"--data\", dest=\"data\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = consume_anything_as_value(**_parsed_args)\n"
-            ],
-            "args": [
-              "--data",
-              "{{$.inputs.parameters['data']}}"
-            ]
-          }
-        },
-        "Consume anything as file 6": {
-          "container": {
-            "image": "python:3.7",
-            "command": [
-              "sh",
-              "-ec",
-              "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
-              "def consume_anything_as_file(data_path):\n    with open(data_path) as f:\n        print(\"consume_anything_as_file: \" + f.read())\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Consume anything as file', description='')\n_parser.add_argument(\"--data\", dest=\"data_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = consume_anything_as_file(**_parsed_args)\n"
-            ],
-            "args": [
-              "--data",
-              "{{$.inputs.artifacts['data'].path}}"
-            ]
-          }
-        },
-        "Consume something as value 3": {
+        "Consume something as value 2": {
           "container": {
             "image": "python:3.7",
             "command": [
@@ -394,52 +199,7 @@
             ]
           }
         },
-        "Consume something as file 3": {
-          "container": {
-            "image": "python:3.7",
-            "command": [
-              "sh",
-              "-ec",
-              "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
-              "def consume_something_as_file(data_path):\n    with open(data_path) as f:\n        print(\"consume_something_as_file: \" + f.read())\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Consume something as file', description='')\n_parser.add_argument(\"--data\", dest=\"data_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = consume_something_as_file(**_parsed_args)\n"
-            ],
-            "args": [
-              "--data",
-              "{{$.inputs.artifacts['data'].path}}"
-            ]
-          }
-        },
-        "Consume something as value 4": {
-          "container": {
-            "image": "python:3.7",
-            "command": [
-              "sh",
-              "-ec",
-              "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
-              "def consume_something_as_value(data):\n    print(\"consume_something_as_value: \" + data)\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Consume something as value', description='')\n_parser.add_argument(\"--data\", dest=\"data\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = consume_something_as_value(**_parsed_args)\n"
-            ],
-            "args": [
-              "--data",
-              "{{$.inputs.parameters['data']}}"
-            ]
-          }
-        },
-        "Consume something as file 4": {
-          "container": {
-            "image": "python:3.7",
-            "command": [
-              "sh",
-              "-ec",
-              "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
-              "def consume_something_as_file(data_path):\n    with open(data_path) as f:\n        print(\"consume_something_as_file: \" + f.read())\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Consume something as file', description='')\n_parser.add_argument(\"--data\", dest=\"data_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = consume_something_as_file(**_parsed_args)\n"
-            ],
-            "args": [
-              "--data",
-              "{{$.inputs.artifacts['data'].path}}"
-            ]
-          }
-        },
-        "Consume string as value 3": {
+        "Consume string as value 2": {
           "container": {
             "image": "python:3.7",
             "command": [
@@ -451,141 +211,6 @@
             "args": [
               "--data",
               "{{$.inputs.parameters['data']}}"
-            ]
-          }
-        },
-        "Consume string as file 3": {
-          "container": {
-            "image": "python:3.7",
-            "command": [
-              "sh",
-              "-ec",
-              "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
-              "def consume_string_as_file(data_path):\n    with open(data_path) as f:\n        print(\"consume_string_as_file: \" + f.read())\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Consume string as file', description='')\n_parser.add_argument(\"--data\", dest=\"data_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = consume_string_as_file(**_parsed_args)\n"
-            ],
-            "args": [
-              "--data",
-              "{{$.inputs.artifacts['data'].path}}"
-            ]
-          }
-        },
-        "Consume string as value 4": {
-          "container": {
-            "image": "python:3.7",
-            "command": [
-              "sh",
-              "-ec",
-              "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
-              "def consume_string_as_value(data):\n    print(\"consume_string_as_value: \" + data)\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Consume string as value', description='')\n_parser.add_argument(\"--data\", dest=\"data\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = consume_string_as_value(**_parsed_args)\n"
-            ],
-            "args": [
-              "--data",
-              "{{$.inputs.parameters['data']}}"
-            ]
-          }
-        },
-        "Consume string as file 4": {
-          "container": {
-            "image": "python:3.7",
-            "command": [
-              "sh",
-              "-ec",
-              "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
-              "def consume_string_as_file(data_path):\n    with open(data_path) as f:\n        print(\"consume_string_as_file: \" + f.read())\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Consume string as file', description='')\n_parser.add_argument(\"--data\", dest=\"data_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = consume_string_as_file(**_parsed_args)\n"
-            ],
-            "args": [
-              "--data",
-              "{{$.inputs.artifacts['data'].path}}"
-            ]
-          }
-        },
-        "Consume anything as value 7": {
-          "container": {
-            "image": "python:3.7",
-            "command": [
-              "sh",
-              "-ec",
-              "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
-              "def consume_anything_as_value(data):\n    print(\"consume_anything_as_value: \" + data)\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Consume anything as value', description='')\n_parser.add_argument(\"--data\", dest=\"data\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = consume_anything_as_value(**_parsed_args)\n"
-            ],
-            "args": [
-              "--data",
-              "{{$.inputs.parameters['data']}}"
-            ]
-          }
-        },
-        "Consume anything as file 7": {
-          "container": {
-            "image": "python:3.7",
-            "command": [
-              "sh",
-              "-ec",
-              "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
-              "def consume_anything_as_file(data_path):\n    with open(data_path) as f:\n        print(\"consume_anything_as_file: \" + f.read())\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Consume anything as file', description='')\n_parser.add_argument(\"--data\", dest=\"data_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = consume_anything_as_file(**_parsed_args)\n"
-            ],
-            "args": [
-              "--data",
-              "{{$.inputs.artifacts['data'].path}}"
-            ]
-          }
-        },
-        "Consume something as value 5": {
-          "container": {
-            "image": "python:3.7",
-            "command": [
-              "sh",
-              "-ec",
-              "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
-              "def consume_something_as_value(data):\n    print(\"consume_something_as_value: \" + data)\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Consume something as value', description='')\n_parser.add_argument(\"--data\", dest=\"data\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = consume_something_as_value(**_parsed_args)\n"
-            ],
-            "args": [
-              "--data",
-              "{{$.inputs.parameters['data']}}"
-            ]
-          }
-        },
-        "Consume something as file 5": {
-          "container": {
-            "image": "python:3.7",
-            "command": [
-              "sh",
-              "-ec",
-              "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
-              "def consume_something_as_file(data_path):\n    with open(data_path) as f:\n        print(\"consume_something_as_file: \" + f.read())\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Consume something as file', description='')\n_parser.add_argument(\"--data\", dest=\"data_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = consume_something_as_file(**_parsed_args)\n"
-            ],
-            "args": [
-              "--data",
-              "{{$.inputs.artifacts['data'].path}}"
-            ]
-          }
-        },
-        "Consume string as value 5": {
-          "container": {
-            "image": "python:3.7",
-            "command": [
-              "sh",
-              "-ec",
-              "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
-              "def consume_string_as_value(data):\n    print(\"consume_string_as_value: \" + data)\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Consume string as value', description='')\n_parser.add_argument(\"--data\", dest=\"data\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = consume_string_as_value(**_parsed_args)\n"
-            ],
-            "args": [
-              "--data",
-              "{{$.inputs.parameters['data']}}"
-            ]
-          }
-        },
-        "Consume string as file 5": {
-          "container": {
-            "image": "python:3.7",
-            "command": [
-              "sh",
-              "-ec",
-              "program_path=$(mktemp)\nprintf \"%s\" \"$0\" > \"$program_path\"\npython3 -u \"$program_path\" \"$@\"\n",
-              "def consume_string_as_file(data_path):\n    with open(data_path) as f:\n        print(\"consume_string_as_file: \" + f.read())\n\nimport argparse\n_parser = argparse.ArgumentParser(prog='Consume string as file', description='')\n_parser.add_argument(\"--data\", dest=\"data_path\", type=str, required=True, default=argparse.SUPPRESS)\n_parsed_args = vars(_parser.parse_args())\n\n_outputs = consume_string_as_file(**_parsed_args)\n"
-            ],
-            "args": [
-              "--data",
-              "{{$.inputs.artifacts['data'].path}}"
             ]
           }
         }
@@ -677,74 +302,6 @@
         },
         "executorLabel": "Consume anything as file"
       },
-      "Consume anything as value 2": {
-        "inputDefinitions": {
-          "parameters": {},
-          "artifacts": {
-            "data": {
-              "artifactType": {
-                "schemaTitle": "system.Artifact"
-              }
-            }
-          }
-        },
-        "outputDefinitions": {
-          "parameters": {},
-          "artifacts": {}
-        },
-        "executorLabel": "Consume anything as value 2"
-      },
-      "Consume anything as file 2": {
-        "inputDefinitions": {
-          "parameters": {},
-          "artifacts": {
-            "data": {
-              "artifactType": {
-                "schemaTitle": "system.Artifact"
-              }
-            }
-          }
-        },
-        "outputDefinitions": {
-          "parameters": {},
-          "artifacts": {}
-        },
-        "executorLabel": "Consume anything as file 2"
-      },
-      "Consume anything as value 3": {
-        "inputDefinitions": {
-          "parameters": {},
-          "artifacts": {
-            "data": {
-              "artifactType": {
-                "schemaTitle": "system.Artifact"
-              }
-            }
-          }
-        },
-        "outputDefinitions": {
-          "parameters": {},
-          "artifacts": {}
-        },
-        "executorLabel": "Consume anything as value 3"
-      },
-      "Consume anything as file 3": {
-        "inputDefinitions": {
-          "parameters": {},
-          "artifacts": {
-            "data": {
-              "artifactType": {
-                "schemaTitle": "system.Artifact"
-              }
-            }
-          }
-        },
-        "outputDefinitions": {
-          "parameters": {},
-          "artifacts": {}
-        },
-        "executorLabel": "Consume anything as file 3"
-      },
       "Consume something as value": {
         "inputDefinitions": {
           "parameters": {},
@@ -778,40 +335,6 @@
           "artifacts": {}
         },
         "executorLabel": "Consume something as file"
-      },
-      "Consume something as value 2": {
-        "inputDefinitions": {
-          "parameters": {},
-          "artifacts": {
-            "data": {
-              "artifactType": {
-                "schemaTitle": "system.Artifact"
-              }
-            }
-          }
-        },
-        "outputDefinitions": {
-          "parameters": {},
-          "artifacts": {}
-        },
-        "executorLabel": "Consume something as value 2"
-      },
-      "Consume something as file 2": {
-        "inputDefinitions": {
-          "parameters": {},
-          "artifacts": {
-            "data": {
-              "artifactType": {
-                "schemaTitle": "system.Artifact"
-              }
-            }
-          }
-        },
-        "outputDefinitions": {
-          "parameters": {},
-          "artifacts": {}
-        },
-        "executorLabel": "Consume something as file 2"
       },
       "Consume string as value": {
         "inputDefinitions": {
@@ -847,41 +370,7 @@
         },
         "executorLabel": "Consume string as file"
       },
-      "Consume string as value 2": {
-        "inputDefinitions": {
-          "parameters": {},
-          "artifacts": {
-            "data": {
-              "artifactType": {
-                "schemaTitle": "system.Artifact"
-              }
-            }
-          }
-        },
-        "outputDefinitions": {
-          "parameters": {},
-          "artifacts": {}
-        },
-        "executorLabel": "Consume string as value 2"
-      },
-      "Consume string as file 2": {
-        "inputDefinitions": {
-          "parameters": {},
-          "artifacts": {
-            "data": {
-              "artifactType": {
-                "schemaTitle": "system.Artifact"
-              }
-            }
-          }
-        },
-        "outputDefinitions": {
-          "parameters": {},
-          "artifacts": {}
-        },
-        "executorLabel": "Consume string as file 2"
-      },
-      "Consume anything as value 4": {
+      "Consume anything as value 2": {
         "inputDefinitions": {
           "parameters": {
             "data": {
@@ -894,24 +383,7 @@
           "parameters": {},
           "artifacts": {}
         },
-        "executorLabel": "Consume anything as value 4"
-      },
-      "Consume anything as file 4": {
-        "inputDefinitions": {
-          "parameters": {},
-          "artifacts": {
-            "data": {
-              "artifactType": {
-                "schemaTitle": "system.Artifact"
-              }
-            }
-          }
-        },
-        "outputDefinitions": {
-          "parameters": {},
-          "artifacts": {}
-        },
-        "executorLabel": "Consume anything as file 4"
+        "executorLabel": "Consume anything as value 2"
       },
       "_make_artifact": {
         "executorLabel": "_make_artifact",
@@ -932,7 +404,7 @@
           }
         }
       },
-      "Consume anything as value 5": {
+      "Consume something as value 2": {
         "inputDefinitions": {
           "parameters": {
             "data": {
@@ -945,26 +417,9 @@
           "parameters": {},
           "artifacts": {}
         },
-        "executorLabel": "Consume anything as value 5"
+        "executorLabel": "Consume something as value 2"
       },
-      "Consume anything as file 5": {
-        "inputDefinitions": {
-          "parameters": {},
-          "artifacts": {
-            "data": {
-              "artifactType": {
-                "schemaTitle": "system.Artifact"
-              }
-            }
-          }
-        },
-        "outputDefinitions": {
-          "parameters": {},
-          "artifacts": {}
-        },
-        "executorLabel": "Consume anything as file 5"
-      },
-      "Consume anything as value 6": {
+      "Consume string as value 2": {
         "inputDefinitions": {
           "parameters": {
             "data": {
@@ -977,248 +432,7 @@
           "parameters": {},
           "artifacts": {}
         },
-        "executorLabel": "Consume anything as value 6"
-      },
-      "Consume anything as file 6": {
-        "inputDefinitions": {
-          "parameters": {},
-          "artifacts": {
-            "data": {
-              "artifactType": {
-                "schemaTitle": "system.Artifact"
-              }
-            }
-          }
-        },
-        "outputDefinitions": {
-          "parameters": {},
-          "artifacts": {}
-        },
-        "executorLabel": "Consume anything as file 6"
-      },
-      "Consume something as value 3": {
-        "inputDefinitions": {
-          "parameters": {
-            "data": {
-              "type": "STRING"
-            }
-          },
-          "artifacts": {}
-        },
-        "outputDefinitions": {
-          "parameters": {},
-          "artifacts": {}
-        },
-        "executorLabel": "Consume something as value 3"
-      },
-      "Consume something as file 3": {
-        "inputDefinitions": {
-          "parameters": {},
-          "artifacts": {
-            "data": {
-              "artifactType": {
-                "schemaTitle": "system.Artifact"
-              }
-            }
-          }
-        },
-        "outputDefinitions": {
-          "parameters": {},
-          "artifacts": {}
-        },
-        "executorLabel": "Consume something as file 3"
-      },
-      "Consume something as value 4": {
-        "inputDefinitions": {
-          "parameters": {
-            "data": {
-              "type": "STRING"
-            }
-          },
-          "artifacts": {}
-        },
-        "outputDefinitions": {
-          "parameters": {},
-          "artifacts": {}
-        },
-        "executorLabel": "Consume something as value 4"
-      },
-      "Consume something as file 4": {
-        "inputDefinitions": {
-          "parameters": {},
-          "artifacts": {
-            "data": {
-              "artifactType": {
-                "schemaTitle": "system.Artifact"
-              }
-            }
-          }
-        },
-        "outputDefinitions": {
-          "parameters": {},
-          "artifacts": {}
-        },
-        "executorLabel": "Consume something as file 4"
-      },
-      "Consume string as value 3": {
-        "inputDefinitions": {
-          "parameters": {
-            "data": {
-              "type": "STRING"
-            }
-          },
-          "artifacts": {}
-        },
-        "outputDefinitions": {
-          "parameters": {},
-          "artifacts": {}
-        },
-        "executorLabel": "Consume string as value 3"
-      },
-      "Consume string as file 3": {
-        "inputDefinitions": {
-          "parameters": {},
-          "artifacts": {
-            "data": {
-              "artifactType": {
-                "schemaTitle": "system.Artifact"
-              }
-            }
-          }
-        },
-        "outputDefinitions": {
-          "parameters": {},
-          "artifacts": {}
-        },
-        "executorLabel": "Consume string as file 3"
-      },
-      "Consume string as value 4": {
-        "inputDefinitions": {
-          "parameters": {
-            "data": {
-              "type": "STRING"
-            }
-          },
-          "artifacts": {}
-        },
-        "outputDefinitions": {
-          "parameters": {},
-          "artifacts": {}
-        },
-        "executorLabel": "Consume string as value 4"
-      },
-      "Consume string as file 4": {
-        "inputDefinitions": {
-          "parameters": {},
-          "artifacts": {
-            "data": {
-              "artifactType": {
-                "schemaTitle": "system.Artifact"
-              }
-            }
-          }
-        },
-        "outputDefinitions": {
-          "parameters": {},
-          "artifacts": {}
-        },
-        "executorLabel": "Consume string as file 4"
-      },
-      "Consume anything as value 7": {
-        "inputDefinitions": {
-          "parameters": {
-            "data": {
-              "type": "STRING"
-            }
-          },
-          "artifacts": {}
-        },
-        "outputDefinitions": {
-          "parameters": {},
-          "artifacts": {}
-        },
-        "executorLabel": "Consume anything as value 7"
-      },
-      "Consume anything as file 7": {
-        "inputDefinitions": {
-          "parameters": {},
-          "artifacts": {
-            "data": {
-              "artifactType": {
-                "schemaTitle": "system.Artifact"
-              }
-            }
-          }
-        },
-        "outputDefinitions": {
-          "parameters": {},
-          "artifacts": {}
-        },
-        "executorLabel": "Consume anything as file 7"
-      },
-      "Consume something as value 5": {
-        "inputDefinitions": {
-          "parameters": {
-            "data": {
-              "type": "STRING"
-            }
-          },
-          "artifacts": {}
-        },
-        "outputDefinitions": {
-          "parameters": {},
-          "artifacts": {}
-        },
-        "executorLabel": "Consume something as value 5"
-      },
-      "Consume something as file 5": {
-        "inputDefinitions": {
-          "parameters": {},
-          "artifacts": {
-            "data": {
-              "artifactType": {
-                "schemaTitle": "system.Artifact"
-              }
-            }
-          }
-        },
-        "outputDefinitions": {
-          "parameters": {},
-          "artifacts": {}
-        },
-        "executorLabel": "Consume something as file 5"
-      },
-      "Consume string as value 5": {
-        "inputDefinitions": {
-          "parameters": {
-            "data": {
-              "type": "STRING"
-            }
-          },
-          "artifacts": {}
-        },
-        "outputDefinitions": {
-          "parameters": {},
-          "artifacts": {}
-        },
-        "executorLabel": "Consume string as value 5"
-      },
-      "Consume string as file 5": {
-        "inputDefinitions": {
-          "parameters": {},
-          "artifacts": {
-            "data": {
-              "artifactType": {
-                "schemaTitle": "system.Artifact"
-              }
-            }
-          }
-        },
-        "outputDefinitions": {
-          "parameters": {},
-          "artifacts": {}
-        },
-        "executorLabel": "Consume string as file 5"
+        "executorLabel": "Consume string as value 2"
       }
     },
     "root": {
@@ -1345,7 +559,7 @@
               "enableCache": true
             },
             "componentRef": {
-              "name": "Consume anything as value 2"
+              "name": "Consume anything as value"
             }
           },
           "Consume anything as file 6": {
@@ -1367,7 +581,7 @@
               "enableCache": true
             },
             "componentRef": {
-              "name": "Consume anything as file 2"
+              "name": "Consume anything as file"
             }
           },
           "Consume anything as value 7": {
@@ -1389,7 +603,7 @@
               "enableCache": true
             },
             "componentRef": {
-              "name": "Consume anything as value 3"
+              "name": "Consume anything as value"
             }
           },
           "Consume anything as file 7": {
@@ -1411,7 +625,7 @@
               "enableCache": true
             },
             "componentRef": {
-              "name": "Consume anything as file 3"
+              "name": "Consume anything as file"
             }
           },
           "Consume something as value 4": {
@@ -1477,7 +691,7 @@
               "enableCache": true
             },
             "componentRef": {
-              "name": "Consume something as value 2"
+              "name": "Consume something as value"
             }
           },
           "Consume something as file 5": {
@@ -1499,7 +713,7 @@
               "enableCache": true
             },
             "componentRef": {
-              "name": "Consume something as file 2"
+              "name": "Consume something as file"
             }
           },
           "Consume string as value 5": {
@@ -1565,7 +779,7 @@
               "enableCache": true
             },
             "componentRef": {
-              "name": "Consume string as value 2"
+              "name": "Consume string as value"
             }
           },
           "Consume string as file 4": {
@@ -1587,7 +801,7 @@
               "enableCache": true
             },
             "componentRef": {
-              "name": "Consume string as file 2"
+              "name": "Consume string as file"
             }
           },
           "Consume anything as value 2": {
@@ -1606,7 +820,7 @@
               "enableCache": true
             },
             "componentRef": {
-              "name": "Consume anything as value 4"
+              "name": "Consume anything as value 2"
             }
           },
           "Make artifact for anything_param": {
@@ -1646,7 +860,7 @@
               "enableCache": true
             },
             "componentRef": {
-              "name": "Consume anything as file 4"
+              "name": "Consume anything as file"
             }
           },
           "Consume anything as value 3": {
@@ -1665,7 +879,7 @@
               "enableCache": true
             },
             "componentRef": {
-              "name": "Consume anything as value 5"
+              "name": "Consume anything as value 2"
             }
           },
           "Make artifact for something_param": {
@@ -1705,7 +919,7 @@
               "enableCache": true
             },
             "componentRef": {
-              "name": "Consume anything as file 5"
+              "name": "Consume anything as file"
             }
           },
           "Consume anything as value 4": {
@@ -1724,7 +938,7 @@
               "enableCache": true
             },
             "componentRef": {
-              "name": "Consume anything as value 6"
+              "name": "Consume anything as value 2"
             }
           },
           "Make artifact for string_param": {
@@ -1764,7 +978,7 @@
               "enableCache": true
             },
             "componentRef": {
-              "name": "Consume anything as file 6"
+              "name": "Consume anything as file"
             }
           },
           "Consume something as value 2": {
@@ -1783,7 +997,7 @@
               "enableCache": true
             },
             "componentRef": {
-              "name": "Consume something as value 3"
+              "name": "Consume something as value 2"
             }
           },
           "Consume something as file 2": {
@@ -1805,7 +1019,7 @@
               "enableCache": true
             },
             "componentRef": {
-              "name": "Consume something as file 3"
+              "name": "Consume something as file"
             }
           },
           "Consume something as value 3": {
@@ -1824,7 +1038,7 @@
               "enableCache": true
             },
             "componentRef": {
-              "name": "Consume something as value 4"
+              "name": "Consume something as value 2"
             }
           },
           "Consume something as file 3": {
@@ -1846,7 +1060,7 @@
               "enableCache": true
             },
             "componentRef": {
-              "name": "Consume something as file 4"
+              "name": "Consume something as file"
             }
           },
           "Consume string as value 3": {
@@ -1865,7 +1079,7 @@
               "enableCache": true
             },
             "componentRef": {
-              "name": "Consume string as value 3"
+              "name": "Consume string as value 2"
             }
           },
           "Consume string as file 3": {
@@ -1887,7 +1101,7 @@
               "enableCache": true
             },
             "componentRef": {
-              "name": "Consume string as file 3"
+              "name": "Consume string as file"
             }
           },
           "Consume string as value 2": {
@@ -1906,7 +1120,7 @@
               "enableCache": true
             },
             "componentRef": {
-              "name": "Consume string as value 4"
+              "name": "Consume string as value 2"
             }
           },
           "Consume string as file 2": {
@@ -1928,7 +1142,7 @@
               "enableCache": true
             },
             "componentRef": {
-              "name": "Consume string as file 4"
+              "name": "Consume string as file"
             }
           },
           "Consume anything as value": {
@@ -1951,7 +1165,7 @@
               "enableCache": true
             },
             "componentRef": {
-              "name": "Consume anything as value 7"
+              "name": "Consume anything as value 2"
             }
           },
           "Make artifact": {
@@ -1995,7 +1209,7 @@
               "enableCache": true
             },
             "componentRef": {
-              "name": "Consume anything as file 7"
+              "name": "Consume anything as file"
             }
           },
           "Consume something as value": {
@@ -2018,7 +1232,7 @@
               "enableCache": true
             },
             "componentRef": {
-              "name": "Consume something as value 5"
+              "name": "Consume something as value 2"
             }
           },
           "Consume something as file": {
@@ -2040,7 +1254,7 @@
               "enableCache": true
             },
             "componentRef": {
-              "name": "Consume something as file 5"
+              "name": "Consume something as file"
             }
           },
           "Consume string as value": {
@@ -2063,7 +1277,7 @@
               "enableCache": true
             },
             "componentRef": {
-              "name": "Consume string as value 5"
+              "name": "Consume string as value 2"
             }
           },
           "Consume string as file": {
@@ -2085,7 +1299,7 @@
               "enableCache": true
             },
             "componentRef": {
-              "name": "Consume string as file 5"
+              "name": "Consume string as file"
             }
           }
         }
