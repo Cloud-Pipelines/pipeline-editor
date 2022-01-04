@@ -395,55 +395,19 @@ const assertDefined = <T>(obj: T | undefined) => {
   return obj;
 };
 
-const taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec = (
+function buildVertexComponentSpecFromComponentSpec(
   componentSpec: ComponentSpec,
-  //passedArgumentNames: string[],
   taskArguments: Record<string, ArgumentType>,
-  graphInputsWithParameterArguments: Set<string>,
+  inputsThatHaveParameterArguments: Set<string>,
   addExecutorAndGetId: (
     executor: vertex.ExecutorSpec,
-    namePrefix?: string
-  ) => string,
-  addComponentAndGetId: (
-    component: vertex.ComponentSpec,
-    namePrefix?: string
-  ) => string,
-  addMakeArtifactTaskAndGetArtifactArgumentSpec: (
-    parameterArgumentSpec: vertex.ParameterArgumentSpec,
-    namePrefix?: string
-  ) => vertex.ArtifactArgumentSpec
-) => {
+    namePrefix?: string | undefined
+  ) => string
+) {
   if (!isContainerImplementation(componentSpec.implementation)) {
     // TODO: Support nested graph components
     throw Error("Nested graph components are not supported yet");
   }
-
-  // So-called "parameter" arguments can either be constant arguments
-  // or come from the arguments to the graph component of the current task.
-  // In the current implementation the parameter arguments cannot come from task outputs since all task outputs are artifacts.
-  const inputsThatHaveParameterArguments = new Set(
-    (componentSpec.inputs ?? [])
-      .map((inputSpec) => inputSpec.name)
-      .filter((inputName) => {
-        const taskArgument = taskArguments[inputName];
-        if (taskArgument === undefined) {
-          return false;
-        }
-        if (typeof taskArgument === "string") {
-          return true;
-        }
-        if ("graphInput" in taskArgument) {
-          if (
-            graphInputsWithParameterArguments.has(
-              taskArgument.graphInput.inputName
-            )
-          ) {
-            return true;
-          }
-        }
-        return false;
-      })
-  );
 
   const containerSpec = componentSpec.implementation.container;
 
@@ -490,7 +454,7 @@ const taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec = (
   };
 
   const vertexComponentOutputsSpec: vertex.ComponentOutputsSpec = {
-    parameters: {}, // Parameters will be added later as needed
+    parameters: {},
     artifacts: Object.fromEntries(
       (componentSpec.outputs ?? []).map((outputSpec) => [
         outputSpec.name,
@@ -505,6 +469,65 @@ const taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec = (
     // dag
     executorLabel: vertexExecutorId,
   };
+  return vertexComponentSpec;
+}
+
+const taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec = (
+  componentSpec: ComponentSpec,
+  //passedArgumentNames: string[],
+  taskArguments: Record<string, ArgumentType>,
+  graphInputsWithParameterArguments: Set<string>,
+  addExecutorAndGetId: (
+    executor: vertex.ExecutorSpec,
+    namePrefix?: string
+  ) => string,
+  addComponentAndGetId: (
+    component: vertex.ComponentSpec,
+    namePrefix?: string
+  ) => string,
+  addMakeArtifactTaskAndGetArtifactArgumentSpec: (
+    parameterArgumentSpec: vertex.ParameterArgumentSpec,
+    namePrefix?: string
+  ) => vertex.ArtifactArgumentSpec
+) => {
+  // So-called "parameter" arguments can either be constant arguments
+  // or come from the arguments to the graph component of the current task.
+  // In the current implementation the parameter arguments cannot come from task outputs since all task outputs are artifacts.
+  const inputsThatHaveParameterArguments = new Set(
+    (componentSpec.inputs ?? [])
+      .map((inputSpec) => inputSpec.name)
+      .filter((inputName) => {
+        const taskArgument = taskArguments[inputName];
+        if (taskArgument === undefined) {
+          return false;
+        }
+        if (typeof taskArgument === "string") {
+          return true;
+        }
+        if ("graphInput" in taskArgument) {
+          if (
+            graphInputsWithParameterArguments.has(
+              taskArgument.graphInput.inputName
+            )
+          ) {
+            return true;
+          }
+        }
+        return false;
+      })
+  );
+
+  const inputMap = new Map(
+    (componentSpec.inputs ?? []).map((inputSpec) => [inputSpec.name, inputSpec])
+  );
+
+  const vertexComponentSpec: vertex.ComponentSpec =
+    buildVertexComponentSpecFromComponentSpec(
+      componentSpec,
+      taskArguments,
+      inputsThatHaveParameterArguments,
+      addExecutorAndGetId
+    );
 
   const vertexComponentId = addComponentAndGetId(
     vertexComponentSpec,
@@ -512,25 +535,29 @@ const taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec = (
   );
 
   const vertexTaskParameterArguments = Object.fromEntries(
-    Object.keys(vertexComponentInputsSpec.parameters ?? {}).map((inputName) => [
-      inputName,
-      buildVertexParameterArgumentSpec(
-        taskArguments[inputName],
-        assertDefined(inputMap.get(inputName))
-      ),
-    ])
+    Object.keys(vertexComponentSpec.inputDefinitions?.parameters ?? {}).map(
+      (inputName) => [
+        inputName,
+        buildVertexParameterArgumentSpec(
+          taskArguments[inputName],
+          assertDefined(inputMap.get(inputName))
+        ),
+      ]
+    )
   );
 
   const vertexTaskArtifactArguments = Object.fromEntries(
-    Object.keys(vertexComponentInputsSpec.artifacts ?? {}).map((inputName) => [
-      inputName,
-      buildVertexArtifactArgumentSpec(
-        taskArguments[inputName],
-        assertDefined(inputMap.get(inputName)),
-        inputsThatHaveParameterArguments.has(inputName),
-        addMakeArtifactTaskAndGetArtifactArgumentSpec
-      ),
-    ])
+    Object.keys(vertexComponentSpec.inputDefinitions?.artifacts ?? {}).map(
+      (inputName) => [
+        inputName,
+        buildVertexArtifactArgumentSpec(
+          taskArguments[inputName],
+          assertDefined(inputMap.get(inputName)),
+          inputsThatHaveParameterArguments.has(inputName),
+          addMakeArtifactTaskAndGetArtifactArgumentSpec
+        ),
+      ]
+    )
   );
 
   const vertexTaskSpec: vertex.PipelineTaskSpec = {
