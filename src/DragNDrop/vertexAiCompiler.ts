@@ -13,6 +13,7 @@ import {
   TypeSpecType,
   isContainerImplementation,
   isGraphImplementation,
+  InputSpec,
 } from "../componentSpec";
 
 import * as vertex from "./vertexPipelineSpec";
@@ -261,6 +262,143 @@ const makeArtifactExecutorSpec: vertex.ExecutorSpec = {
   },
 };
 
+function buildVertexParameterArgumentSpec(
+  taskArgument: ArgumentType | undefined,
+  inputSpec: InputSpec
+) {
+  if (taskArgument === undefined) {
+    if (inputSpec.default !== undefined) {
+      taskArgument = inputSpec.default;
+    } else {
+      if (inputSpec.optional === true) {
+        // TODO: Decide what the behavior should be
+        // throw Error(`Input "${inputSpec.name}" is optional, but command-line still uses it when when it's not present.`);
+        console.error(
+          `Input "${inputSpec.name}" is optional, but command-line still uses it when when it's not present.`
+        );
+        taskArgument = "";
+      } else {
+        throw Error(
+          `Argument was not provided for required input "${inputSpec.name}"`
+        );
+      }
+    }
+  }
+  let result: vertex.ParameterArgumentSpec;
+  if (typeof taskArgument === "string") {
+    result = {
+      runtimeValue: {
+        constantValue: stringToMlmdValue(
+          taskArgument,
+          typeSpecToVertexPrimitiveTypeEnum(inputSpec.type)
+        ),
+      },
+    };
+    return result;
+  } else if ("graphInput" in taskArgument) {
+    result = {
+      componentInputParameter: taskArgument.graphInput.inputName,
+    };
+    return result;
+  } else if ("taskOutput" in taskArgument) {
+    result = {
+      taskOutputParameter: {
+        producerTask: taskArgument.taskOutput.taskId,
+        outputParameterKey: taskArgument.taskOutput.outputName,
+      },
+    };
+    return result;
+  } else {
+    throw Error(`Unknown kind of task argument: "${taskArgument}"`);
+  }
+}
+
+function buildVertexArtifactArgumentSpec(
+  taskArgument: ArgumentType | undefined,
+  inputSpec: InputSpec,
+  upstreamCannotBeArtifact: boolean,
+  addMakeArtifactTaskAndGetArtifactArgumentSpec: (
+    parameterArgumentSpec: vertex.ParameterArgumentSpec,
+    namePrefix?: string
+  ) => vertex.ArtifactArgumentSpec
+) {
+  //if (! (inputName in taskArguments)) {
+  if (taskArgument === undefined) {
+    // Checking for default value
+    if (inputSpec.default !== undefined) {
+      taskArgument = inputSpec.default;
+    } else {
+      if (inputSpec.optional === true) {
+        // TODO: Decide what the behavior should be
+        // throw Error(`Input "${inputSpec.name}" is optional, but command-line still uses it when when it's not present.`);
+        console.error(
+          `Input "${inputSpec.name}" is optional, but command-line still uses it when when it's not present.`
+        );
+        taskArgument = "";
+      } else {
+        throw Error(
+          `Argument was not provided for required input "${inputSpec.name}"`
+        );
+      }
+    }
+  }
+  let result: vertex.ArtifactArgumentSpec;
+  if (typeof taskArgument === "string") {
+    const parameterArgumentSpec: vertex.ParameterArgumentSpec = {
+      runtimeValue: {
+        constantValue: {
+          // TODO: Check whether string is always OK here
+          stringValue: taskArgument,
+        },
+      },
+    };
+    // TODO: Maybe use the taskArgument as part of the name?
+    const convertedArtifactArgumentSpec =
+      addMakeArtifactTaskAndGetArtifactArgumentSpec(
+        parameterArgumentSpec,
+        "Make artifact"
+      );
+    result = convertedArtifactArgumentSpec;
+    return result;
+  } else if ("graphInput" in taskArgument) {
+    // Workaround for root DAG where all inputs must be parameters
+    if (upstreamCannotBeArtifact) {
+      const parameterArgumentSpec: vertex.ParameterArgumentSpec = {
+        componentInputParameter: taskArgument.graphInput.inputName,
+      };
+      // We only need one task for each pipeline input parameter
+      const convertedArtifactArgumentSpec =
+        addMakeArtifactTaskAndGetArtifactArgumentSpec(
+          parameterArgumentSpec,
+          "Make artifact for " + taskArgument.graphInput.inputName
+        );
+      result = convertedArtifactArgumentSpec;
+    } else {
+      result = {
+        componentInputArtifact: taskArgument.graphInput.inputName,
+      };
+    }
+    return result;
+  } else if ("taskOutput" in taskArgument) {
+    result = {
+      taskOutputArtifact: {
+        producerTask: taskArgument.taskOutput.taskId,
+        outputArtifactKey: taskArgument.taskOutput.outputName,
+      },
+    };
+    return result;
+  } else {
+    throw Error(`Unknown kind of task argument: "${taskArgument}"`);
+  }
+}
+
+const assertDefined = <T>(obj: T | undefined) => {
+  if (obj === undefined) {
+    throw TypeError("Object is undefined");
+  }
+  return obj;
+};
+
 const taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec = (
   componentSpec: ComponentSpec,
   //passedArgumentNames: string[],
@@ -345,164 +483,26 @@ const taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec = (
     componentSpec.name ?? "Component"
   );
 
-  const vertexComponentInputParametersSpec =
-    vertexComponentInputsSpec.parameters ?? {};
-
-  const vertexTaskParameterArguments: Record<
-    string,
-    vertex.ParameterArgumentSpec
-  > = Object.fromEntries(
-    Array.from(resolvedCommandLine.inputsConsumedAsValue.values()).map(
-      (inputName) => [
-        inputName,
-        ((inputName) => {
-          // TODO: Check that this works
-          let taskArgument = taskArguments[inputName];
-          //if (! (inputName in taskArguments)) {
-          if (taskArgument === undefined) {
-            // Checking for default value
-            const inputSpec = inputMap.get(inputName);
-            if (inputSpec === undefined) {
-              throw Error(
-                `Cannot happen: vertexTaskParameterArguments - inputMap.get(${inputName}) === undefined`
-              );
-            }
-            if (inputSpec.default !== undefined) {
-              taskArgument = inputSpec.default;
-            } else {
-              if (inputSpec.optional === true) {
-                // TODO: Decide what the behavior should be
-                // throw Error(`Input "${inputName}" is optional, but command-line still uses it when when it's not present.`);
-                console.error(
-                  `Input "${inputName}" is optional, but command-line still uses it when when it's not present.`
-                );
-                taskArgument = "";
-              } else {
-                throw Error(
-                  `Argument was not provided for required input "${inputName}"`
-                );
-              }
-            }
-          }
-          let result: vertex.ParameterArgumentSpec;
-          if (typeof taskArgument === "string") {
-            result = {
-              runtimeValue: {
-                constantValue: stringToMlmdValue(
-                  taskArgument,
-                  vertexComponentInputParametersSpec[inputName].type
-                ),
-              },
-            };
-            return result;
-          } else if ("graphInput" in taskArgument) {
-            result = {
-              componentInputParameter: taskArgument.graphInput.inputName,
-            };
-            return result;
-          } else if ("taskOutput" in taskArgument) {
-            result = {
-              taskOutputParameter: {
-                producerTask: taskArgument.taskOutput.taskId,
-                outputParameterKey: taskArgument.taskOutput.outputName,
-              },
-            };
-            return result;
-          } else {
-            throw Error(`Unknown kind of task argument: "${taskArgument}"`);
-          }
-        })(inputName),
-      ]
-    )
+  const vertexTaskParameterArguments = Object.fromEntries(
+    Object.keys(vertexComponentInputsSpec.parameters ?? {}).map((inputName) => [
+      inputName,
+      buildVertexParameterArgumentSpec(
+        taskArguments[inputName],
+        assertDefined(inputMap.get(inputName))
+      ),
+    ])
   );
 
-  const vertexTaskArtifactArguments: Record<
-    string,
-    vertex.ArtifactArgumentSpec
-  > = Object.fromEntries(
-    Array.from(resolvedCommandLine.inputsConsumedAsPath.values()).map(
-      (inputName) => [
-        inputName,
-        ((inputName) => {
-          // TODO: Check that this works
-          let taskArgument = taskArguments[inputName];
-          //if (! (inputName in taskArguments)) {
-          if (taskArgument === undefined) {
-            // Checking for default value
-            const inputSpec = inputMap.get(inputName);
-            if (inputSpec === undefined) {
-              throw Error(
-                `Cannot happen: vertexTaskParameterArguments - inputMap.get(${inputName}) === undefined`
-              );
-            }
-            if (inputSpec.default !== undefined) {
-              taskArgument = inputSpec.default;
-            } else {
-              if (inputSpec.optional === true) {
-                // TODO: Decide what the behavior should be
-                // throw Error(`Input "${inputName}" is optional, but command-line still uses it when when it's not present.`);
-                console.error(
-                  `Input "${inputName}" is optional, but command-line still uses it when when it's not present.`
-                );
-                taskArgument = "";
-              } else {
-                throw Error(
-                  `Argument was not provided for required input "${inputName}"`
-                );
-              }
-            }
-          }
-          let result: vertex.ArtifactArgumentSpec;
-          if (typeof taskArgument === "string") {
-            const parameterArgumentSpec: vertex.ParameterArgumentSpec = {
-              runtimeValue: {
-                constantValue: {
-                  // TODO: Check whether string is always OK here
-                  stringValue: taskArgument,
-                },
-              },
-            };
-            // TODO: Maybe use the taskArgument as part of the name?
-            const convertedArtifactArgumentSpec =
-              addMakeArtifactTaskAndGetArtifactArgumentSpec(
-                parameterArgumentSpec,
-                "Make artifact"
-              );
-            result = convertedArtifactArgumentSpec;
-            return result;
-          } else if ("graphInput" in taskArgument) {
-            // Workaround for root DAG where all inputs must be parameters
-            if (isRoot) {
-              const parameterArgumentSpec: vertex.ParameterArgumentSpec = {
-                componentInputParameter: taskArgument.graphInput.inputName,
-              };
-              // We only need one task for each pipeline input parameter
-              const convertedArtifactArgumentSpec =
-                addMakeArtifactTaskAndGetArtifactArgumentSpec(
-                  parameterArgumentSpec,
-                  "Make artifact for " + taskArgument.graphInput.inputName
-                );
-              result = convertedArtifactArgumentSpec;
-            } else {
-              result = {
-                componentInputArtifact: taskArgument.graphInput.inputName,
-              };
-            }
-            return result;
-          } else if ("taskOutput" in taskArgument) {
-            result = {
-              taskOutputArtifact: {
-                producerTask: taskArgument.taskOutput.taskId,
-                outputArtifactKey: taskArgument.taskOutput.outputName,
-              },
-            };
-            return result;
-          } else {
-            throw Error(`Unknown kind of task argument: "${taskArgument}"`);
-          }
-        })(inputName),
-      ]
-    )
+  const vertexTaskArtifactArguments = Object.fromEntries(
+    Object.keys(vertexComponentInputsSpec.artifacts ?? {}).map((inputName) => [
+      inputName,
+      buildVertexArtifactArgumentSpec(
+        taskArguments[inputName],
+        assertDefined(inputMap.get(inputName)),
+        isRoot,
+        addMakeArtifactTaskAndGetArtifactArgumentSpec
+      ),
+    ])
   );
 
   const vertexTaskSpec: vertex.PipelineTaskSpec = {
