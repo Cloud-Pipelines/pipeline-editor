@@ -48,7 +48,8 @@ type ResolvedCommandLineAndArgs = {
 
 const resolveCommandLine = (
   componentSpec: ComponentSpec,
-  taskArguments: Record<string, ArgumentType>
+  taskArguments: Record<string, ArgumentType>,
+  inputsThatHaveParameterArguments: Set<string>
 ): ResolvedCommandLineAndArgs => {
   if (!isContainerImplementation(componentSpec.implementation)) {
     throw Error("resolveCommandLine only supports container components");
@@ -62,14 +63,9 @@ const resolveCommandLine = (
       return [arg];
     } else if ("inputValue" in arg) {
       const inputName = arg.inputValue;
-      const argument = taskArguments[inputName];
-      if (
-        argument !== undefined &&
-        typeof argument != "string" &&
-        "taskOutput" in argument
-      ) {
+      if (!inputsThatHaveParameterArguments.has(inputName)) {
         // ! Important details:
-        // In this branch, the argument comes from task output.
+        // In this branch, the argument comes from task output (or graph input with artifact argument).
         // All outputs are artifacts by default, so this argument is an artifact argument.
         // We can either try to change the argument to parameter or make the input to be an artifact to solve the conflict.
         // I choose to make the input to be artifact.
@@ -403,7 +399,7 @@ const taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec = (
   componentSpec: ComponentSpec,
   //passedArgumentNames: string[],
   taskArguments: Record<string, ArgumentType>,
-  isRoot = false,
+  graphInputsWithParameterArguments: Set<string>,
   addExecutorAndGetId: (
     executor: vertex.ExecutorSpec,
     namePrefix?: string
@@ -421,9 +417,41 @@ const taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec = (
     // TODO: Support nested graph components
     throw Error("Nested graph components are not supported yet");
   }
+
+  // So-called "parameter" arguments can either be constant arguments
+  // or come from the arguments to the graph component of the current task.
+  // In the current implementation the parameter arguments cannot come from task outputs since all task outputs are artifacts.
+  const inputsThatHaveParameterArguments = new Set(
+    (componentSpec.inputs ?? [])
+      .map((inputSpec) => inputSpec.name)
+      .filter((inputName) => {
+        const taskArgument = taskArguments[inputName];
+        if (taskArgument === undefined) {
+          return false;
+        }
+        if (typeof taskArgument === "string") {
+          return true;
+        }
+        if ("graphInput" in taskArgument) {
+          if (
+            graphInputsWithParameterArguments.has(
+              taskArgument.graphInput.inputName
+            )
+          ) {
+            return true;
+          }
+        }
+        return false;
+      })
+  );
+
   const containerSpec = componentSpec.implementation.container;
 
-  const resolvedCommandLine = resolveCommandLine(componentSpec, taskArguments);
+  const resolvedCommandLine = resolveCommandLine(
+    componentSpec,
+    taskArguments,
+    inputsThatHaveParameterArguments
+  );
 
   const vertexExecutorSpec: vertex.ExecutorSpec = {
     container: {
@@ -499,7 +527,7 @@ const taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec = (
       buildVertexArtifactArgumentSpec(
         taskArguments[inputName],
         assertDefined(inputMap.get(inputName)),
-        isRoot,
+        inputsThatHaveParameterArguments.has(inputName),
         addMakeArtifactTaskAndGetArtifactArgumentSpec
       ),
     ])
@@ -645,6 +673,11 @@ export const graphComponentSpecToVertexPipelineSpec = (
     return artifactArgumentSpec;
   };
 
+  // All root graph inputs are parameters
+  const graphInputsWithParameterArguments = new Set(
+    (componentSpec.inputs ?? []).map((inputSpec) => inputSpec.name)
+  );
+
   for (const [taskId, taskSpec] of Object.entries(graphSpec.tasks)) {
     if (taskSpec.componentRef.spec === undefined) {
       throw Error(`Task "${taskId}" does not have taskSpec.componentRef.spec.`);
@@ -654,7 +687,7 @@ export const graphComponentSpecToVertexPipelineSpec = (
         taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec(
           taskSpec.componentRef.spec,
           taskSpec.arguments ?? {},
-          true,
+          graphInputsWithParameterArguments,
           addExecutorAndGetId,
           addComponentAndGetId,
           addMakeArtifactTaskAndGetArtifactArgumentSpec
