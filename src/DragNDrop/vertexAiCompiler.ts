@@ -499,7 +499,8 @@ const taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec = (
       .filter((inputName) => {
         const taskArgument = taskArguments[inputName];
         if (taskArgument === undefined) {
-          return false;
+          // Missing arguments fall back to default values which are constant strings which are parameters.
+          return true;
         }
         if (typeof taskArgument === "string") {
           return true;
