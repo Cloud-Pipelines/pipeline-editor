@@ -447,7 +447,11 @@
           "string_param": {
             "type": "STRING"
           }
-        }
+        },
+        "artifacts": {}
+      },
+      "outputDefinitions": {
+        "artifacts": {}
       },
       "dag": {
         "tasks": {
@@ -1302,6 +1306,9 @@
               "name": "Consume string as file"
             }
           }
+        },
+        "outputs": {
+          "artifacts": {}
         }
       }
     }

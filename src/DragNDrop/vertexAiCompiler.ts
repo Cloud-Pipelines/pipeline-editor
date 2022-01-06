@@ -395,7 +395,15 @@ const assertDefined = <T>(obj: T | undefined) => {
   return obj;
 };
 
-function buildVertexComponentSpecFromComponentSpec(
+const transformRecordValues = <T1, T2>(
+  record: Record<string, T1>,
+  transform: (value: T1) => T2
+) =>
+  Object.fromEntries(
+    Object.entries(record).map(([key, value]) => [key, transform(value)])
+  );
+
+function buildVertexComponentSpecFromContainerComponentSpec(
   componentSpec: ComponentSpec,
   taskArguments: Record<string, ArgumentType>,
   inputsThatHaveParameterArguments: Set<string>,
@@ -405,8 +413,7 @@ function buildVertexComponentSpecFromComponentSpec(
   ) => string
 ) {
   if (!isContainerImplementation(componentSpec.implementation)) {
-    // TODO: Support nested graph components
-    throw Error("Nested graph components are not supported yet");
+    throw Error("Only container components are supported by this function");
   }
 
   const containerSpec = componentSpec.implementation.container;
@@ -472,7 +479,232 @@ function buildVertexComponentSpecFromComponentSpec(
   return vertexComponentSpec;
 }
 
-const taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec = (
+function buildVertexComponentSpecFromGraphComponentSpec(
+  componentSpec: ComponentSpec,
+  taskArguments: Record<string, ArgumentType>,
+  inputsThatHaveParameterArguments: Set<string>,
+  addExecutorAndGetId: (
+    executor: vertex.ExecutorSpec,
+    namePrefix?: string
+  ) => string,
+  addComponentAndGetId: (
+    component: vertex.ComponentSpec,
+    namePrefix?: string
+  ) => string
+) {
+  if (!isGraphImplementation(componentSpec.implementation)) {
+    throw Error("Only graph components are supported by this function");
+  }
+
+  const graphSpec = componentSpec.implementation.graph;
+
+  const inputsConsumedAsParameter = new Set<string>();
+  const inputsConsumedAsArtifact = new Set<string>();
+
+  let vertexTasks: Record<string, vertex.PipelineTaskSpec> = {};
+  const taskStringToTaskId = new Map<string, string>();
+
+  const addTaskAndGetId = (
+    task: vertex.PipelineTaskSpec,
+    namePrefix: string = "Task"
+  ) => {
+    const serializedSpec = JSON.stringify(task);
+    const existingId = taskStringToTaskId.get(serializedSpec);
+    if (existingId !== undefined) {
+      return existingId;
+    }
+    const usedIds = new Set(Object.keys(vertexTasks));
+    const id = makeNameUniqueByAddingIndex(namePrefix, usedIds);
+    taskStringToTaskId.set(serializedSpec, id);
+    vertexTasks[id] = task;
+    return id;
+  };
+
+  const addMakeArtifactTaskAndGetArtifactArgumentSpec = (
+    parameterArgumentSpec: vertex.ParameterArgumentSpec,
+    namePrefix: string = "Make artifact"
+  ) => {
+    // These system names are expected to not conflict with user task names
+    const makeArtifactExecutorId = addExecutorAndGetId(
+      makeArtifactExecutorSpec,
+      MAKE_ARTIFACT_EXECUTOR_ID
+    );
+    const makeArtifactComponentSpecCopy = {
+      ...makeArtifactComponentSpec,
+      executorLabel: makeArtifactExecutorId,
+    };
+    const makeArtifactComponentsId = addComponentAndGetId(
+      makeArtifactComponentSpecCopy,
+      MAKE_ARTIFACT_COMPONENT_ID
+    );
+    const makeArtifactTaskSpec = buildMakeArtifactTaskSpec(
+      parameterArgumentSpec
+    );
+    makeArtifactTaskSpec.componentRef.name = makeArtifactComponentsId;
+    const taskId = addTaskAndGetId(makeArtifactTaskSpec, namePrefix);
+    const artifactArgumentSpec: vertex.ArtifactArgumentSpec = {
+      taskOutputArtifact: {
+        producerTask: taskId,
+        outputArtifactKey: MAKE_ARTIFACT_OUTPUT_NAME,
+      },
+    };
+    return artifactArgumentSpec;
+  };
+
+  for (const [taskId, taskSpec] of Object.entries(graphSpec.tasks)) {
+    if (taskSpec.componentRef.spec === undefined) {
+      throw Error(`Task "${taskId}" does not have taskSpec.componentRef.spec.`);
+    }
+    try {
+      const vertexTaskSpec = buildVertexTaskSpecFromTaskSpec(
+        taskSpec.componentRef.spec,
+        taskSpec.arguments ?? {},
+        inputsThatHaveParameterArguments,
+        addExecutorAndGetId,
+        addComponentAndGetId,
+        addMakeArtifactTaskAndGetArtifactArgumentSpec
+      );
+      if (taskId in vertexTasks) {
+        throw Error(
+          `Task ID "${taskId}" is not unique. This cannot happen (unless user task ID clashes with special task ID).`
+        );
+      }
+      vertexTasks[taskId] = vertexTaskSpec;
+
+      for (const argument of Object.values(
+        vertexTaskSpec.inputs?.parameters ?? {}
+      )) {
+        if (argument.componentInputParameter !== undefined) {
+          inputsConsumedAsParameter.add(argument.componentInputParameter);
+        }
+      }
+      for (const argument of Object.values(
+        vertexTaskSpec.inputs?.artifacts ?? {}
+      )) {
+        if ("componentInputArtifact" in argument) {
+          inputsConsumedAsArtifact.add(argument.componentInputArtifact);
+        }
+      }
+    } catch (err) {
+      if (err instanceof Error) {
+        err.message = `Error compiling task ${taskId}: ` + err.message;
+      }
+      throw err;
+    }
+  }
+
+  // Sanity checks
+  const inputNamesThatAreUsedBothAsParameterAndArtifact = Array.from(
+    inputsConsumedAsParameter
+  ).filter((x) => inputsConsumedAsArtifact.has(x));
+  if (inputNamesThatAreUsedBothAsParameterAndArtifact.length > 0) {
+    throw Error(
+      `Compiler error: Some inputs are used both as parameter and artifact: "${inputNamesThatAreUsedBothAsParameterAndArtifact}". Please file a bug report.`
+    );
+  }
+  const inputNamesThatAreParametersButAreConsumedAsArtifacts = Array.from(
+    inputsThatHaveParameterArguments
+  ).filter((x) => inputsConsumedAsArtifact.has(x));
+  if (inputNamesThatAreParametersButAreConsumedAsArtifacts.length > 0) {
+    throw Error(
+      `Compiler error: Some parameter inputs are consumer as artifact: "${inputNamesThatAreParametersButAreConsumedAsArtifacts}". Please file a bug report.`
+    );
+  }
+
+  const dagOutputArtifactSpecs = transformRecordValues(
+    graphSpec.outputValues ?? {},
+    (taskOutputArgument) => {
+      const result: vertex.DagOutputArtifactSpec = {
+        artifactSelectors: [
+          {
+            producerSubtask: taskOutputArgument.taskOutput.taskId,
+            outputArtifactKey: taskOutputArgument.taskOutput.outputName,
+          },
+        ],
+      };
+      return result;
+    }
+  );
+
+  const inputMap = new Map(
+    (componentSpec.inputs ?? []).map((inputSpec) => [inputSpec.name, inputSpec])
+  );
+
+  const vertexComponentInputsSpec: vertex.ComponentInputsSpec = {
+    parameters: Object.fromEntries(
+      Array.from(inputsConsumedAsParameter.values()).map((inputName) => [
+        inputName,
+        typeSpecToVertexParameterSpec(inputMap.get(inputName)?.type),
+      ])
+    ),
+    artifacts: Object.fromEntries(
+      Array.from(inputsConsumedAsArtifact.values()).map((inputName) => [
+        inputName,
+        typeSpecToVertexArtifactSpec(inputMap.get(inputName)?.type),
+      ])
+    ),
+  };
+
+  const vertexComponentOutputsSpec: vertex.ComponentOutputsSpec = {
+    // parameters: {},
+    artifacts: Object.fromEntries(
+      (componentSpec.outputs ?? []).map((outputSpec) => [
+        outputSpec.name,
+        typeSpecToVertexArtifactSpec(outputSpec.type),
+      ])
+    ),
+  };
+
+  const vertexComponentSpec: vertex.ComponentSpec = {
+    inputDefinitions: vertexComponentInputsSpec,
+    outputDefinitions: vertexComponentOutputsSpec,
+    dag: {
+      tasks: vertexTasks,
+      outputs: {
+        artifacts: dagOutputArtifactSpecs,
+        // parameters: {},
+      },
+    },
+  };
+  return vertexComponentSpec;
+}
+
+function buildVertexComponentSpecFromComponentSpec(
+  componentSpec: ComponentSpec,
+  taskArguments: Record<string, ArgumentType>,
+  inputsThatHaveParameterArguments: Set<string>,
+  addExecutorAndGetId: (
+    executor: vertex.ExecutorSpec,
+    namePrefix?: string
+  ) => string,
+  addComponentAndGetId: (
+    component: vertex.ComponentSpec,
+    namePrefix?: string
+  ) => string
+) {
+  if (isContainerImplementation(componentSpec.implementation)) {
+    return buildVertexComponentSpecFromContainerComponentSpec(
+      componentSpec,
+      taskArguments,
+      inputsThatHaveParameterArguments,
+      addExecutorAndGetId
+    );
+  } else if (isGraphImplementation(componentSpec.implementation)) {
+    return buildVertexComponentSpecFromGraphComponentSpec(
+      componentSpec,
+      taskArguments,
+      inputsThatHaveParameterArguments,
+      addExecutorAndGetId,
+      addComponentAndGetId
+    );
+  } else {
+    throw Error(
+      `Unsupported component implementation kind: ${componentSpec.implementation}`
+    );
+  }
+}
+
+const buildVertexTaskSpecFromTaskSpec = (
   componentSpec: ComponentSpec,
   //passedArgumentNames: string[],
   taskArguments: Record<string, ArgumentType>,
@@ -527,7 +759,8 @@ const taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec = (
       componentSpec,
       taskArguments,
       inputsThatHaveParameterArguments,
-      addExecutorAndGetId
+      addExecutorAndGetId,
+      addComponentAndGetId
     );
 
   const vertexComponentId = addComponentAndGetId(
@@ -607,30 +840,10 @@ export const graphComponentSpecToVertexPipelineSpec = (
   componentSpec: ComponentSpec,
   pipelineContextName = "pipeline"
 ) => {
-  if (!isGraphImplementation(componentSpec.implementation)) {
-    throw Error("Only graph components are supported for now");
-  }
-
-  // TODO: Fix case when these inputs are passed to tasks as artifacts
-  const vertexComponentInputsSpec = {
-    parameters: Object.fromEntries(
-      (componentSpec.inputs ?? []).map((inputSpec) => [
-        inputSpec.name,
-        typeSpecToVertexParameterSpec(inputSpec.type),
-      ])
-    ),
-    // Pipeline does not support artifact inputs
-    // artifacts: {},
-  };
-
-  const graphSpec = componentSpec.implementation.graph;
-
   let vertexExecutors: Record<string, vertex.ExecutorSpec> = {};
   const executorStringToExecutorId = new Map<string, string>();
   let vertexComponents: Record<string, vertex.ComponentSpec> = {};
   const componentStringToComponentId = new Map<string, string>();
-  let vertexTasks: Record<string, vertex.PipelineTaskSpec> = {};
-  const taskStringToTaskId = new Map<string, string>();
 
   const addExecutorAndGetId = (
     executor: vertex.ExecutorSpec,
@@ -664,72 +877,26 @@ export const graphComponentSpecToVertexPipelineSpec = (
     return id;
   };
 
-  const addTaskAndGetId = (
-    task: vertex.PipelineTaskSpec,
-    namePrefix: string = "Task"
-  ) => {
-    const serializedSpec = JSON.stringify(task);
-    const existingId = taskStringToTaskId.get(serializedSpec);
-    if (existingId !== undefined) {
-      return existingId;
-    }
-    const usedIds = new Set(Object.keys(vertexTasks));
-    const id = makeNameUniqueByAddingIndex(namePrefix, usedIds);
-    taskStringToTaskId.set(serializedSpec, id);
-    vertexTasks[id] = task;
-    return id;
-  };
-
-  const addMakeArtifactTaskAndGetArtifactArgumentSpec = (
-    parameterArgumentSpec: vertex.ParameterArgumentSpec,
-    namePrefix: string = "Make artifact"
-  ) => {
-    // These system names are expected to not conflict with user task names
-    vertexExecutors[MAKE_ARTIFACT_EXECUTOR_ID] = makeArtifactExecutorSpec;
-    vertexComponents[MAKE_ARTIFACT_COMPONENT_ID] = makeArtifactComponentSpec;
-
-    const makeArtifactTaskSpec = buildMakeArtifactTaskSpec(
-      parameterArgumentSpec
-    );
-    const taskId = addTaskAndGetId(makeArtifactTaskSpec, namePrefix);
-    const artifactArgumentSpec: vertex.ArtifactArgumentSpec = {
-      taskOutputArtifact: {
-        producerTask: taskId,
-        outputArtifactKey: MAKE_ARTIFACT_OUTPUT_NAME,
-      },
-    };
-    return artifactArgumentSpec;
-  };
-
   // All root graph inputs are parameters
   const graphInputsWithParameterArguments = new Set(
     (componentSpec.inputs ?? []).map((inputSpec) => inputSpec.name)
   );
 
-  for (const [taskId, taskSpec] of Object.entries(graphSpec.tasks)) {
-    if (taskSpec.componentRef.spec === undefined) {
-      throw Error(`Task "${taskId}" does not have taskSpec.componentRef.spec.`);
-    }
-    try {
-      const vertexTaskSpec =
-        taskSpecToVertexTaskSpecComponentSpecAndExecutorSpec(
-          taskSpec.componentRef.spec,
-          taskSpec.arguments ?? {},
-          graphInputsWithParameterArguments,
-          addExecutorAndGetId,
-          addComponentAndGetId,
-          addMakeArtifactTaskAndGetArtifactArgumentSpec
-        );
-      if (taskId in vertexTasks) {
-        throw Error(
-          `Task ID "${taskId}" is not unique. This cannot happen (unless user task ID clashes with special task ID).`
-        );
-      }
-      vertexTasks[taskId] = vertexTaskSpec;
-    } catch (err) {
-      throw Error(`Error compiling task ${taskId}: ` + err.toString());
-    }
-  }
+  const pipelineArguments: Record<string, ArgumentType> = Object.fromEntries(
+    (componentSpec.inputs ?? []).map((inputSpec) => {
+      const argument: ArgumentType = {
+        graphInput: { inputName: inputSpec.name },
+      };
+      return [inputSpec.name, argument];
+    })
+  );
+  const pipelineComponentSpec = buildVertexComponentSpecFromComponentSpec(
+    componentSpec,
+    pipelineArguments,
+    graphInputsWithParameterArguments,
+    addExecutorAndGetId,
+    addComponentAndGetId
+  );
 
   const vertexPipelineSpec: vertex.PipelineSpec = {
     pipelineInfo: {
@@ -741,12 +908,7 @@ export const graphComponentSpecToVertexPipelineSpec = (
       executors: vertexExecutors,
     },
     components: vertexComponents,
-    root: {
-      inputDefinitions: vertexComponentInputsSpec,
-      dag: {
-        tasks: vertexTasks,
-      },
-    },
+    root: pipelineComponentSpec,
   };
   return vertexPipelineSpec;
 };
