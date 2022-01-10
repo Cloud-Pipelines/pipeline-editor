@@ -37,7 +37,7 @@ import ComponentTaskNode, { ComponentTaskNodeProps, isComponentTaskNode } from "
 
 const NODE_LAYOUT_ANNOTATION_KEY = "editor.position";
 const SDK_ANNOTATION_KEY = "sdk";
-const SDK_ANNOTATION_VALUE = "https://cloud-pipelines.github.io/pipeline-editor/";
+const SDK_ANNOTATION_VALUE = "https://cloud-pipelines.net/pipeline-editor/";
 
 const taskIdToNodeId = (id: string) => "task_" + id;
 const inputNameToNodeId = (name: string) => "input_" + name;
