@@ -225,9 +225,13 @@ export const cacheAllComponents = async (users = ["kubeflow", "Ark-kun"]) => {
   console.debug("Finished cacheAllComponents");
 };
 
-export const getAllComponentsAsRefs = async (
-  users = ["kubeflow", "Ark-kun"]
+export const refreshComponentDb = async (
+  githubUsers: string[]
 ) => {
+  await cacheAllComponents(githubUsers);
+};
+
+export const getAllComponentsAsRefs = async () => {
   // Perhaps use urlProcessingVersionDb as source of truth. Hmm. It is URL-based
   const hashToUrlDb = localForage.createInstance({
     name: DB_NAME,
@@ -238,14 +242,6 @@ export const getAllComponentsAsRefs = async (
     storeName: HASH_TO_CONTENT_DB_TABLE_NAME,
   });
   let hashToComponentRef = new Map<string, ComponentReference>();
-
-  const cachePromise = cacheAllComponents(users);
-  console.debug("getAllComponentsAsRefs: Started async cacheAllComponents");
-  if ((await hashToContentDb.length()) === 0) {
-    console.debug("getAllComponentsAsRefs: Before await cachePromise");
-    await cachePromise;
-  }
-  console.debug("getAllComponentsAsRefs: After");
 
   // !!! Iterating using hashToContentDb.iterate<string, void> causes all values to be `[object Blob]`
   //await hashToContentDb.iterate<Blob, void>(
@@ -291,11 +287,16 @@ export const getAllComponentsAsRefs = async (
   return componentRefs;
 };
 
-export const searchComponentsByName = async (
-  name: string,
-  users = ["kubeflow", "Ark-kun"]
-) => {
-  const componentRefs = await getAllComponentsAsRefs(users);
+export const isComponentDbEmpty = async () => {
+  const hashToContentDb = localForage.createInstance({
+    name: DB_NAME,
+    storeName: HASH_TO_CONTENT_DB_TABLE_NAME,
+  });
+  return (await hashToContentDb.length()) > 0;
+};
+
+export const searchComponentsByName = async (name: string) => {
+  const componentRefs = await getAllComponentsAsRefs();
   return componentRefs.filter(
     (ref) => ref.spec?.name?.toLowerCase().includes(name.toLowerCase()) ?? false
   );

@@ -8,7 +8,11 @@
 
 import { useState } from "react";
 import { ComponentReference } from "../componentSpec";
-import { searchComponentsByName } from "../github";
+import {
+  isComponentDbEmpty,
+  refreshComponentDb,
+  searchComponentsByName,
+} from "../github";
 import DraggableComponent from "./DraggableComponent";
 
 const COMPONENT_ORGS = ["kubeflow", "Ark-kun"];
@@ -25,16 +29,20 @@ const SearchPanel = (props: any) => {
   };
 
   async function fetchData(query: string) {
-    searchComponentsByName(query, COMPONENT_ORGS).then(
-      (componentRefs) => {
+    // If the DB is populated, return results immediately, then refresh the DB and update the results.
+    try {
+      if (!(await isComponentDbEmpty())) {
+        const componentRefs = await searchComponentsByName(query);
         setIsLoaded(true);
         setItems(componentRefs);
-      },
-      (error) => {
-        setIsLoaded(true);
-        setError(error.message);
       }
-    );
+      await refreshComponentDb(COMPONENT_ORGS);
+      setIsLoaded(true);
+      const componentRefs = await searchComponentsByName(query);
+      setItems(componentRefs);
+    } catch (error: any) {
+      setError(error.message);
+    }
   }
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
