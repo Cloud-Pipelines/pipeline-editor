@@ -8,6 +8,7 @@
 
 import yaml from "js-yaml";
 import localForage from "localforage";
+import { ComponentSearchConfig } from "./appSettings";
 import { httpGetWithCache } from "./cacheUtils";
 import { ComponentSpec, ComponentReference } from "./componentSpec";
 import { preloadComponentReferences } from "./DragNDrop/samplePipelines";
@@ -55,9 +56,7 @@ type UrlAndHash = {
   hash: string;
 };
 
-export async function* getComponentUrlsAndHashes(
-  users = ["kubeflow", "Ark-kun"]
-) {
+export async function* getComponentUrlsAndHashes(users: string[]) {
   let urlsAndHashes: UrlAndHash[] = [];
   const query =
     "filename:component.yaml " + users.map((user) => "user:" + user).join(" ");
@@ -84,7 +83,7 @@ export async function* getComponentUrlsAndHashes(
 }
 
 export const cacheComponentCandidateBlobs = async (
-  users = ["kubeflow", "Ark-kun"]
+  users: string[]
 ): Promise<any[]> => {
   let urlsAndHashes: UrlAndHash[] = [];
   let urls = [];
@@ -106,7 +105,7 @@ export const downloadComponentDataWithCache = async (url: string) => {
   return componentSpec;
 };
 
-export const cacheAllComponents = async (users = ["kubeflow", "Ark-kun"]) => {
+export const cacheAllComponents = async (users: string[]) => {
   console.debug("Starting cacheAllComponents");
   const urlsAndHashesIterator = getComponentUrlsAndHashes(users);
 
@@ -226,9 +225,11 @@ export const cacheAllComponents = async (users = ["kubeflow", "Ark-kun"]) => {
 };
 
 export const refreshComponentDb = async (
-  githubUsers: string[]
+  componentSearchConfig: ComponentSearchConfig
 ) => {
-  await cacheAllComponents(githubUsers);
+  if (componentSearchConfig.GitHubUsers !== undefined) {
+    await cacheAllComponents(componentSearchConfig.GitHubUsers);
+  }
 };
 
 export const getAllComponentsAsRefs = async () => {

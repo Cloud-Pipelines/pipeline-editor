@@ -15,7 +15,7 @@ import {
 } from "../github";
 import DraggableComponent from "./DraggableComponent";
 
-const COMPONENT_ORGS = ["kubeflow", "Ark-kun"];
+import { componentSearchConfig } from "../appSettings";
 
 const SearchPanel = (props: any) => {
   const [error, setError] = useState<string | undefined>(undefined);
@@ -36,7 +36,7 @@ const SearchPanel = (props: any) => {
         setIsLoaded(true);
         setItems(componentRefs);
       }
-      await refreshComponentDb(COMPONENT_ORGS);
+      await refreshComponentDb(componentSearchConfig);
       setIsLoaded(true);
       const componentRefs = await searchComponentsByName(query);
       setItems(componentRefs);
