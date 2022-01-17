@@ -10,6 +10,7 @@ import yaml from "js-yaml";
 import localForage from "localforage";
 import { httpGetWithCache } from "./cacheUtils";
 import { ComponentSpec, ComponentReference } from "./componentSpec";
+import { preloadComponentReferences } from "./DragNDrop/samplePipelines";
 
 // const COMPONENT_FILE_NAME_SUFFIX = "component.yaml";
 // const COMPONENT_FILE_MAX_SIZE = 100000;
@@ -255,6 +256,7 @@ export const getAllComponentsAsRefs = async (
       //const componentText = await componentData.text();
       try {
         const componentSpec = yaml.load(componentText) as ComponentSpec;
+        preloadComponentReferences(componentSpec);
         hashToComponentRef.set(hash, {
           spec: componentSpec,
         });
