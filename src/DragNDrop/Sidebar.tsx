@@ -17,6 +17,7 @@ import { ComponentSpec } from '../componentSpec';
 import { loadComponentFromUrl, DATA_PASSING_PIPELINE_URL } from './samplePipelines';
 import UserComponentLibrary from "./UserComponentLibrary";
 import PipelineLibrary from "./PipelineLibrary";
+import { componentLibraryUrl } from '../appSettings';
 
 const onDragStart = (event: DragEvent, nodeData: object) => {
   event.dataTransfer.setData('application/reactflow', JSON.stringify(nodeData));
@@ -59,7 +60,7 @@ const Sidebar = ({
           Output
         </div>
       </details>
-      <ComponentLibrary url={process.env.PUBLIC_URL + "/component_library.yaml"}/>
+      <ComponentLibrary url={componentLibraryUrl} />
       <details style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>
         <summary style={{ borderWidth: "1px", padding: "4px", fontWeight: "bold" }}>User components</summary>
         <UserComponentLibrary/>

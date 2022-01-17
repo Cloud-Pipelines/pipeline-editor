@@ -6,6 +6,9 @@
  * @copyright 2022 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
+export const componentLibraryUrl =
+  process.env.PUBLIC_URL + "/component_library.yaml";
+
 export interface ComponentSearchConfig {
   GitHubUsers?: string[];
 }
