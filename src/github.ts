@@ -355,7 +355,6 @@ const importComponentsFromFeed = async (componentFeedUrl: string) => {
   for await (const item of urlsHashesAndData) {
     const hash = item.hash.toLowerCase();
     const htmlUrl = item.url;
-    console.debug("Component url: " + htmlUrl);
     const badHashReason = await badHashesDb.getItem<string>(hash);
     if (badHashReason !== null) {
       console.debug(
