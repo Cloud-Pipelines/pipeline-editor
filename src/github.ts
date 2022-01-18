@@ -10,7 +10,11 @@ import yaml from "js-yaml";
 import localForage from "localforage";
 import { ComponentSearchConfig } from "./appSettings";
 import { httpGetWithCache } from "./cacheUtils";
-import { ComponentSpec, ComponentReference } from "./componentSpec";
+import {
+  ComponentSpec,
+  ComponentReference,
+  isValidComponentSpec,
+} from "./componentSpec";
 import { preloadComponentReferences } from "./DragNDrop/samplePipelines";
 
 // const COMPONENT_FILE_NAME_SUFFIX = "component.yaml";
@@ -100,8 +104,18 @@ export const downloadComponentDataWithCache = async (url: string) => {
   const response = await httpGetWithCache(url, BLOB_CACHE_NAME);
   const data = await response.blob();
   const componentText = await data.text();
-  // TODO: Validate the data
-  const componentSpec = yaml.load(componentText) as ComponentSpec;
+  const componentSpecObj = yaml.load(componentText);
+  if (typeof componentSpecObj !== "object" || componentSpecObj === null) {
+    throw Error(
+      `componentText is not a YAML-encoded object: ${componentSpecObj}`
+    );
+  }
+  if (!isValidComponentSpec(componentSpecObj)) {
+    throw Error(
+      `componentText does not encode a valid pipeline component: ${componentSpecObj}`
+    );
+  }
+  const componentSpec = componentSpecObj;
   return componentSpec;
 };
 
@@ -179,8 +193,18 @@ export const cacheAllComponents = async (users: string[]) => {
       try {
         const data = await response.blob();
         componentText = await data.text();
-        // TODO: Validate the data
-        componentSpec = yaml.load(componentText) as ComponentSpec;
+        const componentSpecObj = yaml.load(componentText);
+        if (typeof componentSpecObj !== "object" || componentSpecObj === null) {
+          throw Error(
+            `componentText is not a YAML-encoded object: ${componentSpecObj}`
+          );
+        }
+        if (!isValidComponentSpec(componentSpecObj)) {
+          throw Error(
+            `componentText does not encode a valid pipeline component: ${componentSpecObj}`
+          );
+        }
+        componentSpec = componentSpecObj;
       } catch (err) {
         badHashesDb.setItem(hash, err.name + ": " + err.message);
         continue;
