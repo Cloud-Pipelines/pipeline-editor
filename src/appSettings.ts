@@ -11,12 +11,12 @@ export const componentLibraryUrl =
 
 export interface ComponentSearchConfig {
   ComponentFeedUrls?: string[];
-  GitHubUsers?: string[];
+  GitHubSearchLocations?: string[];
 }
 
 export const componentSearchConfig: ComponentSearchConfig = {
   ComponentFeedUrls: [
     "https://raw.githubusercontent.com/Ark-kun/pipeline_components/pipeline_component_feed/pipeline_component_feed.yaml",
   ],
-  GitHubUsers: ["Ark-kun"],
+  GitHubSearchLocations: ["repo:Ark-kun/pipeline_components path:components"],
 };

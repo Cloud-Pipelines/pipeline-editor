@@ -60,10 +60,12 @@ type UrlAndHash = {
   hash: string;
 };
 
-export async function* getComponentUrlsAndHashes(users: string[]) {
+export async function* getComponentUrlsAndHashes(searchLocations: string[]) {
   let urlsAndHashes: UrlAndHash[] = [];
-  const query =
-    "filename:component.yaml " + users.map((user) => "user:" + user).join(" ");
+  // TODO: If the number of components exceeds 1000 we should issue separate query for each location.
+  // TODO: Perhaps try to filter by component contents (inputValue, inputPath, outputPath, graph, implementation)
+  const queryParts = ["filename:component.yaml"].concat(searchLocations);
+  const query = queryParts.join(" ");
   for (let page = 1; page < 100; page++) {
     const searchResults = await searchGitHubCodeWithCache(query, page);
     // "total_count": 512,
@@ -87,11 +89,11 @@ export async function* getComponentUrlsAndHashes(users: string[]) {
 }
 
 export const cacheComponentCandidateBlobs = async (
-  users: string[]
+  searchLocations: string[]
 ): Promise<any[]> => {
   let urlsAndHashes: UrlAndHash[] = [];
   let urls = [];
-  for await (const urlAndHash of getComponentUrlsAndHashes(users)) {
+  for await (const urlAndHash of getComponentUrlsAndHashes(searchLocations)) {
     urlsAndHashes.push(urlAndHash);
     urls.push(urlAndHash.url);
   }
@@ -119,9 +121,9 @@ export const downloadComponentDataWithCache = async (url: string) => {
   return componentSpec;
 };
 
-export const cacheAllComponents = async (users: string[]) => {
+export const cacheAllComponents = async (searchLocations: string[]) => {
   console.debug("Starting cacheAllComponents");
-  const urlsAndHashesIterator = getComponentUrlsAndHashes(users);
+  const urlsAndHashesIterator = getComponentUrlsAndHashes(searchLocations);
 
   // const cache = await caches.open(BLOB_CACHE_NAME);
   const urlToHashDb = localForage.createInstance({
@@ -450,8 +452,8 @@ export const refreshComponentDb = async (
       }
     }
   }
-  if (componentSearchConfig.GitHubUsers !== undefined) {
-    await cacheAllComponents(componentSearchConfig.GitHubUsers);
+  if (componentSearchConfig.GitHubSearchLocations !== undefined) {
+    await cacheAllComponents(componentSearchConfig.GitHubSearchLocations);
   }
 };
 
