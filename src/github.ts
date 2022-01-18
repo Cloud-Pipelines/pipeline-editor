@@ -248,9 +248,208 @@ export const cacheAllComponents = async (users: string[]) => {
   console.debug("Finished cacheAllComponents");
 };
 
+interface ComponentFeedEntry {
+  componentRef: ComponentReference;
+  annotations?: {
+    [k: string]: unknown;
+  };
+  data: string;
+}
+
+interface ComponentFeed {
+  annotations?: {
+    [k: string]: unknown;
+  };
+  components: ComponentFeedEntry[];
+}
+
+// Type guards
+const isComponentFeedEntry = (obj: any): obj is ComponentFeedEntry =>
+  "componentRef" in obj;
+
+const isComponentFeedEntryArray = (obj: any): obj is ComponentFeedEntry[] =>
+  Array.isArray(obj) && obj.every(isComponentFeedEntry);
+
+const isComponentFeed = (obj: any): obj is ComponentFeed =>
+  typeof obj === "object" &&
+  "components" in obj &&
+  isComponentFeedEntryArray(obj["components"]);
+
+function notUndefined<T>(x: T | undefined): x is T {
+  return x !== undefined;
+}
+
+const importComponentsFromFeed = async (componentFeedUrl: string) => {
+  console.debug("Starting importComponentsFromFeed");
+  console.debug(`Downloading component feed: ${componentFeedUrl}.`);
+  const response = await fetch(componentFeedUrl);
+  const componentFeedCandidateBlob = await response.blob();
+  const componentFeedCandidateText = await componentFeedCandidateBlob.text();
+  const componentFeedCandidateObject = yaml.load(componentFeedCandidateText);
+  if (!isComponentFeed(componentFeedCandidateObject)) {
+    throw new Error(
+      `Component feed loaded from "${componentFeedUrl}" had invalid content inside.`
+    );
+  }
+  const componentFeed = componentFeedCandidateObject;
+
+  const urlsAndHashesIterator = componentFeed.components
+    .map((entry) => {
+      const url = entry.componentRef.url;
+      const digest = entry.componentRef.digest;
+      if (url === undefined) {
+        console.error("Component feed entry has no reference URL.");
+        return undefined;
+      }
+      if (digest === undefined) {
+        console.error("Component feed entry has no reference hash digest.");
+        return undefined;
+      }
+      return {
+        url: url,
+        hash: digest,
+        data: entry.data,
+      };
+    })
+    .filter(notUndefined);
+
+  // const cache = await caches.open(BLOB_CACHE_NAME);
+  const urlToHashDb = localForage.createInstance({
+    name: DB_NAME,
+    storeName: URL_TO_HASH_DB_TABLE_NAME,
+  });
+  const hashToUrlDb = localForage.createInstance({
+    name: DB_NAME,
+    storeName: HASH_TO_URL_DB_TABLE_NAME,
+  });
+  const hashToContentDb = localForage.createInstance({
+    name: DB_NAME,
+    storeName: HASH_TO_CONTENT_DB_TABLE_NAME,
+  });
+  const hashToComponentNameDb = localForage.createInstance({
+    name: DB_NAME,
+    storeName: HASH_TO_COMPONENT_NAME_DB_TABLE_NAME,
+  });
+  const urlProcessingVersionDb = localForage.createInstance({
+    name: DB_NAME,
+    storeName: URL_PROCESSING_VERSION_TABLE_NAME,
+  });
+  const badHashesDb = localForage.createInstance({
+    name: DB_NAME,
+    storeName: BAD_HASHES_TABLE_NAME,
+  });
+  for await (const item of urlsAndHashesIterator) {
+    const hash = item.hash.toLowerCase();
+    const htmlUrl = item.url;
+    console.debug("Component url: " + htmlUrl);
+    const badHashReason = await badHashesDb.getItem<string>(hash);
+    if (badHashReason !== null) {
+      console.debug(
+        `Skipping url ${htmlUrl} with hash ${hash} due to error: "${badHashReason}"`
+      );
+      continue;
+    }
+    try {
+      const downloadUrl = item.url;
+      // Sanity check
+      const cachedHash = await urlToHashDb.getItem<string>(downloadUrl);
+      if (cachedHash !== null && cachedHash !== hash) {
+        console.error(
+          `Component cache is broken. Stored hash for ${downloadUrl}: ${cachedHash} != ${hash}.`
+        );
+      }
+      // Check whether the processing is complete
+      const urlVersion = await urlProcessingVersionDb.getItem<string>(
+        downloadUrl
+      );
+
+      if (
+        cachedHash !== null && // Not sure we should check this, but it improves the sanity
+        urlVersion !== null &&
+        Number.parseInt(urlVersion) >= CURRENT_URL_PROCESSING_VERSION
+      ) {
+        continue;
+      }
+
+      console.debug(`Processing new component candidate: ${downloadUrl}.`);
+      let componentText = item.data;
+      if (componentText === undefined) {
+        const response = await httpGetWithCache(downloadUrl, BLOB_CACHE_NAME);
+        try {
+          const data = await response.blob();
+          componentText = await data.text();
+        } catch (err) {
+          const error_message =
+            err instanceof Error ? err.name + ": " + err.message : String(err);
+          badHashesDb.setItem(hash, error_message);
+          continue;
+        }
+      }
+      const componentSpecObj = yaml.load(componentText);
+      if (typeof componentSpecObj !== "object" || componentSpecObj === null) {
+        throw Error(
+          `componentText is not a YAML-encoded object: ${componentSpecObj}`
+        );
+      }
+      if (!isValidComponentSpec(componentSpecObj)) {
+        throw Error(
+          `componentText does not encode a valid pipeline component: ${componentSpecObj}`
+        );
+      }
+      const componentSpec = componentSpecObj;
+      if (componentSpec.implementation === undefined) {
+        badHashesDb.setItem(
+          hash,
+          'Component lacks the "implementation" section.'
+        );
+        continue;
+      }
+
+      // Blobs are cumbersome (need await to get text) - store text instead
+      // await hashToContentDb.setItem(hash, data);
+      await hashToContentDb.setItem(hash, componentText);
+
+      // Only adding hash -> URL once
+      const urlForHash = await hashToUrlDb.getItem<string>(hash);
+      if (urlForHash === null) {
+        await hashToUrlDb.setItem(hash, downloadUrl);
+      }
+
+      // Only storing names when they exist
+      if (componentSpec.name) {
+        await hashToComponentNameDb.setItem(hash, componentSpec.name);
+      }
+
+      await urlToHashDb.setItem(downloadUrl, hash);
+
+      // Marking the processing as completed
+      await urlProcessingVersionDb.setItem(
+        downloadUrl,
+        CURRENT_URL_PROCESSING_VERSION
+      );
+    } catch (err) {
+      console.error(
+        `Error when processing component candidate ${htmlUrl} Error: ${err}.`
+      );
+    }
+  }
+  console.debug("Finished importComponentsFromFeed");
+};
+
 export const refreshComponentDb = async (
   componentSearchConfig: ComponentSearchConfig
 ) => {
+  if (componentSearchConfig.ComponentFeedUrls) {
+    for (const componentFeedUrl of componentSearchConfig.ComponentFeedUrls) {
+      try {
+        await importComponentsFromFeed(componentFeedUrl);
+      } catch (error) {
+        console.error(
+          `Error importing component feed "${componentFeedUrl}": ${error}`
+        );
+      }
+    }
+  }
   if (componentSearchConfig.GitHubUsers !== undefined) {
     await cacheAllComponents(componentSearchConfig.GitHubUsers);
   }
