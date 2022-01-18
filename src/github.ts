@@ -281,6 +281,21 @@ function notUndefined<T>(x: T | undefined): x is T {
   return x !== undefined;
 }
 
+const calculateGitBlobSha1HashHex = async (data: string | ArrayBuffer) => {
+  // TODO: Avoid string roundtrip
+  const dataString =
+    typeof data === "string" ? data : new TextDecoder().decode(data);
+  const gitDataString =
+    "blob " + dataString.length.toString() + "\0" + dataString;
+  const gitDataBytes = new TextEncoder().encode(gitDataString);
+  const hashBuffer = await crypto.subtle.digest("SHA-1", gitDataBytes);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+  return hashHex;
+};
+
 const importComponentsFromFeed = async (componentFeedUrl: string) => {
   console.debug("Starting importComponentsFromFeed");
   console.debug(`Downloading component feed: ${componentFeedUrl}.`);
@@ -295,25 +310,22 @@ const importComponentsFromFeed = async (componentFeedUrl: string) => {
   }
   const componentFeed = componentFeedCandidateObject;
 
-  const urlsAndHashesIterator = componentFeed.components
-    .map((entry) => {
-      const url = entry.componentRef.url;
-      const digest = entry.componentRef.digest;
-      if (url === undefined) {
-        console.error("Component feed entry has no reference URL.");
-        return undefined;
-      }
-      if (digest === undefined) {
-        console.error("Component feed entry has no reference hash digest.");
-        return undefined;
-      }
-      return {
-        url: url,
-        hash: digest,
-        data: entry.data,
-      };
-    })
-    .filter(notUndefined);
+  const urlsHashesAndData = (
+    await Promise.all(
+      componentFeed.components.map(async (entry) => {
+        const url = entry.componentRef.url;
+        if (url === undefined) {
+          console.error("Component feed entry has no reference URL.");
+          return undefined;
+        }
+        return {
+          url: url,
+          hash: await calculateGitBlobSha1HashHex(entry.data),
+          data: entry.data,
+        };
+      })
+    )
+  ).filter(notUndefined);
 
   // const cache = await caches.open(BLOB_CACHE_NAME);
   const urlToHashDb = localForage.createInstance({
@@ -340,7 +352,7 @@ const importComponentsFromFeed = async (componentFeedUrl: string) => {
     name: DB_NAME,
     storeName: BAD_HASHES_TABLE_NAME,
   });
-  for await (const item of urlsAndHashesIterator) {
+  for await (const item of urlsHashesAndData) {
     const hash = item.hash.toLowerCase();
     const htmlUrl = item.url;
     console.debug("Component url: " + htmlUrl);
