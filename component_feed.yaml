@@ -14,8 +14,9 @@ components:
   componentRef:
     url:
     digest:
-    ?spec: ?
-  data:
+    ?spec: ???
+  data: |
+        component.yaml data
   interface:
     inputs:
     outputs:
@@ -34,7 +35,16 @@ components:
   data: <blob>
   annotations:
     git:
+      path:
       gitBlobSha:
       commitDate:
       commitSha:
+      ?branchName:
+      ?tagName:
+    gitHub:
+      owner:
+      repo:
+
+
+
 
