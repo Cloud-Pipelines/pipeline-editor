@@ -35,6 +35,8 @@ const SearchPanel = (props: any) => {
         const componentRefs = await searchComponentsByName(query);
         setIsLoaded(true);
         setItems(componentRefs);
+      } else {
+        console.debug("Component DB is empty. Need to populate the DB first.");
       }
       await refreshComponentDb(componentSearchConfig);
       setIsLoaded(true);

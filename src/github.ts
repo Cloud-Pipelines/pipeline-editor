@@ -530,7 +530,7 @@ export const isComponentDbEmpty = async () => {
     name: DB_NAME,
     storeName: HASH_TO_CONTENT_DB_TABLE_NAME,
   });
-  return (await hashToContentDb.length()) > 0;
+  return (await hashToContentDb.length()) === 0;
 };
 
 export const searchComponentsByName = async (name: string) => {
