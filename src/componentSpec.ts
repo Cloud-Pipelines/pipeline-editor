@@ -287,8 +287,8 @@ export interface GraphImplementation {
 }
 
 // Type guards
-export const isValidComponentSpec = (obj: object): obj is ComponentSpec =>
-  "implementation" in obj;
+export const isValidComponentSpec = (obj: any): obj is ComponentSpec =>
+  typeof obj === "object" && "implementation" in obj;
 
 export const isContainerImplementation = (
   implementation: ImplementationType
