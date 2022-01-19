@@ -32,7 +32,7 @@ const URL_PROCESSING_VERSION_TABLE_NAME = "url_version";
 const CURRENT_URL_PROCESSING_VERSION = 1;
 const BAD_HASHES_TABLE_NAME = "bad_hashes";
 
-export const searchGitHubCodeWithCache = async (
+const getSingleGitHubCodeSearchPageWithCache = async (
   query: string,
   page = 1,
   sort = "indexed",
@@ -60,14 +60,19 @@ type UrlAndHash = {
   hash: string;
 };
 
-export async function* getComponentUrlsAndHashes(searchLocations: string[]) {
+async function* searchComponentsOnGitHubToGetUrlsAndHashes(
+  searchLocations: string[]
+) {
   let urlsAndHashes: UrlAndHash[] = [];
   // TODO: If the number of components exceeds 1000 we should issue separate query for each location.
   // TODO: Perhaps try to filter by component contents (inputValue, inputPath, outputPath, graph, implementation)
   const queryParts = ["filename:component.yaml"].concat(searchLocations);
   const query = queryParts.join(" ");
   for (let page = 1; page < 100; page++) {
-    const searchResults = await searchGitHubCodeWithCache(query, page);
+    const searchResults = await getSingleGitHubCodeSearchPageWithCache(
+      query,
+      page
+    );
     // "total_count": 512,
     // "incomplete_results": false,
     // "items": [
@@ -88,12 +93,14 @@ export async function* getComponentUrlsAndHashes(searchLocations: string[]) {
   return urlsAndHashes;
 }
 
-export const cacheComponentCandidateBlobs = async (
+const searchComponentsOnGitHubAndCacheCandidateBlobs = async (
   searchLocations: string[]
 ): Promise<any[]> => {
   let urlsAndHashes: UrlAndHash[] = [];
   let urls = [];
-  for await (const urlAndHash of getComponentUrlsAndHashes(searchLocations)) {
+  for await (const urlAndHash of searchComponentsOnGitHubToGetUrlsAndHashes(
+    searchLocations
+  )) {
     urlsAndHashes.push(urlAndHash);
     urls.push(urlAndHash.url);
   }
@@ -121,9 +128,10 @@ export const downloadComponentDataWithCache = async (url: string) => {
   return componentSpec;
 };
 
-export const cacheAllComponents = async (searchLocations: string[]) => {
-  console.debug("Starting cacheAllComponents");
-  const urlsAndHashesIterator = getComponentUrlsAndHashes(searchLocations);
+const importComponentsFromGitHubSearch = async (searchLocations: string[]) => {
+  console.debug("Starting importComponentsFromGitHubSearch");
+  const urlsAndHashesIterator =
+    searchComponentsOnGitHubToGetUrlsAndHashes(searchLocations);
 
   // const cache = await caches.open(BLOB_CACHE_NAME);
   const urlToHashDb = localForage.createInstance({
@@ -247,7 +255,7 @@ export const cacheAllComponents = async (searchLocations: string[]) => {
       );
     }
   }
-  console.debug("Finished cacheAllComponents");
+  console.debug("Finished importComponentsFromGitHubSearch");
 };
 
 interface ComponentFeedEntry {
@@ -464,7 +472,9 @@ export const refreshComponentDb = async (
     }
   }
   if (componentSearchConfig.GitHubSearchLocations !== undefined) {
-    await cacheAllComponents(componentSearchConfig.GitHubSearchLocations);
+    await importComponentsFromGitHubSearch(
+      componentSearchConfig.GitHubSearchLocations
+    );
   }
 };
 
