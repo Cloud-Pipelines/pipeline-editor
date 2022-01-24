@@ -20,3 +20,6 @@ export const componentSearchConfig: ComponentSearchConfig = {
   ],
   GitHubSearchLocations: ["repo:Ark-kun/pipeline_components path:components"],
 };
+
+export const googleCloudOAuthClientId =
+  "640001104961-2m8hs192tmd9f9nssbr5thr5o3uhmita.apps.googleusercontent.com";

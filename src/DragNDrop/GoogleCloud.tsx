@@ -14,14 +14,13 @@ import { ArgumentType, ComponentSpec } from '../componentSpec';
 import {generateVertexPipelineJobFromGraphComponent} from './vertexAiCompiler'
 import ArgumentsEditor from "./ArgumentsEditor";
 import { PipelineJob } from './vertexPipelineSpec';
+import { googleCloudOAuthClientId } from '../appSettings';
 
 const LOCAL_STORAGE_GCS_OUTPUT_DIRECTORY_KEY = "GoogleCloudSubmitter/gcsOutputDirectory";
 const LOCAL_STORAGE_PROJECT_ID_KEY = "GoogleCloudSubmitter/projectId";
 const LOCAL_STORAGE_REGION_KEY = "GoogleCloudSubmitter/region";
 const LOCAL_STORAGE_PROJECT_IDS_KEY = "GoogleCloudSubmitter/projectIds";
 
-var CLIENT_ID = '640001104961-2m8hs192tmd9f9nssbr5thr5o3uhmita.apps.googleusercontent.com';
-     
 const VERTEX_AI_PIPELINES_REGIONS = [
   'us-central1',
   'us-east1',
@@ -39,7 +38,7 @@ const VERTEX_AI_PIPELINES_DEFAULT_REGION = 'us-central1';
 const authorizeGoogleCloudClient = async (
   scopes: string[],
   immediate = false, // Setting immediate to true prevents auth window showing every time. But it needs to be false the first time (when cookies are not set).
-  clientId: string = CLIENT_ID,
+  clientId: string = googleCloudOAuthClientId,
 ) => {
   return new Promise<GoogleApiOAuth2TokenObject>(
     (resolve, reject) => {
