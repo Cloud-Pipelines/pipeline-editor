@@ -29,6 +29,15 @@ function AppFooter() {
         >
           Give feedback
         </Link>
+        <Link
+          href="https://cloud-pipelines.net/privacy_policy"
+          underline="hover"
+          target="_blank"
+          rel="noopener"
+          style={{ marginLeft: "12px" }}
+        >
+          Privacy policy
+        </Link>
       </div>
     </footer>
   );
