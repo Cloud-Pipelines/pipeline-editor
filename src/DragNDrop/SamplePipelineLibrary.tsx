@@ -6,16 +6,46 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
+import yaml from "js-yaml";
 import { useState, useEffect } from "react";
-import { ComponentSpec } from "../componentSpec";
+import { pipelineLibraryUrl } from "../appSettings";
+import { httpGetWithCache } from "../cacheUtils";
+import { ComponentReference, ComponentSpec } from "../componentSpec";
 import {
   storeComponentFromUrl,
   ComponentReferenceWithSpec,
 } from "../componentStore";
-import {
-  preloadComponentReferences,
-  PRELOADED_PIPELINE_URLS,
-} from "./samplePipelines";
+import { preloadComponentReferences } from "./samplePipelines";
+
+type PipelineLibraryStruct = {
+  annotations?: {
+    [k: string]: unknown;
+  };
+  components: ComponentReference[];
+};
+
+const isValidPipelineLibraryStruct = (
+  obj: object
+): obj is PipelineLibraryStruct => "components" in obj;
+
+const loadPipelineLibraryStruct = async (url: string) => {
+  const response = await httpGetWithCache(url, "cache", true);
+  const data = await response.arrayBuffer();
+  const pipelineLibrary = yaml.load(new TextDecoder().decode(data));
+  if (typeof pipelineLibrary !== "object" || pipelineLibrary === null) {
+    throw Error(
+      `Component library data is not a YAML-encoded object: ${pipelineLibrary}`
+    );
+  }
+  if (!isValidPipelineLibraryStruct(pipelineLibrary)) {
+    throw Error(`Invalid Component library data structure: ${pipelineLibrary}`);
+  }
+  return pipelineLibrary;
+};
+
+function notUndefined<T>(x: T | undefined): x is T {
+  return x !== undefined;
+}
 
 interface PipelineLibraryProps {
   setComponentSpec?: (componentSpec: ComponentSpec) => void;
@@ -29,8 +59,14 @@ const SamplePipelineLibrary = ({ setComponentSpec }: PipelineLibraryProps) => {
   useEffect(() => {
     (async () => {
       if (componentRefs.length === 0) {
+        const loadedComponentLibrary = await loadPipelineLibraryStruct(
+          pipelineLibraryUrl
+        );
+        const pipelineUrls = loadedComponentLibrary.components
+          .map((componentRef) => componentRef.url)
+          .filter(notUndefined);
         const loadedComponentRefs = await Promise.all(
-          PRELOADED_PIPELINE_URLS.map(async (url) => {
+          pipelineUrls.map(async (url) => {
             const componentRefPlusData = await storeComponentFromUrl(url);
             const componentRef = componentRefPlusData.componentRef;
             await preloadComponentReferences(componentRef.spec);
