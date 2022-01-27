@@ -40,6 +40,19 @@ const Sidebar = ({
   componentSpec,
   setComponentSpec
 }: SidebarProps) => {
+  // Do not include the DebugScratch in the production build
+  let DebugScratchElement = () => null;
+  if (process?.env?.NODE_ENV === "development") {
+    try {
+      const DebugScratch = require("./DebugScratch").default;
+      DebugScratchElement = () =>
+        DebugScratch({
+          componentSpec: componentSpec,
+          setComponentSpec: setComponentSpec,
+        });
+    } catch (e) {}
+  }
+
   return (
     <aside className="nodeList">
       <details style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>
@@ -81,6 +94,7 @@ const Sidebar = ({
         >
           Load Data Passing pipeline
         </button>
+        <DebugScratchElement/>
       </details>
     </aside>
   );
