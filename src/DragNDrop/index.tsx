@@ -21,7 +21,8 @@ import { ComponentSpec } from '../componentSpec';
 import { componentSpecToYaml } from '../componentStore';
 import GraphComponentSpecFlow, { augmentComponentSpec } from './GraphComponentSpecFlow';
 import Sidebar from './Sidebar';
-import { loadComponentFromUrl, XGBOOST_PIPELINE_URL } from "./samplePipelines";
+import { defaultPipelineUrl } from '../appSettings';
+import { loadComponentFromUrl } from "./samplePipelines";
 
 import './dnd.css';
 
@@ -92,7 +93,7 @@ const DnDFlow = () => {
   if (componentSpec === undefined) {
     const restoredComponentSpec = loadComponentSpec();
     if (restoredComponentSpec === undefined) {
-      loadComponentFromUrl(XGBOOST_PIPELINE_URL).then(setComponentSpec);
+      loadComponentFromUrl(defaultPipelineUrl).then(setComponentSpec);
     } else {
       setComponentSpec(restoredComponentSpec);
     }

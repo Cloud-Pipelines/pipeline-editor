@@ -64,4 +64,4 @@ const loadComponentFromUrl = async (
   return componentSpec;
 };
 
-export { loadComponentFromUrl, preloadComponentReferences, XGBOOST_PIPELINE_URL, PYTORCH_PIPELINE_URL, TFX_PIPELINE_URL };
+export { loadComponentFromUrl, preloadComponentReferences };
