@@ -14,7 +14,6 @@ import GraphComponentExporter from './GraphComponentExporter'
 import GoogleCloudSubmitter from './GoogleCloud'
 import VertexAiExporter from './VertexAiExporter'
 import { ComponentSpec } from '../componentSpec';
-import { loadComponentFromUrl, DATA_PASSING_PIPELINE_URL } from './samplePipelines';
 import UserComponentLibrary from "./UserComponentLibrary";
 import PipelineLibrary from "./PipelineLibrary";
 import { componentLibraryUrl } from '../appSettings';
@@ -86,14 +85,6 @@ const Sidebar = ({
         <summary>Debug</summary>
         {componentSpec && <GraphComponentExporter componentSpec={componentSpec}/>}
         {componentSpec && <VertexAiExporter componentSpec={componentSpec}/>}
-        <button
-          type="button"
-          onClick={(e) => {
-            loadComponentFromUrl(DATA_PASSING_PIPELINE_URL).then(setComponentSpec);
-          }}
-        >
-          Load Data Passing pipeline
-        </button>
         <DebugScratchElement/>
       </details>
     </aside>
