@@ -93,22 +93,6 @@ async function* searchComponentsOnGitHubToGetUrlsAndHashes(
   return urlsAndHashes;
 }
 
-const searchComponentsOnGitHubAndCacheCandidateBlobs = async (
-  searchLocations: string[]
-): Promise<any[]> => {
-  let urlsAndHashes: UrlAndHash[] = [];
-  let urls = [];
-  for await (const urlAndHash of searchComponentsOnGitHubToGetUrlsAndHashes(
-    searchLocations
-  )) {
-    urlsAndHashes.push(urlAndHash);
-    urls.push(urlAndHash.url);
-  }
-  const cache = await caches.open(BLOB_CACHE_NAME);
-  await cache.addAll(urls);
-  return urlsAndHashes;
-};
-
 export const downloadComponentDataWithCache = async (url: string) => {
   const response = await httpGetWithCache(url, BLOB_CACHE_NAME);
   const data = await response.blob();
