@@ -15,7 +15,7 @@
     "@types/react": "^17.0.2",
     "@types/react-dom": "^17.0.2",
     "gh-pages": "^3.2.2",
-    "js-yaml": "^3.14.1",
+    "js-yaml": "^4.1.0",
     "localforage": "^1.9.0",
     "react-dropzone": "^11.3.4",
     "react-flow-renderer": "^9.6.0",
