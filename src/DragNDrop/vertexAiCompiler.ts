@@ -836,7 +836,7 @@ const makeNameUniqueByAddingIndex = (
   return finalName;
 };
 
-export const graphComponentSpecToVertexPipelineSpec = (
+export const buildVertexPipelineSpecFromGraphComponentSpec = (
   componentSpec: ComponentSpec,
   pipelineContextName = "pipeline"
 ) => {
@@ -913,7 +913,7 @@ export const graphComponentSpecToVertexPipelineSpec = (
   return vertexPipelineSpec;
 };
 
-export const generateVertexPipelineJobFromGraphComponent = (
+export const buildVertexPipelineJobFromGraphComponent = (
   componentSpec: ComponentSpec,
   gcsOutputDirectory: string,
   pipelineArguments?: Map<string, string>,
@@ -921,7 +921,7 @@ export const generateVertexPipelineJobFromGraphComponent = (
 ) => {
   // The pipelineContextName affects caching
 
-  const pipelineSpec = graphComponentSpecToVertexPipelineSpec(
+  const pipelineSpec = buildVertexPipelineSpecFromGraphComponentSpec(
     componentSpec,
     pipelineContextName
   );

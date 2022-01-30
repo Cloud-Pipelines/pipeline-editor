@@ -11,7 +11,7 @@
 import { useState } from 'react';
 
 import { ArgumentType, ComponentSpec } from '../componentSpec';
-import {generateVertexPipelineJobFromGraphComponent} from './vertexAiCompiler'
+import { buildVertexPipelineJobFromGraphComponent } from './vertexAiCompiler'
 import ArgumentsEditor from "./ArgumentsEditor";
 import { PipelineJob } from './vertexPipelineSpec';
 import { googleCloudOAuthClientId } from '../appSettings';
@@ -176,7 +176,7 @@ const GoogleCloudSubmitter = ({
       )
     );
     try {
-      vertexPipelineJob = generateVertexPipelineJobFromGraphComponent(
+      vertexPipelineJob = buildVertexPipelineJobFromGraphComponent(
         componentSpec,
         gcsOutputDirectory,
         pipelineArgumentMap

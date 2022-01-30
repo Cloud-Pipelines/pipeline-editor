@@ -10,10 +10,10 @@ import fs from "fs";
 import yaml from "js-yaml";
 import path from "path";
 import { ComponentSpec } from "../componentSpec";
-import { generateVertexPipelineJobFromGraphComponent } from "./vertexAiCompiler";
+import { buildVertexPipelineJobFromGraphComponent } from "./vertexAiCompiler";
 import { PipelineJob } from "./vertexPipelineSpec";
 
-test("generateVertexPipelineJobFromGraphComponent compiles Data_passing_pipeline", () => {
+test("buildVertexPipelineJobFromGraphComponent compiles Data_passing_pipeline", () => {
   const pipelineText = fs
     .readFileSync(
       path.resolve(
@@ -34,7 +34,7 @@ test("generateVertexPipelineJobFromGraphComponent compiles Data_passing_pipeline
   const expectedVertexPipelineJob = JSON.parse(
     expectedCompiledPipelineText
   ) as PipelineJob;
-  const compiledVertexPipelineJob = generateVertexPipelineJobFromGraphComponent(
+  const compiledVertexPipelineJob = buildVertexPipelineJobFromGraphComponent(
     pipelineSpec,
     "gs://some-bucket/",
     new Map(

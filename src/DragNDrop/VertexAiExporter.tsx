@@ -12,7 +12,7 @@ import {
 
 import { ComponentSpec } from "../componentSpec";
 import { augmentComponentSpec } from "./GraphComponentSpecFlow";
-import {graphComponentSpecToVertexPipelineSpec} from './vertexAiCompiler'
+import { buildVertexPipelineSpecFromGraphComponentSpec } from './vertexAiCompiler'
 
 interface VertexAiExporterProps {
   componentSpec: ComponentSpec;
@@ -26,7 +26,7 @@ const VertexAiExporter = ({componentSpec}: VertexAiExporterProps) => {
     // Augmenting the componentSpec might be useless right now, but it can stabilize the output (e.g. ordering).
     // Also, in the future, the original spec might be included in the vertexPipelineSpec
     componentSpec = augmentComponentSpec(componentSpec, nodes, true, true);
-    const vertexPipelineSpec = graphComponentSpecToVertexPipelineSpec(componentSpec);
+    const vertexPipelineSpec = buildVertexPipelineSpecFromGraphComponentSpec(componentSpec);
     vertexPipelineSpecText = JSON.stringify(vertexPipelineSpec, undefined, 2);
   } catch(err) {
     vertexPipelineSpecText = String(err);
