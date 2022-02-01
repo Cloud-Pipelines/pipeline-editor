@@ -11,30 +11,19 @@ import yaml from "js-yaml";
 import path from "path";
 import { ComponentSpec } from "../componentSpec";
 import { buildVertexPipelineJobFromGraphComponent } from "./vertexAiCompiler";
-import { PipelineJob } from "./vertexPipelineSpec";
 
 test("buildVertexPipelineJobFromGraphComponent compiles Data_passing_pipeline", () => {
-  const pipelineText = fs
-    .readFileSync(
-      path.resolve(
-        __dirname,
-        "./testData/Data_passing_pipeline/pipeline.component.yaml"
-      )
-    )
-    .toString();
-  const expectedCompiledPipelineText = fs
-    .readFileSync(
-      path.resolve(
-        __dirname,
-        "./testData/Data_passing_pipeline/google_cloud_vertex_pipeline.json"
-      )
-    )
-    .toString();
+  const sourcePath = path.resolve(
+    __dirname,
+    "./testData/Data_passing_pipeline/pipeline.component.yaml"
+  );
+  const expectedPath = path.resolve(
+    __dirname,
+    "./testData/Data_passing_pipeline/google_cloud_vertex_pipeline.json"
+  );
+  const pipelineText = fs.readFileSync(sourcePath).toString();
   const pipelineSpec = yaml.load(pipelineText) as ComponentSpec;
-  const expectedVertexPipelineJob = JSON.parse(
-    expectedCompiledPipelineText
-  ) as PipelineJob;
-  const compiledVertexPipelineJob = buildVertexPipelineJobFromGraphComponent(
+  const actualResult = buildVertexPipelineJobFromGraphComponent(
     pipelineSpec,
     "gs://some-bucket/",
     new Map(
@@ -45,5 +34,13 @@ test("buildVertexPipelineJobFromGraphComponent compiles Data_passing_pipeline", 
       })
     )
   );
-  expect(compiledVertexPipelineJob).toEqual(expectedVertexPipelineJob);
+  if (fs.existsSync(expectedPath)) {
+    const expectedResultText = fs.readFileSync(expectedPath).toString();
+    const expectedResult = JSON.parse(expectedResultText);
+    expect(actualResult).toEqual(expectedResult);
+  } else {
+    fs.writeFileSync(expectedPath, JSON.stringify(actualResult, undefined, 2));
+    fail();
+  }
+});
 });
