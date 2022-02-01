@@ -954,6 +954,12 @@ export const buildVertexPipelineJobFromGraphComponent = (
   let convertedPipelineArguments: Record<string, any> = {};
   if (pipelineArguments !== undefined) {
     for (const [key, value] of Array.from(pipelineArguments.entries())) {
+      if (!(key in inputParameterDefinitions)) {
+        console.error(
+          `A pipeline argument was provided for the input "${key}" that does not exist in the pipeline spec.`
+        );
+        continue;
+      }
       convertedPipelineArguments[key] = stringToMlmdValue(
         value,
         inputParameterDefinitions[key].type
