@@ -9,13 +9,13 @@
 import fs from "fs";
 import yaml from "js-yaml";
 import path from "path";
-import { ComponentSpec } from "../componentSpec";
+import { ComponentSpec } from "../../componentSpec";
 import { buildVertexPipelineJobFromGraphComponent } from "./vertexAiCompiler";
 
 test("buildVertexPipelineJobFromGraphComponent compiles Data_passing_pipeline", () => {
   const sourcePath = path.resolve(
     __dirname,
-    "./testData/Data_passing_pipeline/pipeline.component.yaml"
+    "../testData/Data_passing_pipeline/pipeline.component.yaml"
   );
   const expectedPath = path.resolve(
     __dirname,
@@ -47,7 +47,7 @@ test("buildVertexPipelineJobFromGraphComponent compiles Data_passing_pipeline", 
 test("buildVertexPipelineJobFromGraphComponent compiles XGBoost_pipeline", () => {
   const sourcePath = path.resolve(
     __dirname,
-    "./testData/XGBoost_pipeline/pipeline.component.yaml"
+    "../testData/XGBoost_pipeline/pipeline.component.yaml"
   );
   const expectedPath = path.resolve(
     __dirname,

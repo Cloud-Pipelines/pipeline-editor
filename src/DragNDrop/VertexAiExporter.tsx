@@ -12,7 +12,7 @@ import {
 
 import { ComponentSpec } from "../componentSpec";
 import { augmentComponentSpec } from "./GraphComponentSpecFlow";
-import { buildVertexPipelineSpecFromGraphComponentSpec } from './vertexAiCompiler'
+import { buildVertexPipelineSpecFromGraphComponentSpec } from '../compilers/GoogleCloudVertexAIPipelines/vertexAiCompiler'
 
 interface VertexAiExporterProps {
   componentSpec: ComponentSpec;

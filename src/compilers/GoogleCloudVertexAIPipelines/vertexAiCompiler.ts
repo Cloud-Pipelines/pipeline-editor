@@ -14,7 +14,7 @@ import {
   isContainerImplementation,
   isGraphImplementation,
   InputSpec,
-} from "../componentSpec";
+} from "../../componentSpec";
 
 import * as vertex from "./vertexPipelineSpec";
 

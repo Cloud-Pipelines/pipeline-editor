@@ -11,9 +11,9 @@
 import { useState } from 'react';
 
 import { ArgumentType, ComponentSpec } from '../componentSpec';
-import { buildVertexPipelineJobFromGraphComponent } from './vertexAiCompiler'
+import { buildVertexPipelineJobFromGraphComponent } from '../compilers/GoogleCloudVertexAIPipelines/vertexAiCompiler'
 import ArgumentsEditor from "./ArgumentsEditor";
-import { PipelineJob } from './vertexPipelineSpec';
+import { PipelineJob } from '../compilers/GoogleCloudVertexAIPipelines/vertexPipelineSpec';
 import { googleCloudOAuthClientId } from '../appSettings';
 
 const LOCAL_STORAGE_GCS_OUTPUT_DIRECTORY_KEY = "GoogleCloudSubmitter/gcsOutputDirectory";
