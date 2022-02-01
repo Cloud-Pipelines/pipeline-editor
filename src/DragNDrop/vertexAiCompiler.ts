@@ -599,7 +599,7 @@ function buildVertexComponentSpecFromGraphComponentSpec(
   ).filter((x) => inputsConsumedAsArtifact.has(x));
   if (inputNamesThatAreUsedBothAsParameterAndArtifact.length > 0) {
     throw Error(
-      `Compiler error: Some inputs are used both as parameter and artifact: "${inputNamesThatAreUsedBothAsParameterAndArtifact}". Please file a bug report.`
+      `Compiler error: When compiling component "${componentSpec.name}" some inputs are used both as parameter and artifact: "${inputNamesThatAreUsedBothAsParameterAndArtifact}". Please file a bug report.`
     );
   }
   const inputNamesThatAreParametersButAreConsumedAsArtifacts = Array.from(
@@ -607,7 +607,7 @@ function buildVertexComponentSpecFromGraphComponentSpec(
   ).filter((x) => inputsConsumedAsArtifact.has(x));
   if (inputNamesThatAreParametersButAreConsumedAsArtifacts.length > 0) {
     throw Error(
-      `Compiler error: Some parameter inputs are consumer as artifact: "${inputNamesThatAreParametersButAreConsumedAsArtifacts}". Please file a bug report.`
+      `Compiler error: When compiling component "${componentSpec.name}" some parameter arguments are consumed as artifact: "${inputNamesThatAreParametersButAreConsumedAsArtifacts}". Please file a bug report.`
     );
   }
 
