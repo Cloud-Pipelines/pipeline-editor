@@ -541,6 +541,9 @@ export interface PipelineContainerSpec {
   // lifecycle: Lifecycle;
 
   resources?: ResourceSpec;
+
+  // Environment variables to be passed to the container.
+  env?: EnvVar[];
 }
 
 // The specification on the resource requirements of a container execution.
@@ -556,6 +559,25 @@ export interface ResourceSpec {
   memoryLimit: number;
 
   accelerator: AcceleratorConfig;
+}
+
+// Environment variables to be passed to the container.
+// Represents an environment variable present in a container.
+export interface EnvVar {
+  // Name of the environment variable. Must be a valid C identifier. It can
+  // be composed of characters such as uppercase, lowercase characters,
+  // underscore, digits, but the leading character should be either a
+  // letter or an underscore.
+  name: string;
+
+  // Variables that reference a $(VAR_NAME) are expanded using the previous
+  // defined environment variables in the container and any environment
+  // variables defined by the platform runtime that executes this pipeline.
+  // If a variable cannot be resolved, the reference in the input string
+  // will be unchanged. The $(VAR_NAME) syntax can be escaped with a double
+  // $$, ie: $$(VAR_NAME). Escaped references will never be expanded,
+  // regardless of whether the variable exists or not.
+  value: string;
 }
 
 // The specification of the executor.

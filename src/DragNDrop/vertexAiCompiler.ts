@@ -42,6 +42,7 @@ const sanitizePipelineInfoName = (pipelineContextName: string) => {
 type ResolvedCommandLineAndArgs = {
   command?: string[];
   args?: string[];
+  env?: Record<string, string>;
   inputsConsumedAsParameter: Set<string>;
   inputsConsumedAsArtifact: Set<string>;
 };
@@ -124,9 +125,25 @@ const resolveCommandLine = (
     }
   };
 
-  const result = {
+  const envValues =
+    containerSpec.env &&
+    Object.fromEntries(
+      Object.entries(containerSpec.env).map(([key, value]) => {
+        const resolvedArgArray = convertArg(value);
+        if (resolvedArgArray.length !== 1) {
+          throw Error(
+            `Environment variable value must resolve to a single value, but got ${resolvedArgArray}`
+          );
+        }
+        const resolvedValue = resolvedArgArray[0];
+        return [key, resolvedValue];
+      })
+    );
+
+  const result: ResolvedCommandLineAndArgs = {
     command: containerSpec.command?.flatMap(convertArg),
     args: containerSpec.args?.flatMap(convertArg),
+    env: envValues,
     inputsConsumedAsParameter: inputsConsumedAsParameter,
     inputsConsumedAsArtifact: inputsConsumedAsArtifact,
   };
@@ -429,6 +446,12 @@ function buildVertexComponentSpecFromContainerComponentSpec(
       image: containerSpec.image,
       command: resolvedCommandLine.command,
       args: resolvedCommandLine.args,
+      env:
+        resolvedCommandLine.env &&
+        Object.entries(resolvedCommandLine.env).map(([name, value]) => ({
+          name: name,
+          value: value,
+        })),
     },
   };
 
