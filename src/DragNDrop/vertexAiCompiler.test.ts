@@ -43,4 +43,29 @@ test("buildVertexPipelineJobFromGraphComponent compiles Data_passing_pipeline", 
     fail();
   }
 });
+
+test("buildVertexPipelineJobFromGraphComponent compiles XGBoost_pipeline", () => {
+  const sourcePath = path.resolve(
+    __dirname,
+    "./testData/XGBoost_pipeline/pipeline.component.yaml"
+  );
+  const expectedPath = path.resolve(
+    __dirname,
+    "./testData/XGBoost_pipeline/google_cloud_vertex_pipeline.json"
+  );
+  const pipelineText = fs.readFileSync(sourcePath).toString();
+  const pipelineSpec = yaml.load(pipelineText) as ComponentSpec;
+  const actualResult = buildVertexPipelineJobFromGraphComponent(
+    pipelineSpec,
+    "gs://some-bucket/",
+    new Map()
+  );
+  if (fs.existsSync(expectedPath)) {
+    const expectedResultText = fs.readFileSync(expectedPath).toString();
+    const expectedResult = JSON.parse(expectedResultText);
+    expect(actualResult).toEqual(expectedResult);
+  } else {
+    fs.writeFileSync(expectedPath, JSON.stringify(actualResult, undefined, 2));
+    fail();
+  }
 });
