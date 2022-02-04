@@ -79,23 +79,25 @@ const authorizeGoogleCloudClient = async (
   );
 };
 
-const ensureGoogleCloudAuthorizesScopes = async (scopes: string[]) => {
+export const ensureGoogleCloudAuthorizesScopes = async (scopes: string[]) => {
   try {
     // console.debug('Before ensureGoogleCloudAuthorizesScopes(immediate=true)');
-    await authorizeGoogleCloudClient(scopes, true);
+    const oauthToken = await authorizeGoogleCloudClient(scopes, true);
     // console.debug('After ensureGoogleCloudAuthorizesScopes(immediate=true)');
     (window as any).gtag?.("event", "GoogleCloud_auth", {
       result: "succeeded",
       immediate: "true"
     });
+    return oauthToken;
   } catch (err) {
     // console.error('ensureGoogleCloudAuthorizesScopes(immediate=true)', err);
     try {
-      await authorizeGoogleCloudClient(scopes, false);
+      const oauthToken = await authorizeGoogleCloudClient(scopes, false);
       (window as any).gtag?.("event", "GoogleCloud_auth", {
         result: "succeeded",
         immediate: "false"
       });
+      return oauthToken;
     } catch (err) {
       // console.error('ensureGoogleCloudAuthorizesScopes(immediate=false)', err);
       (window as any).gtag?.("event", "GoogleCloud_auth", {
