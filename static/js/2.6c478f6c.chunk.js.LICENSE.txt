@@ -10,14 +10,7 @@ object-assign
   http://jedwatson.github.io/classnames
 */
 
-/*!
- * The buffer module from node.js, for the browser.
- *
- * @author   Feross Aboukhadijeh <http://feross.org>
- * @license  MIT
- */
-
-/*! ieee754. BSD-3-Clause License. Feross Aboukhadijeh <https://feross.org/opensource> */
+/*! js-yaml 4.1.0 https://github.com/nodeca/js-yaml @license MIT */
 
 /**
  * A better abstraction over CSS.
