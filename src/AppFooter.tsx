@@ -22,10 +22,20 @@ function AppFooter() {
     >
       <div style={{ display: "inline-block" }}>
         <Link
+          href="https://cloud-pipelines.net/"
+          underline="hover"
+          target="_blank"
+          rel="noopener"
+          style={{ margin: "6px" }}
+        >
+          About
+        </Link>
+        <Link
           href="https://github.com/Cloud-Pipelines/pipeline-editor/issues"
           underline="hover"
           target="_blank"
           rel="noopener"
+          style={{ margin: "6px" }}
         >
           Give feedback
         </Link>
@@ -34,7 +44,7 @@ function AppFooter() {
           underline="hover"
           target="_blank"
           rel="noopener"
-          style={{ marginLeft: "12px" }}
+          style={{ margin: "6px" }}
         >
           Privacy policy
         </Link>
