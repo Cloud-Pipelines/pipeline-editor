@@ -11,13 +11,12 @@ import { DragEvent } from 'react';
 import ComponentLibrary from './ComponentLibrary'
 import ComponentSearch from './ComponentSearch'
 import GraphComponentExporter from './GraphComponentExporter'
-import GoogleCloudSubmitter from './GoogleCloud'
 import VertexAiExporter from './VertexAiExporter'
 import { ComponentSpec } from '../componentSpec';
 import UserComponentLibrary from "./UserComponentLibrary";
 import PipelineLibrary from "./PipelineLibrary";
 import { componentLibraryUrl } from '../appSettings';
-import KubeflowPipelinesSubmitter from './KubeflowPipelinesSubmitter';
+import PipelineSubmitter from "./PipelineSubmitter";
 
 const onDragStart = (event: DragEvent, nodeData: object) => {
   event.dataTransfer.setData('application/reactflow', JSON.stringify(nodeData));
@@ -60,12 +59,8 @@ const Sidebar = ({
         <PipelineLibrary componentSpec={componentSpec} setComponentSpec={setComponentSpec}/>
       </details>
       <details style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>
-        <summary style={{ borderWidth: "1px", padding: "4px", fontWeight: "bold" }}>Submit to Google Cloud</summary>
-        <GoogleCloudSubmitter componentSpec={componentSpec}/>
-      </details>
-      <details style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>
-        <summary style={{ borderWidth: "1px", padding: "4px", fontWeight: "bold" }}>Submit to Kubeflow Pipelines</summary>
-        <KubeflowPipelinesSubmitter componentSpec={componentSpec}/>
+        <summary style={{ borderWidth: "1px", padding: "4px", fontWeight: "bold" }}>Run pipeline</summary>
+        <PipelineSubmitter componentSpec={componentSpec}/>
       </details>
       <h3>Drag components to the canvas:</h3>
       <details style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>

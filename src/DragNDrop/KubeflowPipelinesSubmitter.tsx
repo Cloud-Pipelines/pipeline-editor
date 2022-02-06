@@ -12,8 +12,7 @@ import {
   buildArgoWorkflowFromGraphComponent,
   Workflow,
 } from "../compilers/Argo/argoCompiler";
-import { ArgumentType, ComponentSpec } from "../componentSpec";
-import ArgumentsEditor from "./ArgumentsEditor";
+import { ComponentSpec } from "../componentSpec";
 import { ensureGoogleCloudAuthorizesScopes } from "./GoogleCloud";
 
 const LOCAL_STORAGE_ENDPOINT_KEY = "KubeflowPipelinesSubmitter/endpoint";
@@ -59,6 +58,7 @@ const kfpSubmitPipelineRun = async (
 
 interface KubeflowPipelinesSubmitterProps {
   componentSpec?: ComponentSpec;
+  pipelineArguments?: Map<string, string>;
 }
 
 const generateKfpRunUrl = (endpoint: string, runId: string) => {
@@ -74,10 +74,8 @@ const generateKfpRunUrl = (endpoint: string, runId: string) => {
 
 const KubeflowPipelinesSubmitter = ({
   componentSpec,
+  pipelineArguments,
 }: KubeflowPipelinesSubmitterProps) => {
-  const [pipelineArguments, setComponentArguments] = useState<
-    Record<string, ArgumentType>
-  >({});
   const [argoWorkflow, setArgoWorkflow] = useState<Workflow | undefined>(
     undefined
   );
@@ -101,18 +99,10 @@ const KubeflowPipelinesSubmitter = ({
 
   useEffect(() => {
     if (componentSpec !== undefined) {
-      // This filtering is just for typing as the pipeline arguments can only be strings here.
-      const pipelineArgumentValueMap = new Map(
-        Object.entries(pipelineArguments).filter(
-          // Type guard predicate
-          (pair): pair is [string, string] => typeof pair[1] === "string"
-        )
-      );
-
       try {
         const argoWorkflow = buildArgoWorkflowFromGraphComponent(
           componentSpec,
-          pipelineArgumentValueMap
+          pipelineArguments ?? new Map()
         );
         argoWorkflow.metadata.labels = {
           sdk: "cloud-pipelines-editor",
@@ -208,23 +198,6 @@ const KubeflowPipelinesSubmitter = ({
         }
       }}
     >
-      {componentSpec === undefined ||
-      (componentSpec?.inputs?.length ?? 0) === 0 ? undefined : (
-        <fieldset
-          style={{
-            // Reduce the default padding
-            padding: "2px",
-          }}
-        >
-          <legend>Arguments</legend>
-          <ArgumentsEditor
-            componentSpec={componentSpec}
-            componentArguments={pipelineArguments}
-            setComponentArguments={setComponentArguments}
-            shrinkToWidth={true}
-          />
-        </fieldset>
-      )}
       <div
         style={{
           whiteSpace: "nowrap",

@@ -10,9 +10,8 @@
 
 import { useState } from 'react';
 
-import { ArgumentType, ComponentSpec } from '../componentSpec';
+import { ComponentSpec } from '../componentSpec';
 import { buildVertexPipelineJobFromGraphComponent } from '../compilers/GoogleCloudVertexAIPipelines/vertexAiCompiler'
-import ArgumentsEditor from "./ArgumentsEditor";
 import { PipelineJob } from '../compilers/GoogleCloudVertexAIPipelines/vertexPipelineSpec';
 import { googleCloudOAuthClientId } from '../appSettings';
 
@@ -135,10 +134,12 @@ const aiplatformCreatePipelineJob = async (projectId: string, region='us-central
 
 interface GoogleCloudSubmitterProps {
   componentSpec?: ComponentSpec,
+  pipelineArguments?: Map<string, string>,
 };
 
 const GoogleCloudSubmitter = ({
   componentSpec,
+  pipelineArguments,
 }: GoogleCloudSubmitterProps) => {
   const [projects, setProjects] = useState<string[]>(
     () => JSON.parse(window.localStorage?.getItem(LOCAL_STORAGE_PROJECT_IDS_KEY) ?? "[]")
@@ -155,24 +156,17 @@ const GoogleCloudSubmitter = ({
   );
   const [pipelineJobWebUrl, setPipelineJobWebUrl] = useState("");
   const [compilationError, setCompilationError] = useState("");
-  const [pipelineArguments, setPipelineArguments] = useState<Record<string, ArgumentType>>({});
 
   let vertexPipelineJobJson: string | undefined = undefined;
   let vertexPipelineJob: PipelineJob | undefined = undefined;
 
   //useEffect(() => {
   if (componentSpec !== undefined) {
-    const pipelineArgumentMap = new Map(
-      Object.entries(pipelineArguments).filter(
-        // Type guard predicate
-        (pair): pair is [string, string] => typeof pair[1] === "string"
-      )
-    );
     try {
       vertexPipelineJob = buildVertexPipelineJobFromGraphComponent(
         componentSpec,
         gcsOutputDirectory,
-        pipelineArgumentMap
+        pipelineArguments
       );
       vertexPipelineJob.labels = {
         "sdk": "cloud-pipelines-editor",
@@ -232,23 +226,6 @@ const GoogleCloudSubmitter = ({
         }
       }}
     >
-      {componentSpec === undefined ||
-      (componentSpec?.inputs?.length ?? 0) === 0 ? undefined : (
-        <fieldset
-          style={{
-            // Reduce the default padding
-            padding: "2px",
-          }}
-        >
-          <legend>Arguments</legend>
-          <ArgumentsEditor
-            componentSpec={componentSpec}
-            componentArguments={pipelineArguments}
-            setComponentArguments={setPipelineArguments}
-            shrinkToWidth={true}
-          />
-        </fieldset>
-      )}
       <div style={{
         whiteSpace: "nowrap",
         margin: "5px",
