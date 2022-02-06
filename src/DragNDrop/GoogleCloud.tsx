@@ -8,7 +8,7 @@
 
 /* global gapi */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { ComponentSpec } from '../componentSpec';
 import { buildVertexPipelineJobFromGraphComponent } from '../compilers/GoogleCloudVertexAIPipelines/vertexAiCompiler'
@@ -154,42 +154,53 @@ const GoogleCloudSubmitter = ({
   const [gcsOutputDirectory, setGcsOutputDirectory] = useState(
     () => window.localStorage?.getItem(LOCAL_STORAGE_GCS_OUTPUT_DIRECTORY_KEY) ?? ""
   );
-  const [pipelineJobWebUrl, setPipelineJobWebUrl] = useState("");
-  const [compilationError, setCompilationError] = useState("");
+  const [pipelineJobWebUrl, setPipelineJobWebUrl] = useState<
+    string | undefined
+  >(undefined);
+  const [compilationError, setCompilationError] = useState<string | undefined>(
+    undefined
+  );
+  const [vertexPipelineJob, setVertexPipelineJob] = useState<
+    PipelineJob | undefined
+  >(undefined);
+  const [vertexPipelineJsonBlobUrl, setVertexPipelineJsonBlobUrl] = useState<
+    string | undefined
+  >(undefined);
 
-  let vertexPipelineJobJson: string | undefined = undefined;
-  let vertexPipelineJob: PipelineJob | undefined = undefined;
-
-  //useEffect(() => {
-  if (componentSpec !== undefined) {
-    try {
-      vertexPipelineJob = buildVertexPipelineJobFromGraphComponent(
-        componentSpec,
-        gcsOutputDirectory,
-        pipelineArguments
-      );
-      vertexPipelineJob.labels = {
-        "sdk": "cloud-pipelines-editor",
-        "cloud-pipelines-editor-version": "0-0-1",
-      };
-      vertexPipelineJobJson = JSON.stringify(vertexPipelineJob, undefined, 2);
-      // Prevent infinite re-renders
-      if (compilationError !== "") {
-        setCompilationError("");
-      }
-    } catch (err) {
-      const errorMessage = err.toString();
-      // Prevent infinite re-renders
-      if (errorMessage !== compilationError) {
-        setCompilationError(err.toString());
+  useEffect(() => {
+    if (componentSpec !== undefined) {
+      try {
+        const vertexPipelineJob = buildVertexPipelineJobFromGraphComponent(
+          componentSpec,
+          gcsOutputDirectory,
+          pipelineArguments
+        );
+        setCompilationError(undefined);
+        vertexPipelineJob.labels = {
+          sdk: "cloud-pipelines-editor",
+          "cloud-pipelines-editor-version": "0-0-1",
+        };
+        setVertexPipelineJob(vertexPipelineJob);
+        const vertexPipelineJobJson = JSON.stringify(
+          vertexPipelineJob,
+          undefined,
+          2
+        );
+        const vertexPipelineJsonBlobUrl = URL.createObjectURL(
+          new Blob([vertexPipelineJobJson], { type: "application/json" })
+        );
+        setVertexPipelineJsonBlobUrl(vertexPipelineJsonBlobUrl);
+      } catch (err) {
+        const errorMessage =
+          typeof err === "object" && err instanceof Error
+            ? err.toString()
+            : String(err);
+        setCompilationError(errorMessage);
+        setVertexPipelineJob(undefined);
+        setVertexPipelineJsonBlobUrl(undefined);
       }
     }
-  }
-  //}, [componentSpec, gcsOutputDirectory]);
-
-  const vertexPipelineJobUrl = vertexPipelineJobJson && URL.createObjectURL(
-    new Blob([vertexPipelineJobJson], { type: "application/json" })
-  );
+  }, [componentSpec, pipelineArguments, gcsOutputDirectory]);
 
   const readyToSubmit =
     project !== "" && region !== "" && vertexPipelineJob !== undefined;
@@ -201,7 +212,7 @@ const GoogleCloudSubmitter = ({
         if (vertexPipelineJob === undefined) {
           return;
         }
-        setPipelineJobWebUrl("");
+        setPipelineJobWebUrl(undefined);
         try {
           // setItem might throw exception on iOS in incognito mode
           try {
@@ -217,7 +228,7 @@ const GoogleCloudSubmitter = ({
           const pipelineJobWebUrl = `https://console.cloud.google.com/vertex-ai/locations/${region}/pipelines/runs/${pipelineJobId}?project=${project}`;
           setPipelineJobWebUrl(pipelineJobWebUrl);
           setError("");
-        } catch (err) {
+        } catch (err: any) {
           console.error(err);
           setError(err?.result?.error?.message ?? "Error");
           (window as any).gtag?.("event", "GoogleCloud_submit_pipeline_job", {
@@ -261,7 +272,8 @@ const GoogleCloudSubmitter = ({
                 console.error("GoogleCloudSubmitter: Error writing properties to the localStorage", err);
               }
               (window as any).gtag?.("event", "GoogleCloud_list_projects", { result: "succeeded" });
-            } catch (err) {
+            } catch (err: any) {
+              console.error(err);
               setError(err?.result?.error?.message ?? "Error");
               (window as any).gtag?.("event", "GoogleCloud_list_projects", { result: "failed" });
             }
@@ -311,16 +323,16 @@ const GoogleCloudSubmitter = ({
           disabled={!readyToSubmit}
           value="Submit pipeline job"
         />
-        {pipelineJobWebUrl !== "" && <a href={pipelineJobWebUrl} target="_blank" rel="noreferrer" style={{ margin: "5px" }}>Job</a>}
+        {pipelineJobWebUrl && <a href={pipelineJobWebUrl} target="_blank" rel="noreferrer" style={{ margin: "5px" }}>Job</a>}
       </div>
-      {vertexPipelineJobUrl !== undefined && (
+      {vertexPipelineJsonBlobUrl !== undefined && (
         <div
           style={{
             margin: "5px",
           }}
         >
           Or download the{" "}
-          <a href={vertexPipelineJobUrl} download={"vertex_pipeline_job.json"}>
+          <a href={vertexPipelineJsonBlobUrl} download={"vertex_pipeline_job.json"}>
             pipeline_job.json
           </a>{" "}
           file, then go to{" "}
@@ -334,8 +346,8 @@ const GoogleCloudSubmitter = ({
           .
         </div>
       )}
-      {compilationError !== "" && <div>{compilationError}</div>}
-      {error !== "" && <div>Error: {error}</div>}
+      {compilationError && <div>{compilationError}</div>}
+      {error && <div>Error: {error}</div>}
     </form>
   );
 };
