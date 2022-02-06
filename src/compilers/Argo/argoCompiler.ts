@@ -490,33 +490,34 @@ function buildArgoDagTemplateFromGraphComponentSpec(
       }
       // FIX: !! Need to establish task id->name mappings
       addTaskAndGetId(argoTask, taskId);
-
-      for (const argument of Object.values(
-        argoTask.arguments?.parameters ?? {}
-      )) {
-        const argoInputName = argument.value?.match(
-          /\{\{inputs\.(parameters|artifacts)\.([^}]+)}}/
-        )?.[2];
-        if (argoInputName !== undefined) {
-          // TODO: Input name mapping
-          inputsConsumedAsParameter.add(argoInputName);
-        }
-      }
-      for (const argument of Object.values(
-        argoTask.arguments?.artifacts ?? {}
-      )) {
-        const argoInputName = argument.from?.match(
-          /\{\{inputs\.(parameters|artifacts)\.([^}]+)}}/
-        )?.[2];
-        if (argoInputName !== undefined) {
-          inputsConsumedAsArtifact.add(argoInputName);
-        }
-      }
     } catch (err) {
       if (err instanceof Error) {
         err.message = `Error compiling task ${taskId}: ` + err.message;
       }
       throw err;
+    }
+  }
+
+  // Scanning the compiled tasks to understand how the inputs are consumed.
+  for (const argoTask of Object.values(argoTasks)) {
+    for (const argument of Object.values(
+      argoTask.arguments?.parameters ?? {}
+    )) {
+      const argoInputName = argument.value?.match(
+        /\{\{inputs\.parameters\.([^}]+)}}/
+      )?.[1];
+      if (argoInputName !== undefined) {
+        // TODO: Input name mapping
+        inputsConsumedAsParameter.add(argoInputName);
+      }
+    }
+    for (const argument of Object.values(argoTask.arguments?.artifacts ?? {})) {
+      const argoInputName = argument.from?.match(
+        /\{\{inputs\.artifacts\.([^}]+)}}/
+      )?.[1];
+      if (argoInputName !== undefined) {
+        inputsConsumedAsArtifact.add(argoInputName);
+      }
     }
   }
 
@@ -531,14 +532,14 @@ function buildArgoDagTemplateFromGraphComponentSpec(
   //     `Compiler error: When compiling component "${componentSpec.name}" some inputs are used both as parameter and artifact: "${inputNamesThatAreUsedBothAsParameterAndArtifact}". Please file a bug report.`
   //   );
   // }
-  const inputNamesThatAreParametersButAreConsumedAsArtifacts = Array.from(
-    inputsThatHaveParameterArguments
-  ).filter((x) => inputsConsumedAsArtifact.has(x));
-  if (inputNamesThatAreParametersButAreConsumedAsArtifacts.length > 0) {
-    throw Error(
-      `Compiler error: When compiling component "${componentSpec.name}" some parameter arguments are consumed as artifact: "${inputNamesThatAreParametersButAreConsumedAsArtifacts}". Please file a bug report.`
-    );
-  }
+  // const inputNamesThatAreParametersButAreConsumedAsArtifacts = Array.from(
+  //   inputsThatHaveParameterArguments
+  // ).filter((x) => inputsConsumedAsArtifact.has(x));
+  // if (inputNamesThatAreParametersButAreConsumedAsArtifacts.length > 0) {
+  //   throw Error(
+  //     `Compiler error: When compiling component "${componentSpec.name}" some parameter arguments are consumed as artifact: "${inputNamesThatAreParametersButAreConsumedAsArtifacts}". Please file a bug report.`
+  //   );
+  // }
 
   // We assume that the graphSpec.outputValues has same set of keys as component outputs.
   // However even if there is discrepancy, the graphSpec.outputValues is the "practical" source of truth.
