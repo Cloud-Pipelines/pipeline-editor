@@ -155,22 +155,13 @@ const GoogleCloudSubmitter = ({
   );
   const [pipelineJobWebUrl, setPipelineJobWebUrl] = useState("");
   const [compilationError, setCompilationError] = useState("");
-  const [componentArguments, setComponentArguments] = useState<Record<string, ArgumentType>>({});
+  const [pipelineArguments, setPipelineArguments] = useState<Record<string, ArgumentType>>({});
 
   let vertexPipelineJobJson: string | undefined = undefined;
   let vertexPipelineJob: PipelineJob | undefined = undefined;
 
   //useEffect(() => {
   if (componentSpec !== undefined) {
-    const defaultInputValues = Object.fromEntries(
-      (componentSpec.inputs ?? [])
-        .filter((inputSpec) => inputSpec.default !== undefined)
-        .map((inputSpec) => [inputSpec.name, String(inputSpec.default)])
-    );
-    const pipelineArguments = {
-      ...defaultInputValues,
-      ...componentArguments,
-    };
     const pipelineArgumentMap = new Map(
       Object.entries(pipelineArguments).filter(
         // Type guard predicate
@@ -252,8 +243,8 @@ const GoogleCloudSubmitter = ({
           <legend>Arguments</legend>
           <ArgumentsEditor
             componentSpec={componentSpec}
-            componentArguments={componentArguments}
-            setComponentArguments={setComponentArguments}
+            componentArguments={pipelineArguments}
+            setComponentArguments={setPipelineArguments}
             shrinkToWidth={true}
           />
         </fieldset>

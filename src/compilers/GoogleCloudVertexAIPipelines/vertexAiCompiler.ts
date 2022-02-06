@@ -951,20 +951,31 @@ export const buildVertexPipelineJobFromGraphComponent = (
   const inputParameterDefinitions =
     (pipelineSpec.root.inputDefinitions ?? {}).parameters ?? {};
 
+  // Adding the default values
+  pipelineArguments = pipelineArguments || new Map();
+  const defaultInputValuePairs = (componentSpec.inputs ?? [])
+    .filter((inputSpec) => inputSpec.default !== undefined)
+    .map((inputSpec): [string, string] => [
+      inputSpec.name,
+      String(inputSpec.default),
+    ]);
+  const allPipelineArguments = new Map(
+    defaultInputValuePairs.concat(Array.from(pipelineArguments.entries()))
+  );
+
+  // Converting the pipeline arguments
   let convertedPipelineArguments: Record<string, any> = {};
-  if (pipelineArguments !== undefined) {
-    for (const [key, value] of Array.from(pipelineArguments.entries())) {
-      if (!(key in inputParameterDefinitions)) {
-        console.error(
-          `A pipeline argument was provided for the input "${key}" that does not exist in the pipeline spec.`
-        );
-        continue;
-      }
-      convertedPipelineArguments[key] = stringToMlmdValue(
-        value,
-        inputParameterDefinitions[key].type
+  for (const [key, value] of Array.from(allPipelineArguments.entries())) {
+    if (!(key in inputParameterDefinitions)) {
+      console.error(
+        `A pipeline argument was provided for the input "${key}" that does not exist in the pipeline spec.`
       );
+      continue;
     }
+    convertedPipelineArguments[key] = stringToMlmdValue(
+      value,
+      inputParameterDefinitions[key].type
+    );
   }
 
   const pipelineJob: vertex.PipelineJob = {
