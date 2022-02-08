@@ -117,12 +117,17 @@ const cloudresourcemanagerListProjects = async (isAuthenticated = false) => {
   return response.result;
 }
 
-const aiplatformCreatePipelineJob = async (projectId: string, region='us-central1', pipelineJob: Record<string, any>) => {
+const aiplatformCreatePipelineJob = async (
+  projectId: string,
+  region = "us-central1",
+  pipelineJob: Record<string, any>,
+  pipelineJobId?: string
+) => {
   await ensureGoogleCloudAuthorizesScopes(
     ["https://www.googleapis.com/auth/cloud-platform"]
   );
   const response = await gapi.client.request({
-    path: `https://${region}-aiplatform.googleapis.com/v1beta1/projects/${projectId}/locations/${region}/pipelineJobs`,
+    path: `https://${region}-aiplatform.googleapis.com/v1beta1/projects/${projectId}/locations/${region}/pipelineJobs?pipelineJobId=${pipelineJobId}`,
     method: "POST",
     body: JSON.stringify(pipelineJob),
   });
@@ -222,7 +227,22 @@ const GoogleCloudSubmitter = ({
           } catch(err) {
             console.error("GoogleCloudSubmitter: Error writing properties to the localStorage", err);
           }
-          const result = await aiplatformCreatePipelineJob(project, region, vertexPipelineJob);
+          const displayName = (
+            (componentSpec?.name ?? "Pipeline") +
+            " " +
+            new Date().toISOString().replace("T", " ").replace("Z", "")
+          ).substring(0, 127);
+          const desiredPipelineJobId = displayName
+            .toLowerCase()
+            .replace(/[^-a-z0-9]/g, "-")
+            .replace(/^-+/, ""); // No leading dashes
+          vertexPipelineJob.displayName = displayName;
+          const result = await aiplatformCreatePipelineJob(
+            project,
+            region,
+            vertexPipelineJob,
+            desiredPipelineJobId
+          );
           const pipelineJobName: string = result.name;
           const pipelineJobId = pipelineJobName.split('/').slice(-1)[0];
           const pipelineJobWebUrl = `https://console.cloud.google.com/vertex-ai/locations/${region}/pipelines/runs/${pipelineJobId}?project=${project}`;
