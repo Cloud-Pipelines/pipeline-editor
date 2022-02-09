@@ -131,6 +131,16 @@ const ComponentTaskNode = ({ data }: NodeProps<ComponentTaskNodeProps>) => {
   }
 
   const label = componentSpec.name ?? "<component>";
+  let title = "Task ID: " + data.taskId;
+  if (componentSpec.name) {
+    title += "\nComponent: " + componentSpec.name;
+  }
+  if (taskSpec.componentRef.url) {
+    title += "\nUrl: " + taskSpec.componentRef.url;
+  }
+  if (taskSpec.componentRef.digest) {
+    title += "\nDigest: " + taskSpec.componentRef.digest;
+  }
   const inputsWithInvalidArguments = (componentSpec.inputs ?? [])
     .filter(
       (inputSpec) =>
@@ -152,7 +162,7 @@ const ComponentTaskNode = ({ data }: NodeProps<ComponentTaskNodeProps>) => {
       onDoubleClick={() => {
         setIsArgumentsEditorOpen(!isArgumentsEditorOpen);
       }}
-      title={data.taskId}
+      title={title}
     >
       {label}
       {handleComponents}

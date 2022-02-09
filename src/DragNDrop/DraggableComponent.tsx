@@ -34,6 +34,13 @@ const DraggableComponent = ({
   componentReference,
   ...props
 }: DraggableComponentProps) => {
+  let title = componentReference.spec?.name;
+  if (componentReference.url) {
+    title += "\nUrl: " + componentReference.url;
+  }
+  if (componentReference.digest) {
+    title += "\nDigest: " + componentReference.digest;
+  }
   return (
     <div
       className="react-flow__node react-flow__node-task sidebar-node"
@@ -44,6 +51,7 @@ const DraggableComponent = ({
         };
         return onDragStart(event, { task: taskSpec });
       }}
+      title={title}
       {...props}
     >
       {componentReference.spec?.name ?? "Component"}
