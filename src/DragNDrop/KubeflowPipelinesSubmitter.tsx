@@ -16,10 +16,12 @@ import { ComponentSpec } from "../componentSpec";
 import { ensureGoogleCloudAuthorizesScopes } from "./GoogleCloud";
 
 const LOCAL_STORAGE_ENDPOINT_KEY = "KubeflowPipelinesSubmitter/endpoint";
+const LOCAL_STORAGE_AUTH_TOKEN_KEY = "KubeflowPipelinesSubmitter/auth_token";
 
 const kfpSubmitPipelineRun = async (
-  endpoint: string,
   argoWorkflowSpec: Record<string, any>,
+  endpoint: string,
+  authToken?: string,
   runName?: string
 ) => {
   // https://www.kubeflow.org/docs/components/pipelines/reference/api/kubeflow-pipeline-api-spec/#/definitions/apiRun
@@ -37,15 +39,18 @@ const kfpSubmitPipelineRun = async (
     endpoint = endpoint + "/";
   }
   const apiUrl = endpoint + "apis/v1beta1/runs";
-  // Authenticate the request using Google Cloud
-  const oauthToken = await ensureGoogleCloudAuthorizesScopes([
-    "https://www.googleapis.com/auth/cloud-platform",
-  ]);
+  if (!authToken) {
+    // Auth token not specified. Authenticating the request using Google Cloud
+    const oauthToken = await ensureGoogleCloudAuthorizesScopes([
+      "https://www.googleapis.com/auth/cloud-platform",
+    ]);
+    authToken = oauthToken?.access_token;
+  }
   const response = await fetch(apiUrl, {
     method: "POST",
     body: JSON.stringify(kfpRun),
     headers: new Headers({
-      Authorization: "Bearer " + oauthToken?.access_token,
+      Authorization: "Bearer " + authToken,
     }),
   });
   (window as any).gtag?.(
@@ -90,6 +95,9 @@ const KubeflowPipelinesSubmitter = ({
   );
   const [endpoint, setEndpoint] = useState<string>(
     () => window.localStorage?.getItem(LOCAL_STORAGE_ENDPOINT_KEY) ?? ""
+  );
+  const [authToken, setAuthToken] = useState<string>(
+    () => window.localStorage?.getItem(LOCAL_STORAGE_AUTH_TOKEN_KEY) ?? ""
   );
   const [, setPipelineRunId] = useState<string | undefined>(undefined);
   const [, setWorkflowResourceName] = useState<string | undefined>(undefined);
@@ -149,6 +157,10 @@ const KubeflowPipelinesSubmitter = ({
           // setItem might throw exception on iOS in incognito mode
           try {
             window.localStorage?.setItem(LOCAL_STORAGE_ENDPOINT_KEY, endpoint);
+            window.localStorage?.setItem(
+              LOCAL_STORAGE_AUTH_TOKEN_KEY,
+              authToken
+            );
           } catch (err) {
             console.error(
               "KubeflowPipelinesSubmitter: Error writing properties to the localStorage",
@@ -160,8 +172,9 @@ const KubeflowPipelinesSubmitter = ({
             " " +
             new Date().toISOString().replace("T", " ").replace("Z", "");
           const result = await kfpSubmitPipelineRun(
-            endpoint,
             argoWorkflow,
+            endpoint,
+            authToken,
             runName
           );
           console.debug(result);
@@ -204,7 +217,7 @@ const KubeflowPipelinesSubmitter = ({
           margin: "5px",
         }}
       >
-        <label htmlFor="project">Endpoint: </label>
+        <label htmlFor="Endpoint">Endpoint: </label>
         <input
           id="Endpoint"
           required
@@ -213,6 +226,22 @@ const KubeflowPipelinesSubmitter = ({
           title="https://xxx-dot-us-central2.pipelines.googleusercontent.com/"
           value={endpoint}
           onChange={(e) => setEndpoint(e.target.value)}
+        />
+      </div>
+      <div
+        style={{
+          whiteSpace: "nowrap",
+          margin: "5px",
+        }}
+      >
+        <label htmlFor="Token">Token: </label>
+        <input
+          id="Token"
+          type="text"
+          placeholder="ya29..."
+          title="Authorization Bearer token"
+          value={authToken}
+          onChange={(e) => setAuthToken(e.target.value)}
         />
       </div>
       <div
