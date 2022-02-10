@@ -209,7 +209,8 @@ const KubeflowPipelinesSubmitter = ({
           id="Endpoint"
           required
           type="text"
-          placeholder="https://xxx-dot-us-central2.pipelines.googleusercontent.com/"
+          placeholder="https://xxx.pipelines.googleusercontent.com/"
+          title="https://xxx-dot-us-central2.pipelines.googleusercontent.com/"
           value={endpoint}
           onChange={(e) => setEndpoint(e.target.value)}
         />
