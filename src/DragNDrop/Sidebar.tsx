@@ -6,7 +6,7 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import { DragEvent } from 'react';
+import { DragEvent, useState } from 'react';
 
 import ComponentLibrary from './ComponentLibrary'
 import ComponentSearch from './ComponentSearch'
@@ -17,6 +17,7 @@ import UserComponentLibrary from "./UserComponentLibrary";
 import PipelineLibrary from "./PipelineLibrary";
 import { AppSettings } from '../appSettings';
 import PipelineSubmitter from "./PipelineSubmitter";
+import AppSettingsDialog from './AppSettingsDialog';
 
 const onDragStart = (event: DragEvent, nodeData: object) => {
   event.dataTransfer.setData('application/reactflow', JSON.stringify(nodeData));
@@ -41,6 +42,8 @@ const Sidebar = ({
   setComponentSpec,
   appSettings
 }: SidebarProps) => {
+  const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
+
   // Do not include the DebugScratch in the production build
   let DebugScratchElement = () => null;
   if (process?.env?.NODE_ENV === "development") {
@@ -93,8 +96,24 @@ const Sidebar = ({
           gitHubSearchLocations={appSettings.gitHubSearchLocations}
         />
       </details>
+      {/* Unmounting the dialog control to reset the state when closed. */}
+      {isSettingsDialogOpen && (
+        <AppSettingsDialog
+          isOpen={isSettingsDialogOpen}
+          handleClose={() => {
+            setIsSettingsDialogOpen(false);
+          }}
+        />
+      )}
       <details>
-        <summary>Debug</summary>
+        <summary>Debug and developer tools</summary>
+        <button
+          onClick={(e) => {
+            setIsSettingsDialogOpen(true);
+          }}
+        >
+          Settings
+        </button>
         {componentSpec && <GraphComponentExporter componentSpec={componentSpec}/>}
         {componentSpec && <VertexAiExporter componentSpec={componentSpec}/>}
         <DebugScratchElement/>
