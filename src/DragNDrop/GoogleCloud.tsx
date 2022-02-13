@@ -13,7 +13,6 @@ import { useEffect, useState } from 'react';
 import { ComponentSpec } from '../componentSpec';
 import { buildVertexPipelineJobFromGraphComponent } from '../compilers/GoogleCloudVertexAIPipelines/vertexAiCompiler'
 import { PipelineJob } from '../compilers/GoogleCloudVertexAIPipelines/vertexPipelineSpec';
-import { googleCloudOAuthClientId } from '../appSettings';
 
 const LOCAL_STORAGE_GCS_OUTPUT_DIRECTORY_KEY = "GoogleCloudSubmitter/gcsOutputDirectory";
 const LOCAL_STORAGE_PROJECT_ID_KEY = "GoogleCloudSubmitter/projectId";
@@ -35,9 +34,9 @@ const VERTEX_AI_PIPELINES_REGIONS = [
 const VERTEX_AI_PIPELINES_DEFAULT_REGION = 'us-central1';
 
 const authorizeGoogleCloudClient = async (
+  clientId: string,
   scopes: string[],
   immediate = false, // Setting immediate to true prevents auth window showing every time. But it needs to be false the first time (when cookies are not set).
-  clientId: string = googleCloudOAuthClientId,
 ) => {
   return new Promise<GoogleApiOAuth2TokenObject>(
     (resolve, reject) => {
@@ -78,10 +77,17 @@ const authorizeGoogleCloudClient = async (
   );
 };
 
-export const ensureGoogleCloudAuthorizesScopes = async (scopes: string[]) => {
+export const ensureGoogleCloudAuthorizesScopes = async (
+  googleCloudOAuthClientId: string,
+  scopes: string[]
+) => {
   try {
     // console.debug('Before ensureGoogleCloudAuthorizesScopes(immediate=true)');
-    const oauthToken = await authorizeGoogleCloudClient(scopes, true);
+    const oauthToken = await authorizeGoogleCloudClient(
+      googleCloudOAuthClientId,
+      scopes,
+      true,
+    );
     // console.debug('After ensureGoogleCloudAuthorizesScopes(immediate=true)');
     (window as any).gtag?.("event", "GoogleCloud_auth", {
       result: "succeeded",
@@ -91,7 +97,11 @@ export const ensureGoogleCloudAuthorizesScopes = async (scopes: string[]) => {
   } catch (err) {
     // console.error('ensureGoogleCloudAuthorizesScopes(immediate=true)', err);
     try {
-      const oauthToken = await authorizeGoogleCloudClient(scopes, false);
+      const oauthToken = await authorizeGoogleCloudClient(
+        googleCloudOAuthClientId,
+        scopes,
+        false
+      );
       (window as any).gtag?.("event", "GoogleCloud_auth", {
         result: "succeeded",
         immediate: "false"
@@ -107,8 +117,11 @@ export const ensureGoogleCloudAuthorizesScopes = async (scopes: string[]) => {
   }
 };
 
-const cloudresourcemanagerListProjects = async (isAuthenticated = false) => {
+const cloudresourcemanagerListProjects = async (
+  googleCloudOAuthClientId: string
+) => {
   await ensureGoogleCloudAuthorizesScopes(
+    googleCloudOAuthClientId,
     ["https://www.googleapis.com/auth/cloud-platform"]
   );
   const response = await gapi.client.request({
@@ -121,9 +134,11 @@ const aiplatformCreatePipelineJob = async (
   projectId: string,
   region = "us-central1",
   pipelineJob: Record<string, any>,
-  pipelineJobId?: string
+  googleCloudOAuthClientId: string,
+  pipelineJobId?: string,
 ) => {
   await ensureGoogleCloudAuthorizesScopes(
+    googleCloudOAuthClientId,
     ["https://www.googleapis.com/auth/cloud-platform"]
   );
   const response = await gapi.client.request({
@@ -140,11 +155,13 @@ const aiplatformCreatePipelineJob = async (
 interface GoogleCloudSubmitterProps {
   componentSpec?: ComponentSpec,
   pipelineArguments?: Map<string, string>,
+  googleCloudOAuthClientId: string;
 };
 
 const GoogleCloudSubmitter = ({
   componentSpec,
   pipelineArguments,
+  googleCloudOAuthClientId
 }: GoogleCloudSubmitterProps) => {
   const [projects, setProjects] = useState<string[]>(
     () => JSON.parse(window.localStorage?.getItem(LOCAL_STORAGE_PROJECT_IDS_KEY) ?? "[]")
@@ -241,6 +258,7 @@ const GoogleCloudSubmitter = ({
             project,
             region,
             vertexPipelineJob,
+            googleCloudOAuthClientId,
             desiredPipelineJobId
           );
           const pipelineJobName: string = result.name;
@@ -280,7 +298,9 @@ const GoogleCloudSubmitter = ({
           type="button" // The default button type is "submit", not "button". WTF!?
           onClick={async (e) => {
             try {
-              const result = await cloudresourcemanagerListProjects();
+              const result = await cloudresourcemanagerListProjects(
+                googleCloudOAuthClientId
+              );
               const projectIds = (result.projects as any[]).map<string>(
                 (projectInfo) => projectInfo.projectId
               );

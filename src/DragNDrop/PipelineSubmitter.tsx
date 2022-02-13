@@ -14,9 +14,13 @@ import KubeflowPipelinesSubmitter from "./KubeflowPipelinesSubmitter";
 
 interface PipelineSubmitterProps {
   componentSpec?: ComponentSpec;
+  googleCloudOAuthClientId: string;
 }
 
-const PipelineSubmitter = ({ componentSpec }: PipelineSubmitterProps) => {
+const PipelineSubmitter = ({
+  componentSpec,
+  googleCloudOAuthClientId,
+}: PipelineSubmitterProps) => {
   const [pipelineArguments, setPipelineArguments] = useState<
     Record<string, ArgumentType>
   >({});
@@ -67,7 +71,11 @@ const PipelineSubmitter = ({ componentSpec }: PipelineSubmitterProps) => {
         >
           Submit to Google Cloud
         </summary>
-        <GoogleCloudSubmitter componentSpec={componentSpec} pipelineArguments={stringPipelineArguments} />
+        <GoogleCloudSubmitter
+          componentSpec={componentSpec}
+          pipelineArguments={stringPipelineArguments}
+          googleCloudOAuthClientId={googleCloudOAuthClientId}
+        />
       </details>
       <details
         style={{
@@ -81,7 +89,11 @@ const PipelineSubmitter = ({ componentSpec }: PipelineSubmitterProps) => {
         >
           Submit to Kubeflow Pipelines
         </summary>
-        <KubeflowPipelinesSubmitter componentSpec={componentSpec} pipelineArguments={stringPipelineArguments} />
+        <KubeflowPipelinesSubmitter
+          componentSpec={componentSpec}
+          pipelineArguments={stringPipelineArguments}
+          googleCloudOAuthClientId={googleCloudOAuthClientId}
+        />
       </details>
     </>
   );

@@ -8,7 +8,6 @@
 
 import yaml from "js-yaml";
 import localForage from "localforage";
-import { ComponentSearchConfig } from "./appSettings";
 import { httpGetWithCache } from "./cacheUtils";
 import {
   ComponentSpec,
@@ -440,6 +439,11 @@ const importComponentsFromFeed = async (componentFeedUrl: string) => {
   }
   console.debug("Finished importComponentsFromFeed");
 };
+
+export interface ComponentSearchConfig {
+  ComponentFeedUrls?: string[];
+  GitHubSearchLocations?: string[];
+}
 
 export const refreshComponentDb = async (
   componentSearchConfig: ComponentSearchConfig

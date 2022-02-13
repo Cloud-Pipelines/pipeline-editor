@@ -15,7 +15,7 @@ import VertexAiExporter from './VertexAiExporter'
 import { ComponentSpec } from '../componentSpec';
 import UserComponentLibrary from "./UserComponentLibrary";
 import PipelineLibrary from "./PipelineLibrary";
-import { componentLibraryUrl } from '../appSettings';
+import { AppSettings } from '../appSettings';
 import PipelineSubmitter from "./PipelineSubmitter";
 
 const onDragStart = (event: DragEvent, nodeData: object) => {
@@ -33,11 +33,13 @@ const onDragStart = (event: DragEvent, nodeData: object) => {
 interface SidebarProps {
   componentSpec?: ComponentSpec,
   setComponentSpec?: (componentSpec: ComponentSpec) => void,
+  appSettings: AppSettings;
 }
 
 const Sidebar = ({
   componentSpec,
-  setComponentSpec
+  setComponentSpec,
+  appSettings
 }: SidebarProps) => {
   // Do not include the DebugScratch in the production build
   let DebugScratchElement = () => null;
@@ -56,11 +58,18 @@ const Sidebar = ({
     <aside className="nodeList">
       <details style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>
         <summary style={{ borderWidth: "1px", padding: "4px", fontWeight: "bold" }}>Save/Load pipeline</summary>
-        <PipelineLibrary componentSpec={componentSpec} setComponentSpec={setComponentSpec}/>
+        <PipelineLibrary
+          componentSpec={componentSpec}
+          setComponentSpec={setComponentSpec}
+          samplePipelineLibraryUrl={appSettings.pipelineLibraryUrl}
+        />
       </details>
       <details style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>
         <summary style={{ borderWidth: "1px", padding: "4px", fontWeight: "bold" }}>Run pipeline</summary>
-        <PipelineSubmitter componentSpec={componentSpec}/>
+        <PipelineSubmitter
+          componentSpec={componentSpec}
+          googleCloudOAuthClientId={appSettings.googleCloudOAuthClientId}
+        />
       </details>
       <h3>Drag components to the canvas:</h3>
       <details style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>
@@ -72,14 +81,17 @@ const Sidebar = ({
           Output
         </div>
       </details>
-      <ComponentLibrary url={componentLibraryUrl} />
+      <ComponentLibrary url={appSettings.componentLibraryUrl} />
       <details style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>
         <summary style={{ borderWidth: "1px", padding: "4px", fontWeight: "bold" }}>User components</summary>
         <UserComponentLibrary/>
       </details>
       <details open style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>
         <summary style={{ borderWidth: "1px", padding: "4px", fontWeight: "bold" }}>Component search</summary>
-        <ComponentSearch />
+        <ComponentSearch
+          componentFeedUrls={appSettings.componentFeedUrls}
+          gitHubSearchLocations={appSettings.gitHubSearchLocations}
+        />
       </details>
       <details>
         <summary>Debug</summary>

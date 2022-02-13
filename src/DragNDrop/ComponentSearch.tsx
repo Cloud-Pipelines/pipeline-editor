@@ -15,9 +15,15 @@ import {
 } from "../github";
 import DraggableComponent from "./DraggableComponent";
 
-import { componentSearchConfig } from "../appSettings";
+interface ComponentSearchProps {
+  componentFeedUrls?: string[],
+  gitHubSearchLocations?: string[],
+};
 
-const SearchPanel = (props: any) => {
+const SearchPanel = ({
+  componentFeedUrls,
+  gitHubSearchLocations,
+}: ComponentSearchProps) => {
   const [error, setError] = useState<string | undefined>(undefined);
   const [firstTime, setFirstTime] = useState(true);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -38,7 +44,10 @@ const SearchPanel = (props: any) => {
       } else {
         console.debug("Component DB is empty. Need to populate the DB first.");
       }
-      await refreshComponentDb(componentSearchConfig);
+      await refreshComponentDb({
+        ComponentFeedUrls: componentFeedUrls,
+        GitHubSearchLocations: gitHubSearchLocations,
+      });
       setIsLoaded(true);
       const componentRefs = await searchComponentsByName(query);
       setItems(componentRefs);

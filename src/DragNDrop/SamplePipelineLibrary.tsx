@@ -8,7 +8,6 @@
 
 import yaml from "js-yaml";
 import { useState, useEffect } from "react";
-import { pipelineLibraryUrl } from "../appSettings";
 import { httpGetWithCache } from "../cacheUtils";
 import { ComponentReference, ComponentSpec } from "../componentSpec";
 import {
@@ -48,10 +47,14 @@ function notUndefined<T>(x: T | undefined): x is T {
 }
 
 interface PipelineLibraryProps {
+  pipelineLibraryUrl: string;
   setComponentSpec?: (componentSpec: ComponentSpec) => void;
 }
 
-const SamplePipelineLibrary = ({ setComponentSpec }: PipelineLibraryProps) => {
+const SamplePipelineLibrary = ({
+  pipelineLibraryUrl,
+  setComponentSpec,
+}: PipelineLibraryProps) => {
   const [componentRefs, setComponentRefs] = useState<
     ComponentReferenceWithSpec[]
   >([]);
@@ -80,7 +83,7 @@ const SamplePipelineLibrary = ({ setComponentSpec }: PipelineLibraryProps) => {
         }
       }
     })();
-  }, [componentRefs.length]);
+  }, [pipelineLibraryUrl, componentRefs.length]);
 
   return (
     <div

@@ -22,6 +22,7 @@ const kfpSubmitPipelineRun = async (
   argoWorkflowSpec: Record<string, any>,
   endpoint: string,
   authToken?: string,
+  googleCloudOAuthClientId?: string,
   runName?: string
 ) => {
   // https://www.kubeflow.org/docs/components/pipelines/reference/api/kubeflow-pipeline-api-spec/#/definitions/apiRun
@@ -41,10 +42,13 @@ const kfpSubmitPipelineRun = async (
   const apiUrl = endpoint + "apis/v1beta1/runs";
   if (!authToken) {
     // Auth token not specified. Authenticating the request using Google Cloud
-    const oauthToken = await ensureGoogleCloudAuthorizesScopes([
-      "https://www.googleapis.com/auth/cloud-platform",
-    ]);
-    authToken = oauthToken?.access_token;
+    if (googleCloudOAuthClientId) {
+      const oauthToken = await ensureGoogleCloudAuthorizesScopes(
+        googleCloudOAuthClientId,
+        ["https://www.googleapis.com/auth/cloud-platform"]
+      );
+      authToken = oauthToken?.access_token;
+    }
   }
   const response = await fetch(apiUrl, {
     method: "POST",
@@ -61,11 +65,6 @@ const kfpSubmitPipelineRun = async (
   return response.json();
 };
 
-interface KubeflowPipelinesSubmitterProps {
-  componentSpec?: ComponentSpec;
-  pipelineArguments?: Map<string, string>;
-}
-
 const generateKfpRunUrl = (endpoint: string, runId: string) => {
   //https://xxx-dot-us-central2.pipelines.googleusercontent.com/#/runs/details/<runId>
   if (!endpoint.includes("://")) {
@@ -77,9 +76,16 @@ const generateKfpRunUrl = (endpoint: string, runId: string) => {
   return endpoint + "#/runs/details/" + runId;
 };
 
+interface KubeflowPipelinesSubmitterProps {
+  componentSpec?: ComponentSpec;
+  pipelineArguments?: Map<string, string>;
+  googleCloudOAuthClientId?: string;
+}
+
 const KubeflowPipelinesSubmitter = ({
   componentSpec,
   pipelineArguments,
+  googleCloudOAuthClientId,
 }: KubeflowPipelinesSubmitterProps) => {
   const [argoWorkflow, setArgoWorkflow] = useState<Workflow | undefined>(
     undefined
@@ -175,6 +181,7 @@ const KubeflowPipelinesSubmitter = ({
             argoWorkflow,
             endpoint,
             authToken,
+            googleCloudOAuthClientId,
             runName
           );
           console.debug(result);

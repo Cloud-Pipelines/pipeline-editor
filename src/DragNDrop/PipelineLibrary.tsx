@@ -39,6 +39,7 @@ const USER_PIPELINES_LIST_NAME = "user_pipelines";
 interface PipelineLibraryProps {
   componentSpec?: ComponentSpec;
   setComponentSpec?: (componentSpec: ComponentSpec) => void;
+  samplePipelineLibraryUrl?: string;
 }
 
 const removeSuffixes = (s: string, suffixes: string[]) => {
@@ -192,6 +193,7 @@ const SaveAsDialog = ({
 const PipelineLibrary = ({
   componentSpec,
   setComponentSpec,
+  samplePipelineLibraryUrl,
 }: PipelineLibraryProps) => {
   // const [errorMessage, setErrorMessage] = useState("");
   const [componentFiles, setComponentFiles] = useState(
@@ -466,7 +468,14 @@ const PipelineLibrary = ({
         <summary>
           <strong>Sample pipelines</strong>
         </summary>
-        <SamplePipelineLibrary setComponentSpec={setComponentSpec} />
+        {samplePipelineLibraryUrl === undefined ? (
+          "Sample pipeline library URL is undefined"
+        ) : (
+          <SamplePipelineLibrary
+            setComponentSpec={setComponentSpec}
+            pipelineLibraryUrl={samplePipelineLibraryUrl}
+          />
+        )}
       </details>
     </div>
   );

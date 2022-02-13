@@ -21,7 +21,7 @@ import { ComponentSpec } from '../componentSpec';
 import { componentSpecToYaml } from '../componentStore';
 import GraphComponentSpecFlow, { augmentComponentSpec } from './GraphComponentSpecFlow';
 import Sidebar from './Sidebar';
-import { defaultPipelineUrl } from '../appSettings';
+import { getAppSettings } from '../appSettings';
 import { loadComponentFromUrl } from "./samplePipelines";
 
 import './dnd.css';
@@ -97,6 +97,7 @@ const EMPTY_GRAPH_COMPONENT_SPEC: ComponentSpec = {
 
 const DnDFlow = () => {
   const [componentSpec, setComponentSpec] = useState<ComponentSpec | undefined>();
+  const [appSettings] = useState(getAppSettings());
 
   useEffect(() => {
     (async () => {
@@ -105,6 +106,7 @@ const DnDFlow = () => {
         setComponentSpec(restoredComponentSpec);
         return;
       }
+      const defaultPipelineUrl = appSettings.defaultPipelineUrl;
       try {
         const defaultPipelineSpec = await loadComponentFromUrl(
           defaultPipelineUrl
@@ -118,7 +120,7 @@ const DnDFlow = () => {
         setComponentSpec(EMPTY_GRAPH_COMPONENT_SPEC);
       }
     })();
-  }, []);
+  }, [appSettings.defaultPipelineUrl]);
 
   if (componentSpec === undefined) {
     return (<></>);
@@ -144,6 +146,7 @@ const DnDFlow = () => {
         <Sidebar
           componentSpec={componentSpec}
           setComponentSpec={setComponentSpec}
+          appSettings={appSettings}
         />
         <ComponentSpecAutoSaver componentSpec={componentSpec}/>
       </ReactFlowProvider>
