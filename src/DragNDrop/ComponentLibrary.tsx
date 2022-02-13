@@ -114,16 +114,17 @@ const ComponentLibraryVisFromStruct = ({
         <strong>Component library</strong>
       </summary>
       <div style={{ paddingLeft: "10px" }}>
-        {componentLibraryStruct &&
-          Array.from(componentLibraryStruct.folders).map(
-            (componentFolder, index) => (
-              <SingleFolderVis
-                key={componentFolder.name}
-                folder={componentFolder}
-                isOpen={index === 0}
-              />
-            )
-          )}
+        {componentLibraryStruct === undefined
+          ? "The library is not loaded"
+          : Array.from(componentLibraryStruct.folders).map(
+              (componentFolder, index) => (
+                <SingleFolderVis
+                  key={componentFolder.name}
+                  folder={componentFolder}
+                  isOpen={index === 0}
+                />
+              )
+            )}
       </div>
     </details>
   );
@@ -147,19 +148,24 @@ const loadComponentLibraryStruct = async (url: string) => {
 };
 
 const ComponentLibraryVisFromUrl = ({ url }: { url: string }) => {
-  const [componentLibraryStruct, setComponentLibraryStruct] =
-    useState<ComponentLibraryStruct>();
+  const [componentLibraryStruct, setComponentLibraryStruct] = useState<
+    ComponentLibraryStruct | undefined
+  >();
 
   useEffect(() => {
     if (componentLibraryStruct === undefined) {
       (async () => {
-        const loadedComponentLibrary = await loadComponentLibraryStruct(url);
-        setComponentLibraryStruct(loadedComponentLibrary);
+        try {
+          const loadedComponentLibrary = await loadComponentLibraryStruct(url);
+          setComponentLibraryStruct(loadedComponentLibrary);
+        } catch (err) {
+          console.error(err);
+        }
       })();
     }
   }, [componentLibraryStruct, url]);
 
-  return componentLibraryStruct === undefined ? null : (
+  return (
     <ComponentLibraryVisFromStruct
       componentLibraryStruct={componentLibraryStruct}
     />
