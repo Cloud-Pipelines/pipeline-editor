@@ -71,8 +71,10 @@ const UserComponentLibrary = () => {
           setErrorMessage("");
           refreshComponents();
         } catch (err) {
+          const errorMessage =
+            typeof err === "object" && err ? err.toString() : String(err);
           setErrorMessage(
-            `Error parsing the dropped file as component: ${err.toString()}.`
+            `Error parsing the dropped file as component: ${errorMessage}.`
           );
           console.error("Error parsing the dropped file as component", err);
           (window as any).gtag?.("event", "UserComponents_component_import", {
@@ -101,8 +103,10 @@ const UserComponentLibrary = () => {
         refreshComponents();
         setIsImportComponentDialogOpen(false);
       } catch (err) {
+        const errorMessage =
+          typeof err === "object" && err ? err.toString() : String(err);
         setErrorMessage(
-          `Error parsing the file as component: ${err.toString()}.`
+          `Error parsing the file as component: ${errorMessage}.`
         );
         console.error("Error importing component from the URL", err);
         (window as any).gtag?.(

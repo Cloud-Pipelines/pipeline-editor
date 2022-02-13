@@ -31,7 +31,7 @@ const GraphComponentLink = ({
 
   try {
     componentSpec = augmentComponentSpec(componentSpec, nodes, false, true);
-  } catch (err) {
+  } catch (err: any) {
     if (err?.message?.startsWith("The nodes array does not") !== true) {
       console.error(err);
       return <>err.toString()</>;

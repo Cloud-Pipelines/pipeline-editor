@@ -199,7 +199,9 @@ const importComponentsFromGitHubSearch = async (searchLocations: string[]) => {
         }
         componentSpec = componentSpecObj;
       } catch (err) {
-        badHashesDb.setItem(hash, err.name + ": " + err.message);
+        const errorMessage =
+          typeof err === "object" && err ? err.toString() : String(err);
+        badHashesDb.setItem(hash, errorMessage);
         continue;
       }
       if (componentSpec.implementation === undefined) {
