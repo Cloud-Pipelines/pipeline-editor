@@ -59,21 +59,25 @@ const SamplePipelineLibrary = ({ setComponentSpec }: PipelineLibraryProps) => {
   useEffect(() => {
     (async () => {
       if (componentRefs.length === 0) {
-        const loadedComponentLibrary = await loadPipelineLibraryStruct(
-          pipelineLibraryUrl
-        );
-        const pipelineUrls = loadedComponentLibrary.components
-          .map((componentRef) => componentRef.url)
-          .filter(notUndefined);
-        const loadedComponentRefs = await Promise.all(
-          pipelineUrls.map(async (url) => {
-            const componentRefPlusData = await storeComponentFromUrl(url);
-            const componentRef = componentRefPlusData.componentRef;
-            await preloadComponentReferences(componentRef.spec);
-            return componentRef;
-          })
-        );
-        setComponentRefs(loadedComponentRefs);
+        try {
+          const loadedComponentLibrary = await loadPipelineLibraryStruct(
+            pipelineLibraryUrl
+          );
+          const pipelineUrls = loadedComponentLibrary.components
+            .map((componentRef) => componentRef.url)
+            .filter(notUndefined);
+          const loadedComponentRefs = await Promise.all(
+            pipelineUrls.map(async (url) => {
+              const componentRefPlusData = await storeComponentFromUrl(url);
+              const componentRef = componentRefPlusData.componentRef;
+              await preloadComponentReferences(componentRef.spec);
+              return componentRef;
+            })
+          );
+          setComponentRefs(loadedComponentRefs);
+        } catch (err) {
+          console.error(err);
+        }
       }
     })();
   }, [componentRefs.length]);
