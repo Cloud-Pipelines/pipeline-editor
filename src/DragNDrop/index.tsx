@@ -6,7 +6,7 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ReactFlowProvider,
   Controls,
@@ -87,17 +87,38 @@ const isAppleOS = () =>
   window.navigator.platform.startsWith("iPad") ||
   window.navigator.platform.startsWith("iPod");
 
+const EMPTY_GRAPH_COMPONENT_SPEC: ComponentSpec = {
+  implementation: {
+    graph: {
+      tasks: {},
+    },
+  },
+};
+
 const DnDFlow = () => {
   const [componentSpec, setComponentSpec] = useState<ComponentSpec | undefined>();
 
-  if (componentSpec === undefined) {
-    const restoredComponentSpec = loadComponentSpec();
-    if (restoredComponentSpec === undefined) {
-      loadComponentFromUrl(defaultPipelineUrl).then(setComponentSpec);
-    } else {
-      setComponentSpec(restoredComponentSpec);
-    }
-  };
+  useEffect(() => {
+    (async () => {
+      const restoredComponentSpec = loadComponentSpec();
+      if (restoredComponentSpec !== undefined) {
+        setComponentSpec(restoredComponentSpec);
+        return;
+      }
+      try {
+        const defaultPipelineSpec = await loadComponentFromUrl(
+          defaultPipelineUrl
+        );
+        setComponentSpec(defaultPipelineSpec);
+      } catch (err) {
+        console.error(
+          `Failed to load the default pipeline from ${defaultPipelineUrl}`
+        );
+        console.error(err);
+        setComponentSpec(EMPTY_GRAPH_COMPONENT_SPEC);
+      }
+    })();
+  }, []);
 
   if (componentSpec === undefined) {
     return (<></>);
