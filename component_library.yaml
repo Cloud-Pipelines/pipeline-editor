@@ -9,7 +9,7 @@ folders:
 
   - name: "Datasets"
     components:
-      # - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/d8c4cf5e6403bc65bcf8d606e6baf87e2528a3dc/components/datasets/Chicago_Taxi_Trips/component.yaml"
+      # - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/8dda6ec74d859a0112907fab8bc987a177b9fa4b/components/datasets/Chicago_Taxi_Trips/component.yaml"
       # Has modified default column set. TODO: Perhaps replace with a graph component.
       - url: "https://raw.githubusercontent.com/Ark-kun/pipelines/2463ecda532517462590d75e6e14a8af6b55869a/components/datasets/Chicago_Taxi_Trips/component.yaml"
       # - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/d8c4cf5e6403bc65bcf8d606e6baf87e2528a3dc/components/datasets/HuggingFace/Load_dataset/component.yaml"
@@ -63,6 +63,8 @@ folders:
           - name: Models
             components:
               - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/2c24c0c0730c818b89f676c4dc5c9d6cb90ab01d/components/google-cloud/Vertex_AI/Models/Upload_XGBoost_model/component.yaml"
+              - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/25dc317e649a19a53139a08ccbe496a248693fe4/components/google-cloud/Vertex_AI/Models/Upload_Scikit-learn_pickle_model/component.yaml"
+              - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/719783ef44c04348ea23e247a93021d91cfe602d/components/google-cloud/Vertex_AI/Models/Upload_Tensorflow_model/component.yaml"
               - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/b2cdd60fe93d609111729ef64e79a8b8a2713435/components/google-cloud/Vertex_AI/Models/Deploy_to_endpoint/component.yaml"
               - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/d45e011ad8b62b4fe36c12289a624e5e1573c68d/components/google-cloud/Vertex_AI/Models/Export/to_GCS/component.yaml"
       - name: Storage
@@ -83,6 +85,33 @@ folders:
           #     - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/46b2a4ef4ac530404958839ae397b9fd533cf154/components/google-cloud/AutoML/Tables/Create_dataset/from_GCS/component.yaml"
           #     - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/247a0e0cf55c28b978c7f8e44fcedba356c12e93/components/google-cloud/AutoML/Tables/Create_dataset/from_BigQuery/component.yaml"
           #     - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/d8c4cf5e6403bc65bcf8d606e6baf87e2528a3dc/components/gcp/automl/create_model_for_tables/component.yaml"
+  - name: ML frameworks
+    folders:
+      - name: "Scikit learn"
+        components:
+          - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/f807e02b54d4886c65a05f40848fd51c72407f40/components/ML_frameworks/Scikit_learn/Train_linear_regression_model/from_CSV/component.yaml"
+          - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/cb44b75c9c062fcc40c2b905b2024b4493dbc62b/components/ML_frameworks/Scikit_learn/Train_logistic_regression_model/from_CSV/component.yaml"
+
+      - name: "XGBoost"
+        components:
+          - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/d8c4cf5e6403bc65bcf8d606e6baf87e2528a3dc/components/XGBoost/Train/component.yaml"
+          - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/d8c4cf5e6403bc65bcf8d606e6baf87e2528a3dc/components/XGBoost/Predict/component.yaml"
+
+      - name: "PyTorch"
+        components:
+          - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/d8c4cf5e6403bc65bcf8d606e6baf87e2528a3dc/components/PyTorch/Create_fully_connected_network/component.yaml"
+          - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/d8c4cf5e6403bc65bcf8d606e6baf87e2528a3dc/components/PyTorch/Train_PyTorch_model/from_CSV/component.yaml"
+          - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/d8c4cf5e6403bc65bcf8d606e6baf87e2528a3dc/components/PyTorch/Convert_to_OnnxModel_from_PyTorchScriptModule/component.yaml"
+
+      - name: "Tensorflow"
+        components:
+          - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/6a2467b237cb90f7a51a2ce62d95396810051ebd/components/tensorflow/Create_fully_connected_network/component.yaml"
+
+      - name: "Vowpal_Wabbit"
+        components:
+          - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/a2a629e776d5fa0204ce71370cab23282d3e4278/components/ML_frameworks/Vowpal_Wabbit/Create_JSON_dataset/from_CSV/component.yaml"
+          - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/a2a629e776d5fa0204ce71370cab23282d3e4278/components/ML_frameworks/Vowpal_Wabbit/Train_regression_model/from_VowpalWabbitJsonDataset/component.yaml"
+          - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/a2a629e776d5fa0204ce71370cab23282d3e4278/components/ML_frameworks/Vowpal_Wabbit/Predict/from_VowpalWabbitJsonDataset/component.yaml"
 
   - name: TFX
     components:
