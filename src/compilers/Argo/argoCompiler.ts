@@ -99,16 +99,22 @@ const resolveCommandLine = (
       return [arg];
     } else if ("inputValue" in arg) {
       const inputName = arg.inputValue;
+      // TODO: Replace with proper name mapping to prevent collisions after sanitization.
+      const argoInputName = sanitizeParameterOrArtifactName(inputName);
       // Argo does not support {{inputs.artifacts.${inputName}.value}}, so there is only one way
       inputsConsumedAsParameter.add(inputName);
-      return [`{{inputs.parameters.${inputName}}}`];
+      return [`{{inputs.parameters.${argoInputName}}}`];
     } else if ("inputPath" in arg) {
       const inputName = arg.inputPath;
+      // TODO: Replace with proper name mapping to prevent collisions after sanitization.
+      const argoInputName = sanitizeParameterOrArtifactName(inputName);
       inputsConsumedAsArtifact.add(inputName);
-      return [`{{inputs.artifacts.${inputName}.path}}`];
+      return [`{{inputs.artifacts.${argoInputName}.path}}`];
     } else if ("outputPath" in arg) {
       const outputName = arg.outputPath;
-      return [`{{outputs.artifacts.${outputName}.path}}`];
+      // TODO: Replace with proper name mapping to prevent collisions after sanitization.
+      const argoOutputName = sanitizeParameterOrArtifactName(outputName);
+      return [`{{outputs.artifacts.${argoOutputName}.path}}`];
     } else if ("if" in arg) {
       const [ifCond, ifThen, ifElse] = [arg.if.cond, arg.if.then, arg.if.else];
       // TODO: Check false values, not just check for true
@@ -372,7 +378,8 @@ function buildArgoContainerTemplateFromContainerComponentSpec(
       resolvedCommandLine.inputsConsumedAsParameter.values()
     ).map(
       (inputName): argo.Parameter => ({
-        name: inputName,
+        // TODO: Replace with proper name mapping to prevent collisions after sanitization.
+        name: sanitizeParameterOrArtifactName(inputName),
         // TODO: Enable if needed (after verifying that it works).
         // default: inputMap.get(inputName)?.default,
         // TODO: Enable after verifying the required Argo version.
@@ -383,7 +390,8 @@ function buildArgoContainerTemplateFromContainerComponentSpec(
       resolvedCommandLine.inputsConsumedAsArtifact.values()
     ).map(
       (inputName): argo.Artifact => ({
-        name: inputName,
+        // TODO: Replace with proper name mapping to prevent collisions after sanitization.
+        name: sanitizeParameterOrArtifactName(inputName),
         path: CONTAINER_INPUTS_DIR + "/" + inputName + "/" + IO_FILE_NAME,
         // TODO: Enable this default value feature if needed (after verifying that it works).
         //raw: { data: inputMap.get(inputName)?.default },
@@ -395,7 +403,8 @@ function buildArgoContainerTemplateFromContainerComponentSpec(
     parameters: [],
     artifacts: (componentSpec.outputs ?? []).map(
       (outputSpec): argo.Artifact => ({
-        name: outputSpec.name,
+        // TODO: Replace with proper name mapping to prevent collisions after sanitization.
+        name: sanitizeParameterOrArtifactName(outputSpec.name),
         path:
           CONTAINER_OUTPUTS_DIR + "/" + outputSpec.name + "/" + IO_FILE_NAME,
       })
@@ -427,9 +436,6 @@ function buildArgoDagTemplateFromGraphComponentSpec(
   }
 
   const graphSpec = componentSpec.implementation.graph;
-
-  const inputsConsumedAsParameter = new Set<string>();
-  const inputsConsumedAsArtifact = new Set<string>();
 
   let argoTasks: Record<string, argo.DAGTask> = {};
   const taskStringToTaskId = new Map<string, string>();
@@ -499,6 +505,8 @@ function buildArgoDagTemplateFromGraphComponentSpec(
   }
 
   // Scanning the compiled tasks to understand how the inputs are consumed.
+  const argoInputsConsumedAsParameter = new Set<string>();
+  const argoInputsConsumedAsArtifact = new Set<string>();
   for (const argoTask of Object.values(argoTasks)) {
     for (const argument of Object.values(
       argoTask.arguments?.parameters ?? {}
@@ -508,7 +516,7 @@ function buildArgoDagTemplateFromGraphComponentSpec(
       )?.[1];
       if (argoInputName !== undefined) {
         // TODO: Input name mapping
-        inputsConsumedAsParameter.add(argoInputName);
+        argoInputsConsumedAsParameter.add(argoInputName);
       }
     }
     for (const argument of Object.values(argoTask.arguments?.artifacts ?? {})) {
@@ -516,7 +524,7 @@ function buildArgoDagTemplateFromGraphComponentSpec(
         /\{\{inputs\.artifacts\.([^}]+)}}/
       )?.[1];
       if (argoInputName !== undefined) {
-        inputsConsumedAsArtifact.add(argoInputName);
+        argoInputsConsumedAsArtifact.add(argoInputName);
       }
     }
   }
@@ -560,13 +568,13 @@ function buildArgoDagTemplateFromGraphComponentSpec(
   });
 
   const argoTemplateInputs: argo.Inputs = {
-    parameters: Array.from(inputsConsumedAsParameter.values()).map(
-      (inputName): argo.Parameter => ({
-        name: inputName,
+    parameters: Array.from(argoInputsConsumedAsParameter.values()).map(
+      (argoInputName): argo.Parameter => ({
+        name: argoInputName,
       })
     ),
-    artifacts: Array.from(inputsConsumedAsArtifact.values()).map(
-      (inputName): argo.Artifact => ({ name: inputName })
+    artifacts: Array.from(argoInputsConsumedAsArtifact.values()).map(
+      (argoInputName): argo.Artifact => ({ name: argoInputName })
     ),
   };
 
@@ -656,6 +664,20 @@ const buildArgoDagTaskFromTaskSpec = (
     (componentSpec.inputs ?? []).map((inputSpec) => [inputSpec.name, inputSpec])
   );
 
+  const inputNameToArgoInputName = new Map(
+    Array.from(inputMap.keys()).map((name) => [
+      name,
+      sanitizeParameterOrArtifactName(name),
+    ])
+  );
+
+  const argoInputNameToInputName = new Map(
+    Array.from(inputNameToArgoInputName.entries()).map(([name, argoName]) => [
+      argoName,
+      name,
+    ])
+  );
+
   const argoTemplate: argo.Template = buildArgoTemplateFromComponentSpec(
     componentSpec,
     taskArguments,
@@ -670,27 +692,38 @@ const buildArgoDagTaskFromTaskSpec = (
 
   const argoTaskParameterArguments: argo.Parameter[] = (
     argoTemplate.inputs?.parameters ?? []
-  ).map((parameter) => ({
-    ...buildArgoParameterArgument(
-      taskArguments[parameter.name],
-      assertDefined(inputMap.get(parameter.name)),
-      inputsThatHaveParameterArguments.has(parameter.name),
-      addMakeParameterTaskAndGetParameterArgument
-    ),
-    // buildArgoParameterArgument does not set parameter name, so we set it here.
-    name: parameter.name,
-  }));
+  ).map((parameter) => {
+    const argoInputName = parameter.name;
+    const inputName = assertDefined(
+      argoInputNameToInputName.get(argoInputName)
+    );
+    const inputSpec = assertDefined(inputMap.get(inputName));
+    return {
+      ...buildArgoParameterArgument(
+        taskArguments[inputName],
+        inputSpec,
+        inputsThatHaveParameterArguments.has(inputName),
+        addMakeParameterTaskAndGetParameterArgument
+      ),
+      // buildArgoParameterArgument does not set parameter name, so we set it here.
+      name: argoInputName,
+    };
+  });
 
   const argoTaskArtifactArguments: argo.Artifact[] = (
     argoTemplate.inputs?.artifacts ?? []
-  ).map((artifact) => ({
-    ...buildArgoArtifactArgument(
-      taskArguments[artifact.name],
-      assertDefined(inputMap.get(artifact.name))
-    ),
-    // buildArgoArtifactArgument does not set artifact name, so we set it here.
-    name: artifact.name,
-  }));
+  ).map((artifact) => {
+    const argoInputName = artifact.name;
+    const inputName = assertDefined(
+      argoInputNameToInputName.get(argoInputName)
+    );
+    const inputSpec = assertDefined(inputMap.get(inputName));
+    return {
+      ...buildArgoArtifactArgument(taskArguments[inputName], inputSpec),
+      // buildArgoArtifactArgument does not set artifact name, so we set it here.
+      name: argoInputName,
+    };
+  });
   // We need to scan compiled arguments: The upstream could have been changed to a "convert artifact to parameter" task.
   // So it's better to extract the dependency data from the compiled arguments instead of using the original argument map.
   // const upstreamTaskIds = new Set(
