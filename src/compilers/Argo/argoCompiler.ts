@@ -392,7 +392,13 @@ function buildArgoContainerTemplateFromContainerComponentSpec(
       (inputName): argo.Artifact => ({
         // TODO: Replace with proper name mapping to prevent collisions after sanitization.
         name: sanitizeParameterOrArtifactName(inputName),
-        path: CONTAINER_INPUTS_DIR + "/" + inputName + "/" + IO_FILE_NAME,
+        // Sanitizing the output directory name to prevent potential issues.
+        path:
+          CONTAINER_INPUTS_DIR +
+          "/" +
+          inputName.replaceAll(/[/. ]/g, "_") +
+          "/" +
+          IO_FILE_NAME,
         // TODO: Enable this default value feature if needed (after verifying that it works).
         //raw: { data: inputMap.get(inputName)?.default },
       })
@@ -405,8 +411,14 @@ function buildArgoContainerTemplateFromContainerComponentSpec(
       (outputSpec): argo.Artifact => ({
         // TODO: Replace with proper name mapping to prevent collisions after sanitization.
         name: sanitizeParameterOrArtifactName(outputSpec.name),
+        // I've encountered a bug where Argo fails to capture output from a directory with spaces.
+        // So I'm sanitizing the output directory name.
         path:
-          CONTAINER_OUTPUTS_DIR + "/" + outputSpec.name + "/" + IO_FILE_NAME,
+          CONTAINER_OUTPUTS_DIR +
+          "/" +
+          outputSpec.name.replaceAll(/[/. ]/g, "_") +
+          "/" +
+          IO_FILE_NAME,
       })
     ),
   };
