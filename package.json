@@ -2,6 +2,25 @@
   "name": "pipeline-editor",
   "homepage": "https://cloud-pipelines.net/pipeline-editor",
   "version": "0.1.0",
+  "description": "Cloud Pipelines Editor is a web app that allows the users to build and run Machine Learning pipelines using drag and drop without having to set up development environment.",
+  "keywords": [
+    "ML",
+    "AI",
+    "Machine Learning",
+    "pipelines",
+    "containers",
+    "cloud",
+    "Kubernetes",
+    "MLOps"
+  ],
+  "bugs": "https://github.com/Cloud-Pipelines/pipeline-editor/issues",
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Alexey Volkov",
+    "email": "alexey.volkov+oss@ark-kun.com",
+    "url": "http://ark-kun.com/"
+  },
+  "repository": "github:Cloud-Pipelines/pipeline-editor",
   "private": true,
   "dependencies": {
     "@material-ui/core": "^4.12.2",
