@@ -50,12 +50,12 @@ function generateHandles(
         : { top: positionPercentString };
     // TODO: Handle complex type specs
     const ioTypeName = ioSpec.type?.toString() ?? "Any";
-    let classNames = [`handle_${idPrefix}${ioTypeName}`.replace(" ", "_")];
+    let classNames = [`handle_${idPrefix}${ioTypeName}`.replace(/ /g, "_")];
     const isInvalid = (inputsWithMissingArguments ?? []).includes(ioSpec.name);
     if (isInvalid) {
       classNames.push(MISSING_ARGUMENT_CLASS_NAME);
     }
-    classNames = classNames.map((className) => className.replace(" ", "_"));
+    classNames = classNames.map((className) => className.replace(/ /g, "_"));
 
     const [labelClasses, labelStyle] = generateLabelStyle(position, numHandles);
     handleComponents.push(
