@@ -452,6 +452,9 @@ function buildArgoDagTemplateFromGraphComponentSpec(
   let argoTasks: Record<string, argo.DAGTask> = {};
   const taskStringToTaskId = new Map<string, string>();
 
+  // Only used in addMakeParameterTaskAndGetParameterArgument
+  // We probably should not de-duplicate any user tasks (some components might be volatile).
+  // TODO: Refactor away this code.
   const addTaskAndGetId = (task: argo.DAGTask, namePrefix: string = "Task") => {
     // Erasing the name, so that the structure can be used for lookup.
     // We will generate the ID in this function and set name to it.
@@ -506,8 +509,12 @@ function buildArgoDagTemplateFromGraphComponentSpec(
           `Task ID "${taskId}" is not unique. This cannot happen (unless user task ID clashes with special task ID).`
         );
       }
-      // FIX: !! Need to establish task id->name mappings
-      addTaskAndGetId(argoTask, taskId);
+      // FIX: Need to establish task id->name mappings
+      // We should establish the mapping before processing any tasks and then pass it to buildArgoDagTaskFromTaskSpec calls.
+      // Without prior mapping, de-duplicating tasks breaks task output references.
+      const argoTaskId = sanitizeID(taskId);
+      argoTask.name = argoTaskId;
+      argoTasks[argoTaskId] = argoTask;
     } catch (err) {
       if (err instanceof Error) {
         err.message = `Error compiling task ${taskId}: ` + err.message;
