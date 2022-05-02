@@ -41,17 +41,6 @@ folders:
       - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/6210648f30b2b3a8c01cc10be338da98300efb6b/components/google-cloud/storage/upload_to_explicit_uri/component.yaml"
       - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/cca2d8569d01b527df10c629258be04d52eacc43/components/Download_and_upload/IPFS/Download/component.yaml"
 
-  - name: "XGBoost"
-    components:
-      - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/d8c4cf5e6403bc65bcf8d606e6baf87e2528a3dc/components/XGBoost/Train/component.yaml"
-      - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/d8c4cf5e6403bc65bcf8d606e6baf87e2528a3dc/components/XGBoost/Predict/component.yaml"
-
-  - name: "PyTorch"
-    components:
-      - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/d8c4cf5e6403bc65bcf8d606e6baf87e2528a3dc/components/PyTorch/Create_fully_connected_network/component.yaml"
-      - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/d8c4cf5e6403bc65bcf8d606e6baf87e2528a3dc/components/PyTorch/Train_PyTorch_model/from_CSV/component.yaml"
-      - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/d8c4cf5e6403bc65bcf8d606e6baf87e2528a3dc/components/PyTorch/Convert_to_OnnxModel_from_PyTorchScriptModule/component.yaml"
-
   - name: "Google Cloud"
     folders:
       - name: Vertex AI
@@ -126,12 +115,12 @@ folders:
           - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/a2a629e776d5fa0204ce71370cab23282d3e4278/components/ML_frameworks/Vowpal_Wabbit/Train_regression_model/from_VowpalWabbitJsonDataset/component.yaml"
           - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/a2a629e776d5fa0204ce71370cab23282d3e4278/components/ML_frameworks/Vowpal_Wabbit/Predict/from_VowpalWabbitJsonDataset/component.yaml"
 
-  - name: TFX
-    components:
-      - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/d8c4cf5e6403bc65bcf8d606e6baf87e2528a3dc/components/deprecated/tfx/ExampleGen/CsvExampleGen/component.yaml"
-      - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/d8c4cf5e6403bc65bcf8d606e6baf87e2528a3dc/components/deprecated/tfx/StatisticsGen/component.yaml"
-      - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/d8c4cf5e6403bc65bcf8d606e6baf87e2528a3dc/components/deprecated/tfx/SchemaGen/component.yaml"
-      - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/d8c4cf5e6403bc65bcf8d606e6baf87e2528a3dc/components/deprecated/tfx/ExampleValidator/component.yaml"
-      - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/d8c4cf5e6403bc65bcf8d606e6baf87e2528a3dc/components/deprecated/tfx/Transform/component.yaml"
-      - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/d8c4cf5e6403bc65bcf8d606e6baf87e2528a3dc/components/deprecated/tfx/Trainer/component.yaml"
-      - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/d8c4cf5e6403bc65bcf8d606e6baf87e2528a3dc/components/deprecated/tfx/Evaluator/component.yaml"
+      - name: TFX
+        components:
+          - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/d8c4cf5e6403bc65bcf8d606e6baf87e2528a3dc/components/deprecated/tfx/ExampleGen/CsvExampleGen/component.yaml"
+          - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/d8c4cf5e6403bc65bcf8d606e6baf87e2528a3dc/components/deprecated/tfx/StatisticsGen/component.yaml"
+          - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/d8c4cf5e6403bc65bcf8d606e6baf87e2528a3dc/components/deprecated/tfx/SchemaGen/component.yaml"
+          - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/d8c4cf5e6403bc65bcf8d606e6baf87e2528a3dc/components/deprecated/tfx/ExampleValidator/component.yaml"
+          - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/d8c4cf5e6403bc65bcf8d606e6baf87e2528a3dc/components/deprecated/tfx/Transform/component.yaml"
+          - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/d8c4cf5e6403bc65bcf8d606e6baf87e2528a3dc/components/deprecated/tfx/Trainer/component.yaml"
+          - url: "https://raw.githubusercontent.com/Ark-kun/pipeline_components/d8c4cf5e6403bc65bcf8d606e6baf87e2528a3dc/components/deprecated/tfx/Evaluator/component.yaml"
