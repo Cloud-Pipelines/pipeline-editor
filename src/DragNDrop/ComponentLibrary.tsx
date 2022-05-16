@@ -131,9 +131,8 @@ const ComponentLibraryVisFromStruct = ({
 };
 
 const loadComponentLibraryStruct = async (url: string) => {
-  const response = await httpGetWithCache(url, "cache", true);
-  const data = await response.arrayBuffer();
-  const componentLibrary = yaml.load(new TextDecoder().decode(data));
+  const libraryText = await httpGetWithCache(url, "cache", true);
+  const componentLibrary = yaml.load(libraryText);
   if (typeof componentLibrary !== "object" || componentLibrary === null) {
     throw Error(
       `Component library data is not a YAML-encoded object: ${componentLibrary}`

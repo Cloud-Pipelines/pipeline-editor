@@ -10,19 +10,19 @@ export const httpGetWithCache = async (
   urlOrRequest: string | RequestInfo,
   cacheName: string,
   updateIfInCache: boolean = false
-): Promise<Response> => {
+): Promise<string> => {
   const cache = await caches.open(cacheName);
   const response = await cache.match(urlOrRequest);
   if (response !== undefined) {
     if (updateIfInCache) {
       cache.add(urlOrRequest);
     }
-    return response;
+    return response.text();
   }
   await cache.add(urlOrRequest);
   const response2 = await cache.match(urlOrRequest);
   if (response2 === undefined) {
     return Promise.reject("Added object to cache, but could not find it");
   }
-  return response2;
+  return response2.text();
 };

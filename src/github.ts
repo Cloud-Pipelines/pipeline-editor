@@ -42,8 +42,8 @@ const getSingleGitHubCodeSearchPageWithCache = async (
   const encodedSort = encodeURIComponent(sort);
   const encodedOrder = encodeURIComponent(order);
   const searchUrl = `https://api.github.com/search/code?q=${encodedQuery}&sort=${encodedSort}&order=${encodedOrder}&per_page=100&page=${page}`;
-  const response = await httpGetWithCache(searchUrl, SEARCH_CACHE_NAME, true);
-  return response.json();
+  const responseText = await httpGetWithCache(searchUrl, SEARCH_CACHE_NAME, true);
+  return JSON.parse(responseText);
 };
 
 const githubHtmlUrlToDownloadUrl = (htmlUrl: string): string => {
@@ -93,9 +93,8 @@ async function* searchComponentsOnGitHubToGetUrlsAndHashes(
 }
 
 export const downloadComponentDataWithCache = async (url: string) => {
-  const response = await httpGetWithCache(url, BLOB_CACHE_NAME);
-  const data = await response.blob();
-  const componentText = await data.text();
+  // FIX?: This does not update if in cache
+  const componentText = await httpGetWithCache(url, BLOB_CACHE_NAME);
   const componentSpecObj = yaml.load(componentText);
   if (typeof componentSpecObj !== "object" || componentSpecObj === null) {
     throw Error(
@@ -180,12 +179,10 @@ const importComponentsFromGitHubSearch = async (searchLocations: string[]) => {
       }
 
       console.debug(`Processing new component candidate: ${downloadUrl}.`);
-      const response = await httpGetWithCache(downloadUrl, BLOB_CACHE_NAME);
       let componentSpec: ComponentSpec;
       let componentText: string;
       try {
-        const data = await response.blob();
-        componentText = await data.text();
+        componentText = await httpGetWithCache(downloadUrl, BLOB_CACHE_NAME);
         const componentSpecObj = yaml.load(componentText);
         if (typeof componentSpecObj !== "object" || componentSpecObj === null) {
           throw Error(
@@ -380,10 +377,8 @@ const importComponentsFromFeed = async (componentFeedUrl: string) => {
       console.debug(`Processing new component candidate: ${downloadUrl}.`);
       let componentText = item.data;
       if (componentText === undefined) {
-        const response = await httpGetWithCache(downloadUrl, BLOB_CACHE_NAME);
         try {
-          const data = await response.blob();
-          componentText = await data.text();
+          componentText = await httpGetWithCache(downloadUrl, BLOB_CACHE_NAME)
         } catch (err) {
           const error_message =
             err instanceof Error ? err.name + ": " + err.message : String(err);

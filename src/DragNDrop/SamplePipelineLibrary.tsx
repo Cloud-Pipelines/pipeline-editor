@@ -28,9 +28,8 @@ const isValidPipelineLibraryStruct = (
 ): obj is PipelineLibraryStruct => "components" in obj;
 
 const loadPipelineLibraryStruct = async (url: string) => {
-  const response = await httpGetWithCache(url, "cache", true);
-  const data = await response.arrayBuffer();
-  const pipelineLibrary = yaml.load(new TextDecoder().decode(data));
+  const libraryText = await httpGetWithCache(url, "cache", true);
+  const pipelineLibrary = yaml.load(libraryText);
   if (typeof pipelineLibrary !== "object" || pipelineLibrary === null) {
     throw Error(
       `Component library data is not a YAML-encoded object: ${pipelineLibrary}`
