@@ -8,11 +8,11 @@
 
 import yaml from "js-yaml";
 import { useEffect, useState } from "react";
+import { downloadTextWithCache } from "../cacheUtils";
 
-import { downloadComponentDataWithCache } from "../github";
-import { httpGetWithCache } from "../cacheUtils";
 import { ComponentReference, ComponentSpec } from "../componentSpec";
 import DraggableComponent from "./DraggableComponent";
+import { loadComponentFromUrl } from "./samplePipelines";
 
 type ComponentLibraryFolder = {
   name: string;
@@ -31,14 +31,23 @@ export const isValidComponentLibraryStruct = (
   obj: object
 ): obj is ComponentLibraryStruct => "folders" in obj;
 
-const DraggableComponentRow = ({ componentUrl }: { componentUrl: string }) => {
+interface DraggableComponentRowProps {
+  componentUrl: string;
+  downloadText: (url: string) => Promise<string>;
+}
+
+const DraggableComponentRow = ({
+  componentUrl,
+  downloadText = downloadTextWithCache,
+}: DraggableComponentRowProps) => {
   const [componentSpec, setComponentSpec] = useState<ComponentSpec | undefined>(
     undefined
   );
   useEffect(() => {
     // TODO: Validate the component
-    downloadComponentDataWithCache(componentUrl).then(setComponentSpec);
-  }, [componentUrl]);
+    // Loading the component (preloading the graph component children as well).
+    loadComponentFromUrl(componentUrl, downloadText).then(setComponentSpec);
+  }, [componentUrl, downloadText]);
 
   if (componentSpec === undefined) {
     return <div>Loading...</div>;
@@ -57,9 +66,11 @@ const DraggableComponentRow = ({ componentUrl }: { componentUrl: string }) => {
 const SingleFolderVis = ({
   folder,
   isOpen = false,
+  downloadText = downloadTextWithCache
 }: {
   folder: ComponentLibraryFolder;
   isOpen?: boolean;
+  downloadText: (url: string) => Promise<string>;
 }) => {
   return (
     <details
@@ -81,6 +92,7 @@ const SingleFolderVis = ({
             key={componentFolder.name}
             folder={componentFolder}
             isOpen={isOpen && index === 0}
+            downloadText={downloadText}
           />
         ))}
       {folder.components &&
@@ -90,6 +102,7 @@ const SingleFolderVis = ({
               <DraggableComponentRow
                 key={componentReference.url}
                 componentUrl={componentReference.url}
+                downloadText={downloadText}
               />
             )
         )}
@@ -99,8 +112,10 @@ const SingleFolderVis = ({
 
 const ComponentLibraryVisFromStruct = ({
   componentLibraryStruct,
+  downloadText = downloadTextWithCache
 }: {
   componentLibraryStruct?: ComponentLibraryStruct;
+  downloadText: (url: string) => Promise<string>;
 }) => {
   return (
     <details open>
@@ -122,6 +137,7 @@ const ComponentLibraryVisFromStruct = ({
                   key={componentFolder.name}
                   folder={componentFolder}
                   isOpen={index === 0}
+                  downloadText={downloadText}
                 />
               )
             )}
@@ -130,8 +146,11 @@ const ComponentLibraryVisFromStruct = ({
   );
 };
 
-const loadComponentLibraryStruct = async (url: string) => {
-  const libraryText = await httpGetWithCache(url, "cache", true);
+const loadComponentLibraryStruct = async (
+  url: string,
+  downloadText: (url: string) => Promise<string> = downloadTextWithCache
+) => {
+  const libraryText = await downloadText(url);
   const componentLibrary = yaml.load(libraryText);
   if (typeof componentLibrary !== "object" || componentLibrary === null) {
     throw Error(
@@ -146,7 +165,15 @@ const loadComponentLibraryStruct = async (url: string) => {
   return componentLibrary;
 };
 
-const ComponentLibraryVisFromUrl = ({ url }: { url: string }) => {
+interface ComponentLibraryVisFromUrlProps {
+  url: string;
+  downloadText: (url: string) => Promise<string>;
+}
+
+const ComponentLibraryVisFromUrl = ({
+  url,
+  downloadText = downloadTextWithCache,
+}: ComponentLibraryVisFromUrlProps) => {
   const [componentLibraryStruct, setComponentLibraryStruct] = useState<
     ComponentLibraryStruct | undefined
   >();
@@ -155,18 +182,22 @@ const ComponentLibraryVisFromUrl = ({ url }: { url: string }) => {
     if (componentLibraryStruct === undefined) {
       (async () => {
         try {
-          const loadedComponentLibrary = await loadComponentLibraryStruct(url);
+          const loadedComponentLibrary = await loadComponentLibraryStruct(
+            url,
+            downloadText
+          );
           setComponentLibraryStruct(loadedComponentLibrary);
         } catch (err) {
           console.error(err);
         }
       })();
     }
-  }, [componentLibraryStruct, url]);
+  }, [componentLibraryStruct, url, downloadText]);
 
   return (
     <ComponentLibraryVisFromStruct
       componentLibraryStruct={componentLibraryStruct}
+      downloadText={downloadText}
     />
   );
 };

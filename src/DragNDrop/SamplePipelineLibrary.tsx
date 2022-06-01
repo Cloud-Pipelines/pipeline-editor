@@ -8,7 +8,7 @@
 
 import yaml from "js-yaml";
 import { useState, useEffect } from "react";
-import { httpGetWithCache } from "../cacheUtils";
+import { downloadTextWithCache } from "../cacheUtils";
 import { ComponentReference, ComponentSpec } from "../componentSpec";
 import {
   storeComponentFromUrl,
@@ -27,8 +27,11 @@ const isValidPipelineLibraryStruct = (
   obj: object
 ): obj is PipelineLibraryStruct => "components" in obj;
 
-const loadPipelineLibraryStruct = async (url: string) => {
-  const libraryText = await httpGetWithCache(url, "cache", true);
+const loadPipelineLibraryStruct = async (
+  url: string,
+  downloadText: (url: string) => Promise<string> = downloadTextWithCache,
+) => {
+  const libraryText = await downloadText(url);
   const pipelineLibrary = yaml.load(libraryText);
   if (typeof pipelineLibrary !== "object" || pipelineLibrary === null) {
     throw Error(
@@ -48,11 +51,13 @@ function notUndefined<T>(x: T | undefined): x is T {
 interface PipelineLibraryProps {
   pipelineLibraryUrl: string;
   setComponentSpec?: (componentSpec: ComponentSpec) => void;
+  downloadText: (url: string) => Promise<string>;
 }
 
 const SamplePipelineLibrary = ({
   pipelineLibraryUrl,
   setComponentSpec,
+  downloadText = downloadTextWithCache
 }: PipelineLibraryProps) => {
   const [componentRefs, setComponentRefs] = useState<
     ComponentReferenceWithSpec[]
@@ -63,16 +68,18 @@ const SamplePipelineLibrary = ({
       if (componentRefs.length === 0) {
         try {
           const loadedComponentLibrary = await loadPipelineLibraryStruct(
-            pipelineLibraryUrl
+            pipelineLibraryUrl,
+            downloadText
           );
           const pipelineUrls = loadedComponentLibrary.components
             .map((componentRef) => componentRef.url)
             .filter(notUndefined);
           const loadedComponentRefs = await Promise.all(
             pipelineUrls.map(async (url) => {
+              // ?!!
               const componentRefPlusData = await storeComponentFromUrl(url);
               const componentRef = componentRefPlusData.componentRef;
-              await preloadComponentReferences(componentRef.spec);
+              await preloadComponentReferences(componentRef.spec, downloadText);
               return componentRef;
             })
           );
@@ -82,7 +89,7 @@ const SamplePipelineLibrary = ({
         }
       }
     })();
-  }, [pipelineLibraryUrl, componentRefs.length]);
+  }, [pipelineLibraryUrl, downloadText, componentRefs.length]);
 
   return (
     <div

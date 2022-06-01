@@ -17,6 +17,7 @@ import {
 } from 'react-flow-renderer';
 import yaml from "js-yaml";
 
+import { downloadTextWithCache } from '../cacheUtils';
 import { ComponentSpec } from '../componentSpec';
 import { componentSpecToYaml } from '../componentStore';
 import GraphComponentSpecFlow, { augmentComponentSpec } from './GraphComponentSpecFlow';
@@ -99,6 +100,8 @@ const DnDFlow = () => {
   const [componentSpec, setComponentSpec] = useState<ComponentSpec | undefined>();
   const [appSettings] = useState(getAppSettings());
 
+  const downloadText = downloadTextWithCache;
+
   useEffect(() => {
     (async () => {
       const restoredComponentSpec = loadComponentSpec();
@@ -109,7 +112,8 @@ const DnDFlow = () => {
       const defaultPipelineUrl = appSettings.defaultPipelineUrl;
       try {
         const defaultPipelineSpec = await loadComponentFromUrl(
-          defaultPipelineUrl
+          defaultPipelineUrl,
+          downloadText
         );
         setComponentSpec(defaultPipelineSpec);
       } catch (err) {
@@ -120,10 +124,10 @@ const DnDFlow = () => {
         setComponentSpec(EMPTY_GRAPH_COMPONENT_SPEC);
       }
     })();
-  }, [appSettings.defaultPipelineUrl]);
+  }, [appSettings.defaultPipelineUrl, downloadText]);
 
   if (componentSpec === undefined) {
-    return (<></>);
+    return <></>;
   }
 
   return (
@@ -147,6 +151,7 @@ const DnDFlow = () => {
           componentSpec={componentSpec}
           setComponentSpec={setComponentSpec}
           appSettings={appSettings}
+          downloadText={downloadText}
         />
         <ComponentSpecAutoSaver componentSpec={componentSpec}/>
       </ReactFlowProvider>

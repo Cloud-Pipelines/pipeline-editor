@@ -6,11 +6,13 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
+import { downloadTextWithCache } from "../cacheUtils";
 import { ComponentSpec } from "../componentSpec";
 import { downloadComponentDataWithCache } from "../github";
 
-const preloadComponentReferences = async (
+export const preloadComponentReferences = async (
   componentSpec: ComponentSpec,
+  downloadText: (url: string) => Promise<string> = downloadTextWithCache,
   componentMap?: Map<string, ComponentSpec>
 ) => {
   // This map is needed to improve efficiency and handle recursive components.
@@ -29,27 +31,34 @@ const preloadComponentReferences = async (
         let taskComponentSpec = componentMap.get(componentUrl);
         if (taskComponentSpec === undefined) {
           taskComponentSpec = await downloadComponentDataWithCache(
-            componentUrl
+            componentUrl,
+            downloadText
           );
           componentMap.set(componentUrl, taskComponentSpec);
         }
         taskSpec.componentRef.spec = taskComponentSpec;
-        await preloadComponentReferences(taskComponentSpec, componentMap);
+        await preloadComponentReferences(
+          taskComponentSpec,
+          downloadText,
+          componentMap,
+        );
       }
     }
   }
   return componentSpec;
 };
 
-const loadComponentFromUrl = async (
+export const loadComponentFromUrl = async (
   url: string,
-  preloadChildComponentSpecs = true
+  downloadText: (url: string) => Promise<string> = downloadTextWithCache,
+  preloadChildComponentSpecs = true,
 ) => {
-  let componentSpec = await downloadComponentDataWithCache(url);
+  let componentSpec = await downloadComponentDataWithCache(url, downloadText);
   if (preloadChildComponentSpecs) {
-    componentSpec = await preloadComponentReferences(componentSpec);
+    componentSpec = await preloadComponentReferences(
+      componentSpec,
+      downloadText
+    );
   }
   return componentSpec;
 };
-
-export { loadComponentFromUrl, preloadComponentReferences };

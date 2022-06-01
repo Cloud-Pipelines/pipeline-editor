@@ -7,6 +7,7 @@
  */
 
 import { useState } from "react";
+import { downloadTextWithCache } from "../cacheUtils";
 import { ComponentReference } from "../componentSpec";
 import {
   isComponentDbEmpty,
@@ -18,11 +19,13 @@ import DraggableComponent from "./DraggableComponent";
 interface ComponentSearchProps {
   componentFeedUrls?: string[],
   gitHubSearchLocations?: string[],
-};
+  downloadText: (url: string) => Promise<string>;
+}
 
 const SearchPanel = ({
   componentFeedUrls,
   gitHubSearchLocations,
+  downloadText = downloadTextWithCache,
 }: ComponentSearchProps) => {
   const [error, setError] = useState<string | undefined>(undefined);
   const [firstTime, setFirstTime] = useState(true);
@@ -34,7 +37,9 @@ const SearchPanel = ({
     setQuery(e.target.value);
   };
 
-  async function fetchData(query: string) {
+  async function fetchData(
+    query: string,
+  ) {
     // If the DB is populated, return results immediately, then refresh the DB and update the results.
     try {
       if (!(await isComponentDbEmpty())) {
@@ -44,10 +49,13 @@ const SearchPanel = ({
       } else {
         console.debug("Component DB is empty. Need to populate the DB first.");
       }
-      await refreshComponentDb({
-        ComponentFeedUrls: componentFeedUrls,
-        GitHubSearchLocations: gitHubSearchLocations,
-      });
+      await refreshComponentDb(
+        {
+          ComponentFeedUrls: componentFeedUrls,
+          GitHubSearchLocations: gitHubSearchLocations,
+        },
+        downloadText
+      );
       setIsLoaded(true);
       const componentRefs = await searchComponentsByName(query);
       setItems(componentRefs);

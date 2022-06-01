@@ -8,7 +8,7 @@
 
 import yaml from "js-yaml";
 import localForage from "localforage";
-import { httpGetWithCache } from "./cacheUtils";
+import { downloadText as defaultDownloadText, downloadTextWithCache } from "./cacheUtils";
 import {
   ComponentSpec,
   ComponentReference,
@@ -18,8 +18,6 @@ import { preloadComponentReferences } from "./DragNDrop/samplePipelines";
 
 // const COMPONENT_FILE_NAME_SUFFIX = "component.yaml";
 // const COMPONENT_FILE_MAX_SIZE = 100000;
-const SEARCH_CACHE_NAME = "https://api.github.com/search";
-const BLOB_CACHE_NAME = "raw.githubusercontent.com/.../component.yaml";
 
 // IndexedDB: DB and table names
 const DB_NAME = "components";
@@ -31,18 +29,19 @@ const URL_PROCESSING_VERSION_TABLE_NAME = "url_version";
 const CURRENT_URL_PROCESSING_VERSION = 1;
 const BAD_HASHES_TABLE_NAME = "bad_hashes";
 
-const getSingleGitHubCodeSearchPageWithCache = async (
+const getSingleGitHubCodeSearchPage = async (
   query: string,
   page = 1,
   sort = "indexed",
-  order = "desc"
+  order = "desc",
+  downloadText: (url: string) => Promise<string> = defaultDownloadText
 ): Promise<any> => {
   // TODO: Paging
   const encodedQuery = encodeURIComponent(query);
   const encodedSort = encodeURIComponent(sort);
   const encodedOrder = encodeURIComponent(order);
   const searchUrl = `https://api.github.com/search/code?q=${encodedQuery}&sort=${encodedSort}&order=${encodedOrder}&per_page=100&page=${page}`;
-  const responseText = await httpGetWithCache(searchUrl, SEARCH_CACHE_NAME, true);
+  const responseText = await downloadText(searchUrl);
   return JSON.parse(responseText);
 };
 
@@ -68,7 +67,7 @@ async function* searchComponentsOnGitHubToGetUrlsAndHashes(
   const queryParts = ["filename:component.yaml"].concat(searchLocations);
   const query = queryParts.join(" ");
   for (let page = 1; page < 100; page++) {
-    const searchResults = await getSingleGitHubCodeSearchPageWithCache(
+    const searchResults = await getSingleGitHubCodeSearchPage(
       query,
       page
     );
@@ -92,9 +91,13 @@ async function* searchComponentsOnGitHubToGetUrlsAndHashes(
   return urlsAndHashes;
 }
 
-export const downloadComponentDataWithCache = async (url: string) => {
+// TODO: Either use this function more or remove it.
+export const downloadComponentDataWithCache = async (
+  url: string,
+  downloadText: (url: string) => Promise<string> = downloadTextWithCache,
+) => {
   // FIX?: This does not update if in cache
-  const componentText = await httpGetWithCache(url, BLOB_CACHE_NAME);
+  const componentText = await downloadText(url);
   const componentSpecObj = yaml.load(componentText);
   if (typeof componentSpecObj !== "object" || componentSpecObj === null) {
     throw Error(
@@ -110,7 +113,31 @@ export const downloadComponentDataWithCache = async (url: string) => {
   return componentSpec;
 };
 
-const importComponentsFromGitHubSearch = async (searchLocations: string[]) => {
+
+export const downloadComponentTextAndSpec = async (
+  url: string,
+  downloadText: (url: string) => Promise<string> = downloadTextWithCache
+) => {
+  const componentText = await downloadText(url);
+  const componentSpecObj = yaml.load(componentText);
+  if (typeof componentSpecObj !== "object" || componentSpecObj === null) {
+    throw Error(
+      `componentText is not a YAML-encoded object: ${componentSpecObj}`
+    );
+  }
+  if (!isValidComponentSpec(componentSpecObj)) {
+    throw Error(
+      `componentText does not encode a valid pipeline component: ${componentSpecObj}`
+    );
+  }
+  const componentSpec = componentSpecObj;
+  return [componentText, componentSpec] as [string, ComponentSpec];
+};
+
+const importComponentsFromGitHubSearch = async (
+  searchLocations: string[],
+  downloadText: (url: string) => Promise<string> = downloadTextWithCache
+) => {
   console.debug("Starting importComponentsFromGitHubSearch");
   const urlsAndHashesIterator =
     searchComponentsOnGitHubToGetUrlsAndHashes(searchLocations);
@@ -182,30 +209,14 @@ const importComponentsFromGitHubSearch = async (searchLocations: string[]) => {
       let componentSpec: ComponentSpec;
       let componentText: string;
       try {
-        componentText = await httpGetWithCache(downloadUrl, BLOB_CACHE_NAME);
-        const componentSpecObj = yaml.load(componentText);
-        if (typeof componentSpecObj !== "object" || componentSpecObj === null) {
-          throw Error(
-            `componentText is not a YAML-encoded object: ${componentSpecObj}`
-          );
-        }
-        if (!isValidComponentSpec(componentSpecObj)) {
-          throw Error(
-            `componentText does not encode a valid pipeline component: ${componentSpecObj}`
-          );
-        }
-        componentSpec = componentSpecObj;
+        [componentText, componentSpec] = await downloadComponentTextAndSpec(
+          downloadUrl,
+          downloadText
+        );
       } catch (err) {
         const errorMessage =
           typeof err === "object" && err ? err.toString() : String(err);
         badHashesDb.setItem(hash, errorMessage);
-        continue;
-      }
-      if (componentSpec.implementation === undefined) {
-        badHashesDb.setItem(
-          hash,
-          'Component lacks the "implementation" section.'
-        );
         continue;
       }
 
@@ -286,12 +297,13 @@ const calculateGitBlobSha1HashHex = async (data: string | ArrayBuffer) => {
   return hashHex;
 };
 
-const importComponentsFromFeed = async (componentFeedUrl: string) => {
+const importComponentsFromFeed = async (
+  componentFeedUrl: string,
+  downloadText: (url: string) => Promise<string> = downloadTextWithCache
+) => {
   console.debug("Starting importComponentsFromFeed");
   console.debug(`Downloading component feed: ${componentFeedUrl}.`);
-  const response = await fetch(componentFeedUrl);
-  const componentFeedCandidateBlob = await response.blob();
-  const componentFeedCandidateText = await componentFeedCandidateBlob.text();
+  const componentFeedCandidateText = await downloadText(componentFeedUrl);
   const componentFeedCandidateObject = yaml.load(componentFeedCandidateText);
   if (!isComponentFeed(componentFeedCandidateObject)) {
     throw new Error(
@@ -378,7 +390,10 @@ const importComponentsFromFeed = async (componentFeedUrl: string) => {
       let componentText = item.data;
       if (componentText === undefined) {
         try {
-          componentText = await httpGetWithCache(downloadUrl, BLOB_CACHE_NAME)
+          [componentText] = await downloadComponentTextAndSpec(
+            downloadUrl,
+            downloadText
+          );
         } catch (err) {
           const error_message =
             err instanceof Error ? err.name + ": " + err.message : String(err);
@@ -416,6 +431,8 @@ const importComponentsFromFeed = async (componentFeedUrl: string) => {
         await hashToUrlDb.setItem(hash, downloadUrl);
       }
 
+      //TODO: Store fully-loaded component spec as well.
+
       // Only storing names when they exist
       if (componentSpec.name) {
         await hashToComponentNameDb.setItem(hash, componentSpec.name);
@@ -443,12 +460,13 @@ export interface ComponentSearchConfig {
 }
 
 export const refreshComponentDb = async (
-  componentSearchConfig: ComponentSearchConfig
+  componentSearchConfig: ComponentSearchConfig,
+  downloadText: (url: string) => Promise<string> = downloadTextWithCache
 ) => {
   if (componentSearchConfig.ComponentFeedUrls) {
     for (const componentFeedUrl of componentSearchConfig.ComponentFeedUrls) {
       try {
-        await importComponentsFromFeed(componentFeedUrl);
+        await importComponentsFromFeed(componentFeedUrl, downloadText);
       } catch (error) {
         console.error(
           `Error importing component feed "${componentFeedUrl}": ${error}`
@@ -458,12 +476,15 @@ export const refreshComponentDb = async (
   }
   if (componentSearchConfig.GitHubSearchLocations !== undefined) {
     await importComponentsFromGitHubSearch(
-      componentSearchConfig.GitHubSearchLocations
+      componentSearchConfig.GitHubSearchLocations,
+      downloadText
     );
   }
 };
 
-export const getAllComponentsAsRefs = async () => {
+export const getAllComponentsAsRefs = async (
+  downloadText: (url: string) => Promise<string> = downloadTextWithCache
+) => {
   // Perhaps use urlProcessingVersionDb as source of truth. Hmm. It is URL-based
   const hashToUrlDb = localForage.createInstance({
     name: DB_NAME,
@@ -484,7 +505,8 @@ export const getAllComponentsAsRefs = async () => {
       //const componentText = await componentData.text();
       try {
         const componentSpec = yaml.load(componentText) as ComponentSpec;
-        preloadComponentReferences(componentSpec);
+        // TODO: Store preloaded components.
+        preloadComponentReferences(componentSpec, downloadText);
         hashToComponentRef.set(hash, {
           spec: componentSpec,
         });
@@ -527,8 +549,11 @@ export const isComponentDbEmpty = async () => {
   return (await hashToContentDb.length()) === 0;
 };
 
-export const searchComponentsByName = async (name: string) => {
-  const componentRefs = await getAllComponentsAsRefs();
+export const searchComponentsByName = async (
+  name: string,
+  downloadText: (url: string) => Promise<string> = defaultDownloadText
+) => {
+  const componentRefs = await getAllComponentsAsRefs(downloadText);
   return componentRefs.filter(
     (ref) => ref.spec?.name?.toLowerCase().includes(name.toLowerCase()) ?? false
   );

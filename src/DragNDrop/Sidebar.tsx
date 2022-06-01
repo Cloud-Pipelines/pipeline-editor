@@ -18,6 +18,7 @@ import PipelineLibrary from "./PipelineLibrary";
 import { AppSettings } from '../appSettings';
 import PipelineSubmitter from "./PipelineSubmitter";
 import AppSettingsDialog from './AppSettingsDialog';
+import { downloadTextWithCache } from '../cacheUtils';
 
 const onDragStart = (event: DragEvent, nodeData: object) => {
   event.dataTransfer.setData('application/reactflow', JSON.stringify(nodeData));
@@ -35,12 +36,14 @@ interface SidebarProps {
   componentSpec?: ComponentSpec,
   setComponentSpec?: (componentSpec: ComponentSpec) => void,
   appSettings: AppSettings;
+  downloadText: (url: string) => Promise<string>;
 }
 
 const Sidebar = ({
   componentSpec,
   setComponentSpec,
-  appSettings
+  appSettings,
+  downloadText = downloadTextWithCache
 }: SidebarProps) => {
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
 
@@ -53,6 +56,7 @@ const Sidebar = ({
         DebugScratch({
           componentSpec: componentSpec,
           setComponentSpec: setComponentSpec,
+          downloadText: downloadText,
         });
     } catch (e) {}
   }
@@ -65,6 +69,7 @@ const Sidebar = ({
           componentSpec={componentSpec}
           setComponentSpec={setComponentSpec}
           samplePipelineLibraryUrl={appSettings.pipelineLibraryUrl}
+          downloadText={downloadText}
         />
       </details>
       <details style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>
@@ -84,7 +89,10 @@ const Sidebar = ({
           Output
         </div>
       </details>
-      <ComponentLibrary url={appSettings.componentLibraryUrl} />
+      <ComponentLibrary
+        url={appSettings.componentLibraryUrl}
+        downloadText={downloadText}
+      />
       <details style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>
         <summary style={{ borderWidth: "1px", padding: "4px", fontWeight: "bold" }}>User components</summary>
         <UserComponentLibrary/>
@@ -94,6 +102,7 @@ const Sidebar = ({
         <ComponentSearch
           componentFeedUrls={appSettings.componentFeedUrls}
           gitHubSearchLocations={appSettings.gitHubSearchLocations}
+          downloadText={downloadText}
         />
       </details>
       {/* Unmounting the dialog control to reset the state when closed. */}
