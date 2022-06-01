@@ -82,12 +82,6 @@ const ComponentSpecAutoSaver = ({
   return null;
 };
 
-const isAppleOS = () =>
-  window.navigator.platform.startsWith("Mac") ||
-  window.navigator.platform.startsWith("iPhone") ||
-  window.navigator.platform.startsWith("iPad") ||
-  window.navigator.platform.startsWith("iPod");
-
 const EMPTY_GRAPH_COMPONENT_SPEC: ComponentSpec = {
   implementation: {
     graph: {
@@ -137,8 +131,6 @@ const DnDFlow = () => {
           <GraphComponentSpecFlow
             componentSpec={componentSpec}
             setComponentSpec={setComponentSpec}
-            deleteKeyCode={isAppleOS() ? "Backspace" : "Delete"}
-            multiSelectionKeyCode={isAppleOS() ? "Command" : "Control"}
             snapToGrid={true}
             snapGrid={[GRID_SIZE, GRID_SIZE]}
           >

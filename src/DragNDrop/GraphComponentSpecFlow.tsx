@@ -773,6 +773,12 @@ const GraphComponentSpecFlow = ({
       onEdgeUpdate={onEdgeUpdate}
       onElementsRemove={onElementsRemove}
       onLoad={onLoad}
+      deleteKeyCode={
+        rest.deleteKeyCode ?? (isAppleOS() ? "Backspace" : "Delete")
+      }
+      multiSelectionKeyCode={
+        rest.multiSelectionKeyCode ?? (isAppleOS() ? "Command" : "Control")
+      }
     >
       {children}
     </ReactFlow>
@@ -780,3 +786,9 @@ const GraphComponentSpecFlow = ({
 };
 
 export default GraphComponentSpecFlow;
+
+const isAppleOS = () =>
+  window.navigator.platform.startsWith("Mac") ||
+  window.navigator.platform.startsWith("iPhone") ||
+  window.navigator.platform.startsWith("iPad") ||
+  window.navigator.platform.startsWith("iPod");
