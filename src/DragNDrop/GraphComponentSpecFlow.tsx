@@ -261,6 +261,46 @@ export const augmentComponentSpec = (
   return componentSpec;
 };
 
+const makeNameUniqueByAddingIndex = (name: string, existingNames: Set<string>): ElementId => {
+  let finalName = name;
+  let index = 1;
+  while (existingNames.has(finalName)) {
+    index++;
+    finalName = name + " " + index.toString();
+  }
+  return finalName;
+};
+
+const getUniqueInputName = (
+  componentSpec: ComponentSpec,
+  name: string = "Input",
+) => {
+  return makeNameUniqueByAddingIndex(
+    name,
+    new Set(componentSpec.inputs?.map((inputSpec) => inputSpec.name))
+  );
+};
+
+const getUniqueOutputName = (
+  componentSpec: ComponentSpec,
+  name: string = "Output",
+) => {
+  return makeNameUniqueByAddingIndex(
+    name,
+    new Set(componentSpec.outputs?.map((outputSpec) => outputSpec.name))
+  );
+};
+
+const getUniqueTaskName = (
+  graphSpec: GraphSpec,
+  name: string = "Task",
+) => {
+  return makeNameUniqueByAddingIndex(
+    name,
+    new Set(Object.keys(graphSpec.tasks))
+  );
+};
+
 export interface GraphComponentSpecFlowProps
   extends Omit<ReactFlowProps, "elements"> {
   componentSpec: ComponentSpec,
@@ -411,7 +451,7 @@ const GraphComponentSpecFlow = ({
   );
 
   const elements = (nodes as Elements).concat(inputNodes).concat(outputNodes).concat(edges).concat(outputEdges);
-  
+
   const replaceComponentSpec = (newComponentSpec: ComponentSpec) => {
     componentSpec = newComponentSpec;
     setComponentSpec(newComponentSpec);
@@ -660,37 +700,6 @@ const GraphComponentSpecFlow = ({
     event.dataTransfer.dropEffect = "move";
   };
 
-  const makeNameUniqueByAddingIndex = (name: string, existingNames: Set<string>): ElementId => {
-    let finalName = name;
-    let index = 1;
-    while (existingNames.has(finalName)) {
-      index++;
-      finalName = name + " " + index.toString();
-    }
-    return finalName;
-  };
-
-  const getUniqueInputName = (name: string = "Input") => {
-    return makeNameUniqueByAddingIndex(
-      name,
-      new Set(componentSpec.inputs?.map((inputSpec) => inputSpec.name))
-    );
-  };
-
-  const getUniqueOutputName = (name: string = "Output") => {
-    return makeNameUniqueByAddingIndex(
-      name,
-      new Set(componentSpec.outputs?.map((outputSpec) => outputSpec.name))
-    );
-  };
-
-  const getUniqueTaskName = (name: string = "Task") => {
-    return makeNameUniqueByAddingIndex(
-      name,
-      new Set(Object.keys(graphSpec.tasks))
-    );
-  };
-
   const onDrop = (event: DragEvent) => {
     event.preventDefault();
 
@@ -702,7 +711,7 @@ const GraphComponentSpecFlow = ({
       const droppedDataObject = JSON.parse(droppedData);
       const nodeType = Object.keys(droppedDataObject)[0];
       const nodeData = droppedDataObject[nodeType];
-      
+
       // Correcting the position using the drag point location information
       let dragOffsetX = 0;
       let dragOffsetY = 0;
@@ -735,12 +744,15 @@ const GraphComponentSpecFlow = ({
           ...taskSpec,
           annotations: mergedAnnotations,
         };
-        const taskId = getUniqueTaskName(taskSpec.componentRef.spec?.name ?? "Task");
+        const taskId = getUniqueTaskName(
+          graphSpec,
+          taskSpec.componentRef.spec?.name ?? "Task"
+        );
         graphSpec = { ...graphSpec, tasks: { ...graphSpec.tasks } };
         graphSpec.tasks[taskId] = taskSpecWithAnnotation;
         replaceGraphSpec(graphSpec);
       } else if (nodeType === "input") {
-        const inputId = getUniqueInputName();
+        const inputId = getUniqueInputName(componentSpec);
         const inputSpec: InputSpec = {
           name: inputId,
           annotations: positionAnnotations,
@@ -749,7 +761,7 @@ const GraphComponentSpecFlow = ({
         componentSpec = { ...componentSpec, inputs: inputs };
         replaceComponentSpec(componentSpec);
       } else if (nodeType === "output") {
-        const outputId = getUniqueOutputName();
+        const outputId = getUniqueOutputName(componentSpec);
         const outputSpec: OutputSpec = {
           name: outputId,
           annotations: positionAnnotations,
