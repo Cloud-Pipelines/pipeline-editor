@@ -709,9 +709,8 @@ const GraphComponentSpecFlow = ({
       const dragStartOffsetData = event.dataTransfer.getData("DragStart.offset");
       if (dragStartOffsetData !== "") {
         const dragStartOffset = JSON.parse(dragStartOffsetData);
-        // Hack to work around Chrome's draggable anchor bug. TODO: Remove once Chrome is fixed
-        dragOffsetX = dragStartOffset.offsetX * 0.68 ?? 0;
-        dragOffsetY = dragStartOffset.offsetY * 0.64 ?? 0;
+        dragOffsetX = dragStartOffset.offsetX ?? 0;
+        dragOffsetY = dragStartOffset.offsetY ?? 0;
       }
 
       // Node position. Offsets should be included in projection, so that they snap to the grid.
