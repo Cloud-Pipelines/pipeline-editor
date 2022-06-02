@@ -39,6 +39,14 @@ const NODE_LAYOUT_ANNOTATION_KEY = "editor.position";
 const SDK_ANNOTATION_KEY = "sdk";
 const SDK_ANNOTATION_VALUE = "https://cloud-pipelines.net/pipeline-editor/";
 
+export const EMPTY_GRAPH_COMPONENT_SPEC: ComponentSpec = {
+  implementation: {
+    graph: {
+      tasks: {},
+    },
+  },
+};
+
 const taskIdToNodeId = (id: string) => "task_" + id;
 const inputNameToNodeId = (name: string) => "input_" + name;
 const outputNameToNodeId = (name: string) => "output_" + name;

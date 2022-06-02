@@ -20,7 +20,7 @@ import yaml from "js-yaml";
 import { downloadTextWithCache } from '../cacheUtils';
 import { ComponentSpec } from '../componentSpec';
 import { componentSpecToYaml } from '../componentStore';
-import GraphComponentSpecFlow, { augmentComponentSpec } from './GraphComponentSpecFlow';
+import GraphComponentSpecFlow, { augmentComponentSpec, EMPTY_GRAPH_COMPONENT_SPEC } from './GraphComponentSpecFlow';
 import Sidebar from './Sidebar';
 import { getAppSettings } from '../appSettings';
 import { fullyLoadComponentFromUrl } from "../componentStore";
@@ -80,14 +80,6 @@ const ComponentSpecAutoSaver = ({
     saveComponentSpec(componentSpec, nodes);
   }
   return null;
-};
-
-const EMPTY_GRAPH_COMPONENT_SPEC: ComponentSpec = {
-  implementation: {
-    graph: {
-      tasks: {},
-    },
-  },
 };
 
 const DnDFlow = () => {
