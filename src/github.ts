@@ -14,6 +14,7 @@ import {
   ComponentReference,
   isValidComponentSpec,
 } from "./componentSpec";
+import { loadComponentFromUrlAsRefPlusData } from "./componentStore";
 import { preloadComponentReferences } from "./DragNDrop/samplePipelines";
 
 // const COMPONENT_FILE_NAME_SUFFIX = "component.yaml";
@@ -91,26 +92,6 @@ async function* searchComponentsOnGitHubToGetUrlsAndHashes(
   return urlsAndHashes;
 }
 
-export const downloadComponentTextAndSpec = async (
-  url: string,
-  downloadText: (url: string) => Promise<string> = downloadTextWithCache
-) => {
-  const componentText = await downloadText(url);
-  const componentSpecObj = yaml.load(componentText);
-  if (typeof componentSpecObj !== "object" || componentSpecObj === null) {
-    throw Error(
-      `componentText is not a YAML-encoded object: ${componentSpecObj}`
-    );
-  }
-  if (!isValidComponentSpec(componentSpecObj)) {
-    throw Error(
-      `componentText does not encode a valid pipeline component: ${componentSpecObj}`
-    );
-  }
-  const componentSpec = componentSpecObj;
-  return [componentText, componentSpec] as [string, ComponentSpec];
-};
-
 const importComponentsFromGitHubSearch = async (
   searchLocations: string[],
   downloadText: (url: string) => Promise<string> = downloadTextWithCache
@@ -186,10 +167,13 @@ const importComponentsFromGitHubSearch = async (
       let componentSpec: ComponentSpec;
       let componentText: string;
       try {
-        [componentText, componentSpec] = await downloadComponentTextAndSpec(
+        // TODO: Consider fully preloading graph component children here.
+        const componentRefPlusData = await loadComponentFromUrlAsRefPlusData(
           downloadUrl,
           downloadText
         );
+        componentText = new TextDecoder().decode(componentRefPlusData.data);
+        componentSpec = componentRefPlusData.componentRef.spec;
       } catch (err) {
         const errorMessage =
           typeof err === "object" && err ? err.toString() : String(err);
@@ -367,10 +351,13 @@ const importComponentsFromFeed = async (
       let componentText = item.data;
       if (componentText === undefined) {
         try {
-          [componentText] = await downloadComponentTextAndSpec(
+          // TODO: Consider fully preloading graph component children here.
+          const componentRefPlusData = await loadComponentFromUrlAsRefPlusData(
             downloadUrl,
             downloadText
           );
+          componentText = new TextDecoder().decode(componentRefPlusData.data);
+          //componentSpec = componentRefPlusData.componentRef.spec;
         } catch (err) {
           const error_message =
             err instanceof Error ? err.name + ": " + err.message : String(err);
@@ -378,6 +365,7 @@ const importComponentsFromFeed = async (
           continue;
         }
       }
+      // TODO: Extract component loading and validation into a separate function.
       const componentSpecObj = yaml.load(componentText);
       if (typeof componentSpecObj !== "object" || componentSpecObj === null) {
         throw Error(
