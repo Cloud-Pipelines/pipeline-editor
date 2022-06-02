@@ -8,7 +8,7 @@
 
 import { downloadTextWithCache } from "../cacheUtils";
 import { ComponentSpec } from "../componentSpec";
-import { downloadComponentDataWithCache } from "../github";
+import { loadComponentFromUrlAsRefPlusData } from "../componentStore";
 
 export const preloadComponentReferences = async (
   componentSpec: ComponentSpec,
@@ -30,17 +30,16 @@ export const preloadComponentReferences = async (
       ) {
         let taskComponentSpec = componentMap.get(componentUrl);
         if (taskComponentSpec === undefined) {
-          taskComponentSpec = await downloadComponentDataWithCache(
-            componentUrl,
-            downloadText
-          );
+          const taskComponentRefPlusData =
+            await loadComponentFromUrlAsRefPlusData(componentUrl, downloadText);
+          taskComponentSpec = taskComponentRefPlusData.componentRef.spec;
           componentMap.set(componentUrl, taskComponentSpec);
         }
         taskSpec.componentRef.spec = taskComponentSpec;
         await preloadComponentReferences(
           taskComponentSpec,
           downloadText,
-          componentMap,
+          componentMap
         );
       }
     }
@@ -50,11 +49,14 @@ export const preloadComponentReferences = async (
 
 export const fullyLoadComponentFromUrl = async (
   url: string,
-  downloadText: (url: string) => Promise<string> = downloadTextWithCache,
+  downloadText: (url: string) => Promise<string> = downloadTextWithCache
 ) => {
-  let componentSpec = await downloadComponentDataWithCache(url, downloadText);
-  componentSpec = await preloadComponentReferences(
-    componentSpec,
+  const componentRefPlusData = await loadComponentFromUrlAsRefPlusData(
+    url,
+    downloadText
+  );
+  const componentSpec = await preloadComponentReferences(
+    componentRefPlusData.componentRef.spec,
     downloadText
   );
   return componentSpec;

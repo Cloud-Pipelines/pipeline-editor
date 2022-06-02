@@ -8,6 +8,7 @@
 
 import yaml from "js-yaml";
 import localForage from "localforage";
+import { downloadTextWithCache } from "./cacheUtils";
 
 import {
   ComponentSpec,
@@ -100,10 +101,12 @@ export const loadComponentAsRefFromText = async (
   return componentRefPlusData;
 };
 
-export const loadComponentAsRefFromUrl = async (url: string) => {
-  const response = await fetch(url);
-  const componentData = await response.arrayBuffer();
-  let componentRefPlusData = await loadComponentAsRefFromText(componentData);
+export const loadComponentFromUrlAsRefPlusData = async (
+  url: string,
+  downloadText: (url: string) => Promise<string> = downloadTextWithCache,
+) => {
+  const componentText = await downloadText(url);
+  let componentRefPlusData = await loadComponentAsRefFromText(componentText);
   componentRefPlusData.componentRef.url = url;
   return componentRefPlusData;
 };
@@ -224,6 +227,7 @@ export const storeComponentFromUrl = async (
     }
   }
 
+  // TODO: Think about whether to directly use fetch here.
   const response = await fetch(url);
   const componentData = await response.arrayBuffer();
   let componentRefPlusData = await storeComponentText(componentData);

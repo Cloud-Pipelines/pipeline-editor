@@ -91,29 +91,6 @@ async function* searchComponentsOnGitHubToGetUrlsAndHashes(
   return urlsAndHashes;
 }
 
-// TODO: Either use this function more or remove it.
-export const downloadComponentDataWithCache = async (
-  url: string,
-  downloadText: (url: string) => Promise<string> = downloadTextWithCache,
-) => {
-  // FIX?: This does not update if in cache
-  const componentText = await downloadText(url);
-  const componentSpecObj = yaml.load(componentText);
-  if (typeof componentSpecObj !== "object" || componentSpecObj === null) {
-    throw Error(
-      `componentText is not a YAML-encoded object: ${componentSpecObj}`
-    );
-  }
-  if (!isValidComponentSpec(componentSpecObj)) {
-    throw Error(
-      `componentText does not encode a valid pipeline component: ${componentSpecObj}`
-    );
-  }
-  const componentSpec = componentSpecObj;
-  return componentSpec;
-};
-
-
 export const downloadComponentTextAndSpec = async (
   url: string,
   downloadText: (url: string) => Promise<string> = downloadTextWithCache
