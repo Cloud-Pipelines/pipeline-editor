@@ -12,7 +12,7 @@ import { downloadTextWithCache } from "../cacheUtils";
 
 import { ComponentReference, ComponentSpec } from "../componentSpec";
 import DraggableComponent from "./DraggableComponent";
-import { fullyLoadComponentFromUrl } from "./samplePipelines";
+import { fullyLoadComponentFromUrl } from "../componentStore";
 
 type ComponentLibraryFolder = {
   name: string;

@@ -23,7 +23,7 @@ import { componentSpecToYaml } from '../componentStore';
 import GraphComponentSpecFlow, { augmentComponentSpec } from './GraphComponentSpecFlow';
 import Sidebar from './Sidebar';
 import { getAppSettings } from '../appSettings';
-import { fullyLoadComponentFromUrl } from "./samplePipelines";
+import { fullyLoadComponentFromUrl } from "../componentStore";
 
 import './dnd.css';
 

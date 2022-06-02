@@ -14,7 +14,7 @@ import {
   storeComponentFromUrl,
   ComponentReferenceWithSpec,
 } from "../componentStore";
-import { preloadComponentReferences } from "./samplePipelines";
+import { preloadComponentReferences } from "../componentStore";
 
 type PipelineLibraryStruct = {
   annotations?: {

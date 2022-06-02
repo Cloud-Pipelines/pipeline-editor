@@ -33,7 +33,7 @@ import {
 import GraphComponentLink from "./GraphComponentLink";
 import { augmentComponentSpec } from "./GraphComponentSpecFlow";
 import SamplePipelineLibrary from "./SamplePipelineLibrary";
-import { preloadComponentReferences } from "./samplePipelines";
+import { preloadComponentReferences } from "../componentStore";
 
 const USER_PIPELINES_LIST_NAME = "user_pipelines";
 

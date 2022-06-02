@@ -14,8 +14,10 @@ import {
   ComponentReference,
   isValidComponentSpec,
 } from "./componentSpec";
-import { loadComponentFromUrlAsRefPlusData } from "./componentStore";
-import { preloadComponentReferences } from "./DragNDrop/samplePipelines";
+import {
+  loadComponentFromUrlAsRefPlusData,
+  preloadComponentReferences,
+} from "./componentStore";
 
 // const COMPONENT_FILE_NAME_SUFFIX = "component.yaml";
 // const COMPONENT_FILE_MAX_SIZE = 100000;
