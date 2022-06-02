@@ -528,7 +528,7 @@ export const isComponentDbEmpty = async () => {
 
 export const searchComponentsByName = async (
   name: string,
-  downloadText: (url: string) => Promise<string> = defaultDownloadText
+  downloadText: (url: string) => Promise<string> = downloadTextWithCache
 ) => {
   const componentRefs = await getAllComponentsAsRefs(downloadText);
   return componentRefs.filter(
