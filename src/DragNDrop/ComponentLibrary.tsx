@@ -12,7 +12,7 @@ import { downloadTextWithCache } from "../cacheUtils";
 
 import { ComponentReference, ComponentSpec } from "../componentSpec";
 import DraggableComponent from "./DraggableComponent";
-import { loadComponentFromUrl } from "./samplePipelines";
+import { fullyLoadComponentFromUrl } from "./samplePipelines";
 
 type ComponentLibraryFolder = {
   name: string;
@@ -46,7 +46,7 @@ const DraggableComponentRow = ({
   useEffect(() => {
     // TODO: Validate the component
     // Loading the component (preloading the graph component children as well).
-    loadComponentFromUrl(componentUrl, downloadText).then(setComponentSpec);
+    fullyLoadComponentFromUrl(componentUrl, downloadText).then(setComponentSpec);
   }, [componentUrl, downloadText]);
 
   if (componentSpec === undefined) {

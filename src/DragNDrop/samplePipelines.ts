@@ -48,17 +48,14 @@ export const preloadComponentReferences = async (
   return componentSpec;
 };
 
-export const loadComponentFromUrl = async (
+export const fullyLoadComponentFromUrl = async (
   url: string,
   downloadText: (url: string) => Promise<string> = downloadTextWithCache,
-  preloadChildComponentSpecs = true,
 ) => {
   let componentSpec = await downloadComponentDataWithCache(url, downloadText);
-  if (preloadChildComponentSpecs) {
-    componentSpec = await preloadComponentReferences(
-      componentSpec,
-      downloadText
-    );
-  }
+  componentSpec = await preloadComponentReferences(
+    componentSpec,
+    downloadText
+  );
   return componentSpec;
 };

@@ -23,7 +23,7 @@ import { componentSpecToYaml } from '../componentStore';
 import GraphComponentSpecFlow, { augmentComponentSpec } from './GraphComponentSpecFlow';
 import Sidebar from './Sidebar';
 import { getAppSettings } from '../appSettings';
-import { loadComponentFromUrl } from "./samplePipelines";
+import { fullyLoadComponentFromUrl } from "./samplePipelines";
 
 import './dnd.css';
 
@@ -105,7 +105,7 @@ const DnDFlow = () => {
       }
       const defaultPipelineUrl = appSettings.defaultPipelineUrl;
       try {
-        const defaultPipelineSpec = await loadComponentFromUrl(
+        const defaultPipelineSpec = await fullyLoadComponentFromUrl(
           defaultPipelineUrl,
           downloadText
         );
