@@ -7,7 +7,7 @@
  */
 
 import { useState } from "react";
-import { downloadTextWithCache } from "../cacheUtils";
+import { DownloadDataType, downloadDataWithCache } from "../cacheUtils";
 import { ComponentReference } from "../componentSpec";
 import {
   isComponentDbEmpty,
@@ -19,13 +19,13 @@ import DraggableComponent from "./DraggableComponent";
 interface ComponentSearchProps {
   componentFeedUrls?: string[],
   gitHubSearchLocations?: string[],
-  downloadText: (url: string) => Promise<string>;
+  downloadData: DownloadDataType;
 }
 
 const SearchPanel = ({
   componentFeedUrls,
   gitHubSearchLocations,
-  downloadText = downloadTextWithCache,
+  downloadData = downloadDataWithCache,
 }: ComponentSearchProps) => {
   const [error, setError] = useState<string | undefined>(undefined);
   const [firstTime, setFirstTime] = useState(true);
@@ -54,7 +54,7 @@ const SearchPanel = ({
           ComponentFeedUrls: componentFeedUrls,
           GitHubSearchLocations: gitHubSearchLocations,
         },
-        downloadText
+        downloadData
       );
       setIsLoaded(true);
       const componentRefs = await searchComponentsByName(query);

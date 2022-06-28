@@ -8,7 +8,7 @@
 
 import yaml from "js-yaml";
 import localForage from "localforage";
-import { downloadTextWithCache } from "./cacheUtils";
+import { DownloadDataType, downloadDataWithCache } from "./cacheUtils";
 
 import {
   ComponentSpec,
@@ -103,17 +103,19 @@ export const loadComponentAsRefFromText = async (
 
 export const loadComponentFromUrlAsRefPlusData = async (
   url: string,
-  downloadText: (url: string) => Promise<string> = downloadTextWithCache,
+  downloadData: DownloadDataType = downloadDataWithCache
 ) => {
-  const componentText = await downloadText(url);
-  let componentRefPlusData = await loadComponentAsRefFromText(componentText);
+  const componentRefPlusData = await downloadData(
+    url,
+    loadComponentAsRefFromText
+  );
   componentRefPlusData.componentRef.url = url;
   return componentRefPlusData;
 };
 
 export const preloadComponentReferences = async (
   componentSpec: ComponentSpec,
-  downloadText: (url: string) => Promise<string> = downloadTextWithCache,
+  downloadData: DownloadDataType = downloadDataWithCache,
   componentMap?: Map<string, ComponentSpec>
 ) => {
   // This map is needed to improve efficiency and handle recursive components.
@@ -132,14 +134,14 @@ export const preloadComponentReferences = async (
         let taskComponentSpec = componentMap.get(componentUrl);
         if (taskComponentSpec === undefined) {
           const taskComponentRefPlusData =
-            await loadComponentFromUrlAsRefPlusData(componentUrl, downloadText);
+            await loadComponentFromUrlAsRefPlusData(componentUrl, downloadData);
           taskComponentSpec = taskComponentRefPlusData.componentRef.spec;
           componentMap.set(componentUrl, taskComponentSpec);
         }
         taskSpec.componentRef.spec = taskComponentSpec;
         await preloadComponentReferences(
           taskComponentSpec,
-          downloadText,
+          downloadData,
           componentMap
         );
       }
@@ -150,15 +152,15 @@ export const preloadComponentReferences = async (
 
 export const fullyLoadComponentFromUrl = async (
   url: string,
-  downloadText: (url: string) => Promise<string> = downloadTextWithCache
+  downloadData: DownloadDataType = downloadDataWithCache
 ) => {
   const componentRefPlusData = await loadComponentFromUrlAsRefPlusData(
     url,
-    downloadText
+    downloadData
   );
   const componentSpec = await preloadComponentReferences(
     componentRefPlusData.componentRef.spec,
-    downloadText
+    downloadData
   );
   return componentSpec;
 };

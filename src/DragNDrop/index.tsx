@@ -14,7 +14,7 @@ import {
   MiniMap,
 } from 'react-flow-renderer';
 
-import { downloadTextWithCache } from '../cacheUtils';
+import { downloadDataWithCache } from '../cacheUtils';
 import { ComponentSpec } from '../componentSpec';
 import GraphComponentSpecFlow, {
   EMPTY_GRAPH_COMPONENT_SPEC,
@@ -35,7 +35,7 @@ const DnDFlow = () => {
   const [componentSpec, setComponentSpec] = useState<ComponentSpec | undefined>();
   const [appSettings] = useState(getAppSettings());
 
-  const downloadText = downloadTextWithCache;
+  const downloadData = downloadDataWithCache;
 
   useEffect(() => {
     (async () => {
@@ -48,7 +48,7 @@ const DnDFlow = () => {
       try {
         const defaultPipelineSpec = await fullyLoadComponentFromUrl(
           defaultPipelineUrl,
-          downloadText
+          downloadData
         );
         setComponentSpec(defaultPipelineSpec);
       } catch (err) {
@@ -59,7 +59,7 @@ const DnDFlow = () => {
         setComponentSpec(EMPTY_GRAPH_COMPONENT_SPEC);
       }
     })();
-  }, [appSettings.defaultPipelineUrl, downloadText]);
+  }, [appSettings.defaultPipelineUrl, downloadData]);
 
   if (componentSpec === undefined) {
     return <></>;
@@ -84,7 +84,7 @@ const DnDFlow = () => {
           componentSpec={componentSpec}
           setComponentSpec={setComponentSpec}
           appSettings={appSettings}
-          downloadText={downloadText}
+          downloadData={downloadData}
         />
         <PipelineAutoSaver componentSpec={componentSpec}/>
       </ReactFlowProvider>

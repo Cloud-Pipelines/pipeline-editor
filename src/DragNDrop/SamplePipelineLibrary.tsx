@@ -6,9 +6,8 @@
  * @copyright 2021 Alexey Volkov <alexey.volkov+oss@ark-kun.com>
  */
 
-import yaml from "js-yaml";
 import { useState, useEffect } from "react";
-import { downloadTextWithCache } from "../cacheUtils";
+import { DownloadDataType, downloadDataWithCache, loadObjectFromYamlData } from "../cacheUtils";
 import { ComponentReference, ComponentSpec } from "../componentSpec";
 import {
   storeComponentFromUrl,
@@ -27,20 +26,21 @@ const isValidPipelineLibraryStruct = (
   obj: object
 ): obj is PipelineLibraryStruct => "components" in obj;
 
-const loadPipelineLibraryStruct = async (
-  url: string,
-  downloadText: (url: string) => Promise<string> = downloadTextWithCache,
+const loadPipelineLibraryStructFromData = async (
+  data: ArrayBuffer,
 ) => {
-  const libraryText = await downloadText(url);
-  const pipelineLibrary = yaml.load(libraryText);
-  if (typeof pipelineLibrary !== "object" || pipelineLibrary === null) {
-    throw Error(
-      `Component library data is not a YAML-encoded object: ${pipelineLibrary}`
-    );
-  }
+  const pipelineLibrary = loadObjectFromYamlData(data);
   if (!isValidPipelineLibraryStruct(pipelineLibrary)) {
     throw Error(`Invalid Component library data structure: ${pipelineLibrary}`);
   }
+  return pipelineLibrary;
+};
+
+const loadPipelineLibraryStructFromUrl = async (
+  url: string,
+  downloadData: DownloadDataType = downloadDataWithCache,
+) => {
+  const pipelineLibrary = await downloadData(url, loadPipelineLibraryStructFromData);
   return pipelineLibrary;
 };
 
@@ -51,13 +51,13 @@ function notUndefined<T>(x: T | undefined): x is T {
 interface PipelineLibraryProps {
   pipelineLibraryUrl: string;
   setComponentSpec?: (componentSpec: ComponentSpec) => void;
-  downloadText: (url: string) => Promise<string>;
+  downloadData: DownloadDataType;
 }
 
 const SamplePipelineLibrary = ({
   pipelineLibraryUrl,
   setComponentSpec,
-  downloadText = downloadTextWithCache
+  downloadData = downloadDataWithCache
 }: PipelineLibraryProps) => {
   const [componentRefs, setComponentRefs] = useState<
     ComponentReferenceWithSpec[]
@@ -67,9 +67,9 @@ const SamplePipelineLibrary = ({
     (async () => {
       if (componentRefs.length === 0) {
         try {
-          const loadedComponentLibrary = await loadPipelineLibraryStruct(
+          const loadedComponentLibrary = await loadPipelineLibraryStructFromUrl(
             pipelineLibraryUrl,
-            downloadText
+            downloadData
           );
           const pipelineUrls = loadedComponentLibrary.components
             .map((componentRef) => componentRef.url)
@@ -79,7 +79,7 @@ const SamplePipelineLibrary = ({
               // ?!!
               const componentRefPlusData = await storeComponentFromUrl(url);
               const componentRef = componentRefPlusData.componentRef;
-              await preloadComponentReferences(componentRef.spec, downloadText);
+              await preloadComponentReferences(componentRef.spec, downloadData);
               return componentRef;
             })
           );
@@ -89,7 +89,7 @@ const SamplePipelineLibrary = ({
         }
       }
     })();
-  }, [pipelineLibraryUrl, downloadText, componentRefs.length]);
+  }, [pipelineLibraryUrl, downloadData, componentRefs.length]);
 
   return (
     <div

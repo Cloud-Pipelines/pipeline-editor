@@ -18,7 +18,7 @@ import PipelineLibrary from "./PipelineLibrary";
 import { AppSettings } from '../appSettings';
 import PipelineSubmitter from "./PipelineSubmitter";
 import AppSettingsDialog from './AppSettingsDialog';
-import { downloadTextWithCache } from '../cacheUtils';
+import { DownloadDataType, downloadDataWithCache } from '../cacheUtils';
 
 const onDragStart = (event: DragEvent, nodeData: object) => {
   event.dataTransfer.setData('application/reactflow', JSON.stringify(nodeData));
@@ -36,14 +36,14 @@ interface SidebarProps {
   componentSpec?: ComponentSpec,
   setComponentSpec?: (componentSpec: ComponentSpec) => void,
   appSettings: AppSettings;
-  downloadText: (url: string) => Promise<string>;
+  downloadData: DownloadDataType;
 }
 
 const Sidebar = ({
   componentSpec,
   setComponentSpec,
   appSettings,
-  downloadText = downloadTextWithCache
+  downloadData = downloadDataWithCache
 }: SidebarProps) => {
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
 
@@ -56,7 +56,7 @@ const Sidebar = ({
         DebugScratch({
           componentSpec: componentSpec,
           setComponentSpec: setComponentSpec,
-          downloadText: downloadText,
+          downloadData: downloadData,
         });
     } catch (e) {}
   }
@@ -69,7 +69,7 @@ const Sidebar = ({
           componentSpec={componentSpec}
           setComponentSpec={setComponentSpec}
           samplePipelineLibraryUrl={appSettings.pipelineLibraryUrl}
-          downloadText={downloadText}
+          downloadData={downloadData}
         />
       </details>
       <details style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>
@@ -91,7 +91,7 @@ const Sidebar = ({
       </details>
       <ComponentLibrary
         url={appSettings.componentLibraryUrl}
-        downloadText={downloadText}
+        downloadData={downloadData}
       />
       <details style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>
         <summary style={{ borderWidth: "1px", padding: "4px", fontWeight: "bold" }}>User components</summary>
@@ -102,7 +102,7 @@ const Sidebar = ({
         <ComponentSearch
           componentFeedUrls={appSettings.componentFeedUrls}
           gitHubSearchLocations={appSettings.gitHubSearchLocations}
-          downloadText={downloadText}
+          downloadData={downloadData}
         />
       </details>
       {/* Unmounting the dialog control to reset the state when closed. */}

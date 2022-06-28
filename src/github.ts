@@ -8,7 +8,7 @@
 
 import yaml from "js-yaml";
 import localForage from "localforage";
-import { downloadText as defaultDownloadText, downloadTextWithCache } from "./cacheUtils";
+import { DownloadDataType, downloadData as defaultDownloadData, downloadDataWithCache, loadObjectFromYamlData, loadObjectFromJsonData } from "./cacheUtils";
 import {
   ComponentSpec,
   ComponentReference,
@@ -32,20 +32,34 @@ const URL_PROCESSING_VERSION_TABLE_NAME = "url_version";
 const CURRENT_URL_PROCESSING_VERSION = 1;
 const BAD_HASHES_TABLE_NAME = "bad_hashes";
 
+type GitHubCodeSearchResultsStruct = {
+  items: any[];
+};
+
+const isValidGitHubCodeSearchResultsStruct = (
+  obj: any
+): obj is GitHubCodeSearchResultsStruct =>
+  "items" in obj && Array.isArray(obj.items);
+
 const getSingleGitHubCodeSearchPage = async (
   query: string,
   page = 1,
   sort = "indexed",
   order = "desc",
-  downloadText: (url: string) => Promise<string> = defaultDownloadText
-): Promise<any> => {
+  downloadData: DownloadDataType = defaultDownloadData
+): Promise<GitHubCodeSearchResultsStruct> => {
   // TODO: Paging
   const encodedQuery = encodeURIComponent(query);
   const encodedSort = encodeURIComponent(sort);
   const encodedOrder = encodeURIComponent(order);
   const searchUrl = `https://api.github.com/search/code?q=${encodedQuery}&sort=${encodedSort}&order=${encodedOrder}&per_page=100&page=${page}`;
-  const responseText = await downloadText(searchUrl);
-  return JSON.parse(responseText);
+  const responseObject = await downloadData(searchUrl, loadObjectFromJsonData);
+  if (!isValidGitHubCodeSearchResultsStruct(responseObject)) {
+    throw Error(
+      "The downloaded data is not a valid GitHub code search results page"
+    );
+  }
+  return responseObject;
 };
 
 const githubHtmlUrlToDownloadUrl = (htmlUrl: string): string => {
@@ -96,7 +110,7 @@ async function* searchComponentsOnGitHubToGetUrlsAndHashes(
 
 const importComponentsFromGitHubSearch = async (
   searchLocations: string[],
-  downloadText: (url: string) => Promise<string> = downloadTextWithCache
+  downloadData: DownloadDataType = downloadDataWithCache
 ) => {
   console.debug("Starting importComponentsFromGitHubSearch");
   const urlsAndHashesIterator =
@@ -172,7 +186,7 @@ const importComponentsFromGitHubSearch = async (
         // TODO: Consider fully preloading graph component children here.
         const componentRefPlusData = await loadComponentFromUrlAsRefPlusData(
           downloadUrl,
-          downloadText
+          downloadData
         );
         componentText = new TextDecoder().decode(componentRefPlusData.data);
         componentSpec = componentRefPlusData.componentRef.spec;
@@ -262,12 +276,14 @@ const calculateGitBlobSha1HashHex = async (data: string | ArrayBuffer) => {
 
 const importComponentsFromFeed = async (
   componentFeedUrl: string,
-  downloadText: (url: string) => Promise<string> = downloadTextWithCache
+  downloadData: DownloadDataType = downloadDataWithCache
 ) => {
   console.debug("Starting importComponentsFromFeed");
   console.debug(`Downloading component feed: ${componentFeedUrl}.`);
-  const componentFeedCandidateText = await downloadText(componentFeedUrl);
-  const componentFeedCandidateObject = yaml.load(componentFeedCandidateText);
+  const componentFeedCandidateObject = await downloadData(
+    componentFeedUrl,
+    loadObjectFromYamlData
+  );
   if (!isComponentFeed(componentFeedCandidateObject)) {
     throw new Error(
       `Component feed loaded from "${componentFeedUrl}" had invalid content inside.`
@@ -356,7 +372,7 @@ const importComponentsFromFeed = async (
           // TODO: Consider fully preloading graph component children here.
           const componentRefPlusData = await loadComponentFromUrlAsRefPlusData(
             downloadUrl,
-            downloadText
+            downloadData
           );
           componentText = new TextDecoder().decode(componentRefPlusData.data);
           //componentSpec = componentRefPlusData.componentRef.spec;
@@ -428,12 +444,12 @@ export interface ComponentSearchConfig {
 
 export const refreshComponentDb = async (
   componentSearchConfig: ComponentSearchConfig,
-  downloadText: (url: string) => Promise<string> = downloadTextWithCache
+  downloadData: DownloadDataType = downloadDataWithCache
 ) => {
   if (componentSearchConfig.ComponentFeedUrls) {
     for (const componentFeedUrl of componentSearchConfig.ComponentFeedUrls) {
       try {
-        await importComponentsFromFeed(componentFeedUrl, downloadText);
+        await importComponentsFromFeed(componentFeedUrl, downloadData);
       } catch (error) {
         console.error(
           `Error importing component feed "${componentFeedUrl}": ${error}`
@@ -444,13 +460,13 @@ export const refreshComponentDb = async (
   if (componentSearchConfig.GitHubSearchLocations !== undefined) {
     await importComponentsFromGitHubSearch(
       componentSearchConfig.GitHubSearchLocations,
-      downloadText
+      downloadData
     );
   }
 };
 
 export const getAllComponentsAsRefs = async (
-  downloadText: (url: string) => Promise<string> = downloadTextWithCache
+  downloadData: DownloadDataType = downloadDataWithCache
 ) => {
   // Perhaps use urlProcessingVersionDb as source of truth. Hmm. It is URL-based
   const hashToUrlDb = localForage.createInstance({
@@ -473,7 +489,7 @@ export const getAllComponentsAsRefs = async (
       try {
         const componentSpec = yaml.load(componentText) as ComponentSpec;
         // TODO: Store preloaded components.
-        preloadComponentReferences(componentSpec, downloadText);
+        preloadComponentReferences(componentSpec, downloadData);
         hashToComponentRef.set(hash, {
           spec: componentSpec,
         });
@@ -518,9 +534,9 @@ export const isComponentDbEmpty = async () => {
 
 export const searchComponentsByName = async (
   name: string,
-  downloadText: (url: string) => Promise<string> = downloadTextWithCache
+  downloadData: DownloadDataType = downloadDataWithCache
 ) => {
-  const componentRefs = await getAllComponentsAsRefs(downloadText);
+  const componentRefs = await getAllComponentsAsRefs(downloadData);
   return componentRefs.filter(
     (ref) => ref.spec?.name?.toLowerCase().includes(name.toLowerCase()) ?? false
   );

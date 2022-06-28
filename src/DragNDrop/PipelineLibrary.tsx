@@ -18,7 +18,7 @@ import {
 } from "@material-ui/core";
 import { useCallback, useState, useEffect, useRef } from "react";
 import { useStoreState } from "react-flow-renderer";
-import { downloadTextWithCache } from "../cacheUtils";
+import { DownloadDataType, downloadDataWithCache } from "../cacheUtils";
 import { ComponentSpec, isGraphImplementation } from "../componentSpec";
 import {
   loadComponentAsRefFromText,
@@ -41,7 +41,7 @@ interface PipelineLibraryProps {
   componentSpec?: ComponentSpec;
   setComponentSpec?: (componentSpec: ComponentSpec) => void;
   samplePipelineLibraryUrl?: string;
-  downloadText: (url: string) => Promise<string>;
+  downloadData: DownloadDataType;
 }
 
 const removeSuffixes = (s: string, suffixes: string[]) => {
@@ -196,7 +196,7 @@ const PipelineLibrary = ({
   componentSpec,
   setComponentSpec,
   samplePipelineLibraryUrl,
-  downloadText = downloadTextWithCache
+  downloadData = downloadDataWithCache
 }: PipelineLibraryProps) => {
   // const [errorMessage, setErrorMessage] = useState("");
   const [componentFiles, setComponentFiles] = useState(
@@ -223,12 +223,12 @@ const PipelineLibrary = ({
       // TODO: Move this functionality to the setComponentSpec function
       await preloadComponentReferences(
         fileEntry.componentRef.spec,
-        downloadText
+        downloadData
       );
       setComponentSpec?.(fileEntry.componentRef.spec);
       setPipelineFile(fileEntry);
     },
-    [setComponentSpec, setPipelineFile, downloadText]
+    [setComponentSpec, setPipelineFile, downloadData]
   );
 
   const onDrop = useCallback(
@@ -260,7 +260,7 @@ const PipelineLibrary = ({
               return;
             }
             // Caching the child components
-            await preloadComponentReferences(componentRef1.spec, downloadText);
+            await preloadComponentReferences(componentRef1.spec, downloadData);
             // TODO: Do not load the component twice
             const componentRefPlusData = await addComponentToListByText(
               USER_PIPELINES_LIST_NAME,
@@ -287,7 +287,7 @@ const PipelineLibrary = ({
         reader.readAsArrayBuffer(file);
       });
     },
-    [refreshPipelines, downloadText]
+    [refreshPipelines, downloadData]
   );
 
   const openSaveAsDialog = useCallback(() => {
@@ -480,7 +480,7 @@ const PipelineLibrary = ({
           <SamplePipelineLibrary
             setComponentSpec={setComponentSpec}
             pipelineLibraryUrl={samplePipelineLibraryUrl}
-            downloadText={downloadText}
+            downloadData={downloadData}
           />
         )}
       </details>
