@@ -365,6 +365,15 @@ const PipelineLibrary = ({
     }
   };
 
+  const openSamplePipeline = useCallback(
+    (pipelineSpec) => {
+      //Reset current file
+      setPipelineFile(undefined);
+      setComponentSpec?.(pipelineSpec);
+    },
+    [setComponentSpec]
+  );
+
   const fileInput = useRef<HTMLInputElement>(null);
   const componentLink = useRef<HTMLAnchorElement>(null);
 
@@ -477,7 +486,7 @@ const PipelineLibrary = ({
           "Sample pipeline library URL is undefined"
         ) : (
           <SamplePipelineLibrary
-            setComponentSpec={setComponentSpec}
+            setComponentSpec={openSamplePipeline}
             pipelineLibraryUrl={samplePipelineLibraryUrl}
             downloadData={downloadData}
           />
