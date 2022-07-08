@@ -123,25 +123,39 @@ export const preloadComponentReferences = async (
       componentSpec.implementation.graph.tasks
     )) {
       const componentUrl = taskSpec.componentRef.url;
-      if (
-        taskSpec.componentRef.spec === undefined &&
-        componentUrl !== undefined
-      ) {
-        let taskComponentSpec = componentMap.get(componentUrl);
-        if (taskComponentSpec === undefined) {
+      let taskComponentSpec = taskSpec.componentRef.spec;
+      if (taskComponentSpec === undefined) {
+        if (taskSpec.componentRef.text !== undefined) {
           const taskComponentRef = await loadComponentFromUrlAsRef(
-            componentUrl,
+            taskSpec.componentRef.text,
             downloadData
           );
           taskComponentSpec = taskComponentRef.spec;
-          componentMap.set(componentUrl, taskComponentSpec);
+        } else if (componentUrl !== undefined) {
+          taskComponentSpec = componentMap.get(componentUrl);
+          if (taskComponentSpec === undefined) {
+            const taskComponentRef = await loadComponentFromUrlAsRef(
+              componentUrl,
+              downloadData
+            );
+            taskComponentSpec = taskComponentRef.spec;
+            componentMap.set(componentUrl, taskComponentSpec);
+          }
         }
-        taskSpec.componentRef.spec = taskComponentSpec;
-        await preloadComponentReferences(
-          taskComponentSpec,
-          downloadData,
-          componentMap
-        );
+        if (taskComponentSpec === undefined) {
+          // TODO: Print task name here
+          console.error(
+            "Could not get component spec for task: ",
+            taskSpec.componentRef
+          );
+        } else {
+          taskSpec.componentRef.spec = taskComponentSpec;
+          await preloadComponentReferences(
+            taskSpec.componentRef.spec,
+            downloadData,
+            componentMap
+          );
+        }
       }
     }
   }
