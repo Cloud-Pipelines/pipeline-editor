@@ -398,7 +398,7 @@ const PipelineLibrary = ({
           Save
         </button>
         <button onClick={openSaveAsDialog}>Save as</button>
-        {componentSpec && (
+        {componentSpec && saveAsDialogIsOpen && (
           <SavePipelineAsDialog
             initialName={componentSpec.name}
             isOpen={saveAsDialogIsOpen}
