@@ -15,7 +15,7 @@ import {
   isValidComponentSpec,
 } from "./componentSpec";
 import {
-  loadComponentFromUrlAsRefPlusData,
+  loadComponentFromUrlAsRef,
   preloadComponentReferences,
 } from "./componentStore";
 
@@ -184,12 +184,12 @@ const importComponentsFromGitHubSearch = async (
       let componentText: string;
       try {
         // TODO: Consider fully preloading graph component children here.
-        const componentRefPlusData = await loadComponentFromUrlAsRefPlusData(
+        const componentRef = await loadComponentFromUrlAsRef(
           downloadUrl,
           downloadData
         );
-        componentText = new TextDecoder().decode(componentRefPlusData.data);
-        componentSpec = componentRefPlusData.componentRef.spec;
+        componentText = componentRef.text;
+        componentSpec = componentRef.spec;
       } catch (err) {
         const errorMessage =
           typeof err === "object" && err ? err.toString() : String(err);
@@ -370,12 +370,12 @@ const importComponentsFromFeed = async (
       if (componentText === undefined) {
         try {
           // TODO: Consider fully preloading graph component children here.
-          const componentRefPlusData = await loadComponentFromUrlAsRefPlusData(
+          const componentRef = await loadComponentFromUrlAsRef(
             downloadUrl,
             downloadData
           );
-          componentText = new TextDecoder().decode(componentRefPlusData.data);
-          //componentSpec = componentRefPlusData.componentRef.spec;
+          componentText = componentRef.text;
+          //componentSpec = componentRef.spec;
         } catch (err) {
           const error_message =
             err instanceof Error ? err.name + ": " + err.message : String(err);

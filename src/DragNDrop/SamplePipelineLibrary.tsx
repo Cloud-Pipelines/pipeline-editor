@@ -10,10 +10,9 @@ import { useState, useEffect } from "react";
 import { DownloadDataType, downloadDataWithCache, loadObjectFromYamlData } from "../cacheUtils";
 import { ComponentReference, ComponentSpec } from "../componentSpec";
 import {
-  storeComponentFromUrl,
   ComponentReferenceWithSpec,
+  fullyLoadComponentRefFromUrl,
 } from "../componentStore";
-import { preloadComponentReferences } from "../componentStore";
 
 type PipelineLibraryStruct = {
   annotations?: {
@@ -75,13 +74,9 @@ const SamplePipelineLibrary = ({
             .map((componentRef) => componentRef.url)
             .filter(notUndefined);
           const loadedComponentRefs = await Promise.all(
-            pipelineUrls.map(async (url) => {
-              // ?!!
-              const componentRefPlusData = await storeComponentFromUrl(url);
-              const componentRef = componentRefPlusData.componentRef;
-              await preloadComponentReferences(componentRef.spec, downloadData);
-              return componentRef;
-            })
+            pipelineUrls.map((url) =>
+              fullyLoadComponentRefFromUrl(url, downloadData)
+            )
           );
           setComponentRefs(loadedComponentRefs);
         } catch (err) {

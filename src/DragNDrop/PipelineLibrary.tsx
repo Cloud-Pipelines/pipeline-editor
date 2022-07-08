@@ -251,10 +251,9 @@ const PipelineLibrary = ({
               ".yaml",
             ]) || "Pipeline";
           try {
-            const componentRefPlusData1 = await loadComponentAsRefFromText(
+            const componentRef1 = await loadComponentAsRefFromText(
               binaryStr
             );
-            const componentRef1 = componentRefPlusData1.componentRef;
             if (!isGraphImplementation(componentRef1.spec.implementation)) {
               console.error("Dropped component is not a graph component");
               return;

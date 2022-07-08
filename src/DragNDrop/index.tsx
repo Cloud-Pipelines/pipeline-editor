@@ -21,7 +21,7 @@ import GraphComponentSpecFlow, {
 } from "./GraphComponentSpecFlow";
 import Sidebar from './Sidebar';
 import { getAppSettings } from '../appSettings';
-import { fullyLoadComponentFromUrl } from "../componentStore";
+import { fullyLoadComponentRefFromUrl } from "../componentStore";
 import {
   loadPipelineSpecFromSessionStorage,
   PipelineAutoSaver,
@@ -46,11 +46,11 @@ const DnDFlow = () => {
       }
       const defaultPipelineUrl = appSettings.defaultPipelineUrl;
       try {
-        const defaultPipelineSpec = await fullyLoadComponentFromUrl(
+        const defaultPipelineRef = await fullyLoadComponentRefFromUrl(
           defaultPipelineUrl,
           downloadData
         );
-        setComponentSpec(defaultPipelineSpec);
+        setComponentSpec(defaultPipelineRef.spec);
       } catch (err) {
         console.error(
           `Failed to load the default pipeline from ${defaultPipelineUrl}`

@@ -223,6 +223,8 @@ export const augmentComponentSpec = (
           newTaskSpec.componentRef = { ...newTaskSpec.componentRef };
           delete newTaskSpec.componentRef.spec;
         }
+        // Always deleting the text since it's not yet supported in some SDKs.
+        delete newTaskSpec.componentRef.text;
         return [taskId, newTaskSpec] as [string, TaskSpec];
       })
       .sort(taskOrderComparer)

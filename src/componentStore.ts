@@ -30,6 +30,8 @@ const FILE_STORE_DB_TABLE_NAME_PREFIX = "file_store_";
 export interface ComponentReferenceWithSpec extends ComponentReference {
   spec: ComponentSpec;
   digest: string;
+  // If ComponentReference has digest it probably should have text as well
+  text: string;
 }
 
 export interface ComponentReferenceWithSpecPlusData {
@@ -68,7 +70,7 @@ const storeComponentSpec = async (
 
 export const loadComponentAsRefFromText = async (
   componentText: string | ArrayBuffer
-) => {
+): Promise<ComponentReferenceWithSpec> => {
   const componentString =
     typeof componentText === "string"
       ? componentText
@@ -93,24 +95,18 @@ export const loadComponentAsRefFromText = async (
   const componentRef: ComponentReferenceWithSpec = {
     spec: componentSpec,
     digest: digest,
+    text: componentString,
   };
-  const componentRefPlusData: ComponentReferenceWithSpecPlusData = {
-    componentRef: componentRef,
-    data: componentBytes,
-  };
-  return componentRefPlusData;
+  return componentRef;
 };
 
-export const loadComponentFromUrlAsRefPlusData = async (
+export const loadComponentFromUrlAsRef = async (
   url: string,
   downloadData: DownloadDataType = downloadDataWithCache
-) => {
-  const componentRefPlusData = await downloadData(
-    url,
-    loadComponentAsRefFromText
-  );
-  componentRefPlusData.componentRef.url = url;
-  return componentRefPlusData;
+): Promise<ComponentReferenceWithSpec> => {
+  const componentRef = await downloadData(url, loadComponentAsRefFromText);
+  componentRef.url = url;
+  return componentRef;
 };
 
 export const preloadComponentReferences = async (
@@ -133,9 +129,11 @@ export const preloadComponentReferences = async (
       ) {
         let taskComponentSpec = componentMap.get(componentUrl);
         if (taskComponentSpec === undefined) {
-          const taskComponentRefPlusData =
-            await loadComponentFromUrlAsRefPlusData(componentUrl, downloadData);
-          taskComponentSpec = taskComponentRefPlusData.componentRef.spec;
+          const taskComponentRef = await loadComponentFromUrlAsRef(
+            componentUrl,
+            downloadData
+          );
+          taskComponentSpec = taskComponentRef.spec;
           componentMap.set(componentUrl, taskComponentSpec);
         }
         taskSpec.componentRef.spec = taskComponentSpec;
@@ -150,19 +148,20 @@ export const preloadComponentReferences = async (
   return componentSpec;
 };
 
-export const fullyLoadComponentFromUrl = async (
+export const fullyLoadComponentRefFromUrl = async (
   url: string,
   downloadData: DownloadDataType = downloadDataWithCache
-) => {
-  const componentRefPlusData = await loadComponentFromUrlAsRefPlusData(
-    url,
-    downloadData
-  );
+): Promise<ComponentReferenceWithSpec> => {
+  const componentRef = await loadComponentFromUrlAsRef(url, downloadData);
   const componentSpec = await preloadComponentReferences(
-    componentRefPlusData.componentRef.spec,
+    componentRef.spec,
     downloadData
   );
-  return componentSpec;
+  const newComponentRef: ComponentReferenceWithSpec = {
+    ...componentRef,
+    spec: componentSpec,
+  };
+  return newComponentRef;
 };
 
 export const storeComponentText = async (
@@ -172,38 +171,45 @@ export const storeComponentText = async (
     typeof componentText === "string"
       ? new TextEncoder().encode(componentText)
       : componentText;
-  const componentRefPlusData = await loadComponentAsRefFromText(componentText);
+  const componentRef = await loadComponentAsRefFromText(
+    componentText
+  );
   const digestToComponentTextDb = localForage.createInstance({
     name: DB_NAME,
     storeName: DIGEST_TO_DATA_DB_TABLE_NAME,
   });
-  const componentRef = componentRefPlusData.componentRef;
   await digestToComponentTextDb.setItem(
-    componentRefPlusData.componentRef.digest,
+    componentRef.digest,
     componentBytes
   );
   await storeComponentSpec(componentRef.digest, componentRef.spec);
 
-  return componentRefPlusData;
+  return componentRef;
 };
 
 export const getAllComponentsAsRefs = async () => {
-  const digestToComponentSpecDb = localForage.createInstance({
+  const digestToDataDb = localForage.createInstance({
     name: DB_NAME,
-    storeName: DIGEST_TO_COMPONENT_SPEC_DB_TABLE_NAME,
+    storeName: DIGEST_TO_DATA_DB_TABLE_NAME,
   });
 
   // TODO: Rewrite as async generator
-  let digestToComponentRef = new Map<string, ComponentReferenceWithSpec>();
-  await digestToComponentSpecDb.iterate<ComponentSpec, void>(
-    (componentSpec, digest, iterationNumber) => {
-      const componentRef: ComponentReferenceWithSpec = {
-        spec: componentSpec,
-        digest: digest,
-      };
-      digestToComponentRef.set(digest, componentRef);
+  const digestToComponentData = new Map<string, ArrayBuffer>();
+  await digestToDataDb.iterate<ArrayBuffer, void>(
+    (data, digest, iterationNumber) => {
+      digestToComponentData.set(digest, data);
     }
   );
+
+  const digestToComponentRef = new Map<string, ComponentReferenceWithSpec>(
+    await Promise.all(
+      Array.from(digestToComponentData.entries()).map(
+        async ([digest, data]) =>
+          [digest, await loadComponentAsRefFromText(data)] as const
+      )
+    )
+  );
+
   await addCanonicalUrlsToComponentReferences(digestToComponentRef);
 
   const componentRefs = Array.from(digestToComponentRef.values());
@@ -241,7 +247,7 @@ export const searchComponentsByName = async (name: string) => {
 export const storeComponentFromUrl = async (
   url: string,
   setUrlAsCanonical = false
-) => {
+): Promise<ComponentReferenceWithSpec> => {
   const urlToDigestDb = localForage.createInstance({
     name: DB_NAME,
     storeName: URL_TO_DIGEST_DB_TABLE_NAME,
@@ -268,12 +274,9 @@ export const storeComponentFromUrl = async (
         url: url,
         digest: existingDigest,
         spec: componentSpec,
+        text: new TextDecoder().decode(componentData),
       };
-      const componentRefPlusData: ComponentReferenceWithSpecPlusData = {
-        componentRef: componentRef,
-        data: componentData,
-      };
-      return componentRefPlusData;
+      return componentRef;
     } else {
       console.error(
         `Component db is corrupted: Component with url ${url} was added before with digest ${existingDigest} but now has no content in the DB.`
@@ -284,15 +287,14 @@ export const storeComponentFromUrl = async (
   // TODO: Think about whether to directly use fetch here.
   const response = await fetch(url);
   const componentData = await response.arrayBuffer();
-  let componentRefPlusData = await storeComponentText(componentData);
-  let componentRef = componentRefPlusData.componentRef;
+  const componentRef = await storeComponentText(componentData);
   componentRef.url = url;
   const digest = componentRef.digest;
   if (digest === undefined) {
     console.error(
       `Cannot happen: storeComponentText has returned componentReference with digest === undefined.`
     );
-    return componentRefPlusData;
+    return componentRef;
   }
   if (existingDigest !== null && digest !== existingDigest) {
     console.error(
@@ -322,7 +324,7 @@ export const storeComponentFromUrl = async (
   // Updating the urlToDigestDb last, because it's used to check for cached entries.
   // So we need to be sure that everything has been updated correctly.
   await urlToDigestDb.setItem(url, digest);
-  return componentRefPlusData;
+  return componentRef;
 };
 
 interface ComponentFileEntryV2 {
@@ -355,10 +357,10 @@ const makeNameUniqueByAddingIndex = (
   return finalName;
 };
 
-const writeComponentRefPlusDataToFile = async (
+const writeComponentRefToFile = async (
   listName: string,
   fileName: string,
-  componentRefPlusData: ComponentReferenceWithSpecPlusData
+  componentRef: ComponentReferenceWithSpec
 ) => {
   await upgradeSingleComponentListDb(listName);
   const tableName = FILE_STORE_DB_TABLE_NAME_PREFIX + listName;
@@ -370,31 +372,32 @@ const writeComponentRefPlusDataToFile = async (
     fileName
   );
   const currentTime = new Date();
+  const componentData = new TextEncoder().encode(componentRef.text);
   let fileEntry: ComponentFileEntry;
   if (existingFile === null) {
     fileEntry = {
-      componentRef: componentRefPlusData.componentRef,
+      componentRef: componentRef,
       name: fileName,
       creationTime: currentTime,
       modificationTime: currentTime,
-      data: componentRefPlusData.data,
+      data: componentData,
     };
   } else {
     fileEntry = {
       ...existingFile,
       name: fileName,
       modificationTime: currentTime,
-      data: componentRefPlusData.data,
-      componentRef: componentRefPlusData.componentRef,
+      data: componentData,
+      componentRef: componentRef,
     };
   }
   await componentListDb.setItem(fileName, fileEntry);
   return fileEntry;
 };
 
-const addComponentRefPlusDataToList = async (
+const addComponentRefToList = async (
   listName: string,
-  componentRefPlusData: ComponentReferenceWithSpecPlusData,
+  componentRef: ComponentReferenceWithSpec,
   fileName: string = "Component"
 ) => {
   await upgradeSingleComponentListDb(listName);
@@ -405,10 +408,10 @@ const addComponentRefPlusDataToList = async (
   });
   const existingNames = new Set<string>(await componentListDb.keys());
   const uniqueFileName = makeNameUniqueByAddingIndex(fileName, existingNames);
-  return writeComponentRefPlusDataToFile(
+  return writeComponentRefToFile(
     listName,
     uniqueFileName,
-    componentRefPlusData
+    componentRef
   );
 };
 
@@ -417,11 +420,11 @@ export const addComponentToListByUrl = async (
   url: string,
   defaultFileName: string = "Component"
 ) => {
-  const componentRefPlusData = await storeComponentFromUrl(url);
-  return addComponentRefPlusDataToList(
+  const componentRef = await storeComponentFromUrl(url);
+  return addComponentRefToList(
     listName,
-    componentRefPlusData,
-    componentRefPlusData.componentRef.spec.name ?? defaultFileName
+    componentRef,
+    componentRef.spec.name ?? defaultFileName
   );
 };
 
@@ -431,11 +434,11 @@ export const addComponentToListByText = async (
   fileName?: string,
   defaultFileName: string = "Component"
 ) => {
-  const componentRefPlusData = await storeComponentText(componentText);
-  return addComponentRefPlusDataToList(
+  const componentRef = await storeComponentText(componentText);
+  return addComponentRefToList(
     listName,
-    componentRefPlusData,
-    fileName ?? componentRefPlusData.componentRef.spec.name ?? defaultFileName
+    componentRef,
+    fileName ?? componentRef.spec.name ?? defaultFileName
   );
 };
 
@@ -444,11 +447,11 @@ export const writeComponentToFileListFromText = async (
   fileName: string,
   componentText: string | ArrayBuffer
 ) => {
-  const componentRefPlusData = await storeComponentText(componentText);
-  return writeComponentRefPlusDataToFile(
+  const componentRef = await storeComponentText(componentText);
+  return writeComponentRefToFile(
     listName,
     fileName,
-    componentRefPlusData
+    componentRef
   );
 };
 
@@ -541,7 +544,7 @@ const upgradeSingleComponentListDb = async (listName: string) => {
   let listFormatVersion =
     (await componentStoreSettingsDb.getItem<number>(componentListVersionKey)) ??
     1;
-  if (![1, 2, 3].includes(listFormatVersion)) {
+  if (![1, 2, 3, 4].includes(listFormatVersion)) {
     throw Error(
       `upgradeComponentListDb: Unknown component list version "${listFormatVersion}" for the list ${listName}`
     );
@@ -620,6 +623,30 @@ const upgradeSingleComponentListDb = async (listName: string) => {
       await componentListDb.setItem(fileName, newFileEntry);
     }
     listFormatVersion = 3;
+    await componentStoreSettingsDb.setItem(
+      componentListVersionKey,
+      listFormatVersion
+    );
+    console.log(
+      `componentStore: Upgraded the component list DB ${listName} to version ${listFormatVersion}`
+    );
+  }
+  if (listFormatVersion === 3) {
+    // Upgrading the DB to backfill entry.componentRef.text from entry.data
+    const fileNames = await componentListDb.keys();
+    for (const fileName of fileNames) {
+      const fileEntry = await componentListDb.getItem<ComponentFileEntryV3>(
+        fileName
+      );
+      if (fileEntry === null) {
+        throw Error(`File "${fileName}" has disappeared during upgrade`);
+      }
+      if (!fileEntry.componentRef.text) {
+        fileEntry.componentRef.text = new TextDecoder().decode(fileEntry.data)
+      }
+      await componentListDb.setItem(fileName, fileEntry);
+    }
+    listFormatVersion = 4;
     await componentStoreSettingsDb.setItem(
       componentListVersionKey,
       listFormatVersion

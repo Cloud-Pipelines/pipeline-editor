@@ -164,6 +164,14 @@ export interface ComponentReference {
   tag?: string;
   url?: string;
   spec?: ComponentSpec;
+  // Holds unparsed component text. An alternative to spec.
+  // url -> data -> text -> spec
+  // This simplifies code due to ability to preserve the original component data corresponding to the hash digest.
+  // I debated whether to use data (binary) or text here and decided on text.
+  // ComponentSpec is usually serialized to YAML or JSON formats that are text based
+  // and have better support for text compared to binary data.
+  // Not yet in the standard.
+  text?: string;
 }
 /**
  * Represents the component argument value that comes from the graph component input.

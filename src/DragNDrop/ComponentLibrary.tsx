@@ -9,9 +9,9 @@
 import { useEffect, useState } from "react";
 import { DownloadDataType, downloadDataWithCache, loadObjectFromYamlData } from "../cacheUtils";
 
-import { ComponentReference, ComponentSpec } from "../componentSpec";
+import { ComponentReference } from "../componentSpec";
 import DraggableComponent from "./DraggableComponent";
-import { fullyLoadComponentFromUrl } from "../componentStore";
+import { ComponentReferenceWithSpec, fullyLoadComponentRefFromUrl } from "../componentStore";
 
 type ComponentLibraryFolder = {
   name: string;
@@ -39,26 +39,21 @@ const DraggableComponentRow = ({
   componentUrl,
   downloadData = downloadDataWithCache,
 }: DraggableComponentRowProps) => {
-  const [componentSpec, setComponentSpec] = useState<ComponentSpec | undefined>(
-    undefined
-  );
+  const [componentRef, setComponentRef] = useState<
+    ComponentReferenceWithSpec | undefined
+  >(undefined);
   useEffect(() => {
     // TODO: Validate the component
     // Loading the component (preloading the graph component children as well).
-    fullyLoadComponentFromUrl(componentUrl, downloadData).then(setComponentSpec);
+    fullyLoadComponentRefFromUrl(componentUrl, downloadData).then(
+      setComponentRef
+    );
   }, [componentUrl, downloadData]);
 
-  if (componentSpec === undefined) {
+  if (componentRef === undefined) {
     return <div>Loading...</div>;
   } else {
-    return (
-      <DraggableComponent
-        componentReference={{
-          url: componentUrl,
-          spec: componentSpec,
-        }}
-      />
-    );
+    return <DraggableComponent componentReference={componentRef} />;
   }
 };
 
