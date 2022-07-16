@@ -7,11 +7,17 @@
  */
 
 import { useEffect, useState } from "react";
-import { DownloadDataType, downloadDataWithCache, loadObjectFromYamlData } from "../cacheUtils";
-
+import {
+  DownloadDataType,
+  downloadDataWithCache,
+  loadObjectFromYamlData,
+} from "../cacheUtils";
 import { ComponentReference } from "../componentSpec";
+import {
+  ComponentReferenceWithSpec,
+  fullyLoadComponentRef,
+} from "../componentStore";
 import DraggableComponent from "./DraggableComponent";
-import { ComponentReferenceWithSpec, fullyLoadComponentRef } from "../componentStore";
 
 export type ComponentLibraryFolder = {
   name: string;
@@ -107,7 +113,7 @@ export const SingleFolderVis = ({
 
 export const ComponentLibraryVisFromStruct = ({
   componentLibraryStruct,
-  downloadData = downloadDataWithCache
+  downloadData = downloadDataWithCache,
 }: {
   componentLibraryStruct?: ComponentLibraryStruct;
   downloadData: DownloadDataType;
