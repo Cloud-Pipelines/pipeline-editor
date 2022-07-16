@@ -11,7 +11,7 @@ import { DownloadDataType, downloadDataWithCache, loadObjectFromYamlData } from 
 
 import { ComponentReference } from "../componentSpec";
 import DraggableComponent from "./DraggableComponent";
-import { ComponentReferenceWithSpec, fullyLoadComponentRefFromUrl } from "../componentStore";
+import { ComponentReferenceWithSpec, fullyLoadComponentRef } from "../componentStore";
 
 type ComponentLibraryFolder = {
   name: string;
@@ -31,36 +31,36 @@ export const isValidComponentLibraryStruct = (
 ): obj is ComponentLibraryStruct => "folders" in obj;
 
 interface DraggableComponentRowProps {
-  componentUrl: string;
+  componentRef: ComponentReference;
   downloadData: DownloadDataType;
 }
 
 const DraggableComponentRow = ({
-  componentUrl,
+  componentRef,
   downloadData = downloadDataWithCache,
 }: DraggableComponentRowProps) => {
-  const [componentRef, setComponentRef] = useState<
+  const [componentRefWithSpec, setComponentRefWithSpec] = useState<
     ComponentReferenceWithSpec | undefined
   >(undefined);
   useEffect(() => {
     // TODO: Validate the component
     // Loading the component (preloading the graph component children as well).
-    fullyLoadComponentRefFromUrl(componentUrl, downloadData).then(
-      setComponentRef
+    fullyLoadComponentRef(componentRef, downloadData).then(
+      setComponentRefWithSpec
     );
-  }, [componentUrl, downloadData]);
+  }, [componentRef, downloadData]);
 
-  if (componentRef === undefined) {
+  if (componentRefWithSpec === undefined) {
     return <div>Loading...</div>;
   } else {
-    return <DraggableComponent componentReference={componentRef} />;
+    return <DraggableComponent componentReference={componentRefWithSpec} />;
   }
 };
 
 const SingleFolderVis = ({
   folder,
   isOpen = false,
-  downloadData = downloadDataWithCache
+  downloadData = downloadDataWithCache,
 }: {
   folder: ComponentLibraryFolder;
   isOpen?: boolean;
@@ -90,16 +90,17 @@ const SingleFolderVis = ({
           />
         ))}
       {folder.components &&
-        Array.from(folder.components).map(
-          (componentReference) =>
-            componentReference.url && (
-              <DraggableComponentRow
-                key={componentReference.url}
-                componentUrl={componentReference.url}
-                downloadData={downloadData}
-              />
-            )
-        )}
+        Array.from(folder.components).map((componentReference) => (
+          <DraggableComponentRow
+            key={
+              componentReference.digest ||
+              componentReference.url ||
+              componentReference.text
+            }
+            componentRef={componentReference}
+            downloadData={downloadData}
+          />
+        ))}
     </details>
   );
 };
