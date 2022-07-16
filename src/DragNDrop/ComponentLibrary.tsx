@@ -13,13 +13,13 @@ import { ComponentReference } from "../componentSpec";
 import DraggableComponent from "./DraggableComponent";
 import { ComponentReferenceWithSpec, fullyLoadComponentRef } from "../componentStore";
 
-type ComponentLibraryFolder = {
+export type ComponentLibraryFolder = {
   name: string;
   folders: ComponentLibraryFolder[];
   components: ComponentReference[];
 };
 
-type ComponentLibraryStruct = {
+export type ComponentLibraryStruct = {
   annotations?: {
     [k: string]: unknown;
   };
@@ -35,7 +35,7 @@ interface DraggableComponentRowProps {
   downloadData: DownloadDataType;
 }
 
-const DraggableComponentRow = ({
+export const DraggableComponentRow = ({
   componentRef,
   downloadData = downloadDataWithCache,
 }: DraggableComponentRowProps) => {
@@ -57,7 +57,7 @@ const DraggableComponentRow = ({
   }
 };
 
-const SingleFolderVis = ({
+export const SingleFolderVis = ({
   folder,
   isOpen = false,
   downloadData = downloadDataWithCache,
@@ -105,7 +105,7 @@ const SingleFolderVis = ({
   );
 };
 
-const ComponentLibraryVisFromStruct = ({
+export const ComponentLibraryVisFromStruct = ({
   componentLibraryStruct,
   downloadData = downloadDataWithCache
 }: {
