@@ -178,6 +178,58 @@ export const fullyLoadComponentRefFromUrl = async (
   return newComponentRef;
 };
 
+export const fullyLoadComponentRef = async (
+  componentRef: ComponentReference,
+  downloadData: DownloadDataType = downloadDataWithCache,
+  recursive: boolean = true
+): Promise<ComponentReferenceWithSpec> => {
+  let newComponentRef: ComponentReferenceWithSpec;
+  if (componentRef.spec === undefined) {
+    if (componentRef.text !== undefined) {
+      const loadedComponentRef = await loadComponentAsRefFromText(
+        componentRef.text
+      );
+      newComponentRef = {
+        ...componentRef,
+        spec: loadedComponentRef.spec,
+        digest: loadedComponentRef.digest,
+        text: loadedComponentRef.text,
+      };
+    } else {
+      if (componentRef.url !== undefined) {
+        const loadedComponentRef = await loadComponentFromUrlAsRef(
+          componentRef.url,
+          downloadData
+        );
+        newComponentRef = {
+          ...componentRef,
+          spec: loadedComponentRef.spec,
+          digest: loadedComponentRef.digest,
+          text: loadedComponentRef.text,
+        };
+      } else {
+        throw Error(
+          `The component reference cannot be materialized since it has no information: ${componentRef}`
+        );
+      }
+    }
+  } else {
+    console.warn("Regenerating component text from spec. Avoid this.");
+    const componentText = componentSpecToYaml(componentRef.spec);
+    const componentDigest = await calculateHashDigestHex(componentText);
+    newComponentRef = {
+      ...componentRef,
+      spec: componentRef.spec,
+      digest: componentDigest,
+      text: componentText,
+    };
+  }
+  if (recursive) {
+    preloadComponentReferences(newComponentRef.spec, downloadData);
+  }
+  return newComponentRef;
+};
+
 export const storeComponentText = async (
   componentText: string | ArrayBuffer
 ) => {
