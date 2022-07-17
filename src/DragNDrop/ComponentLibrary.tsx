@@ -148,23 +148,21 @@ export const ComponentLibraryVisFromStruct = ({
   componentLibraryStruct,
   downloadData = downloadDataWithCache,
 }: {
-  componentLibraryStruct?: ComponentLibraryStruct;
+  componentLibraryStruct: ComponentLibraryStruct;
   downloadData: DownloadDataType;
 }) => {
   return (
     <>
-      {componentLibraryStruct === undefined
-        ? "The library is not loaded"
-        : Array.from(componentLibraryStruct.folders).map(
-            (componentFolder, index) => (
-              <SingleFolderVis
-                key={componentFolder.name}
-                folder={componentFolder}
-                isOpen={index === 0}
-                downloadData={downloadData}
-              />
-            )
-          )}
+      {Array.from(componentLibraryStruct.folders).map(
+        (componentFolder, index) => (
+          <SingleFolderVis
+            key={componentFolder.name}
+            folder={componentFolder}
+            isOpen={index === 0}
+            downloadData={downloadData}
+          />
+        )
+      )}
     </>
   );
 };
@@ -217,7 +215,9 @@ const ComponentLibraryVisFromUrl = ({
     }
   }, [componentLibraryStruct, url, downloadData]);
 
-  return (
+  return componentLibraryStruct === undefined ? (
+    "The library is not loaded"
+  ) : (
     <ComponentLibraryVisFromStruct
       componentLibraryStruct={componentLibraryStruct}
       downloadData={downloadData}
