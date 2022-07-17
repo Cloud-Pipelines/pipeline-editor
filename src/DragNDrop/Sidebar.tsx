@@ -89,10 +89,17 @@ const Sidebar = ({
           Output
         </div>
       </details>
-      <ComponentLibrary
-        url={appSettings.componentLibraryUrl}
-        downloadData={downloadData}
-      />
+      <details open>
+        <summary style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>
+          <strong>Component library</strong>
+        </summary>
+        <div style={{ paddingLeft: "10px" }}>
+          <ComponentLibrary
+            url={appSettings.componentLibraryUrl}
+            downloadData={downloadData}
+          />
+        </div>
+      </details>
       <details style={{ border: "1px solid #aaa", borderRadius: "4px", padding: "4px" }}>
         <summary style={{ borderWidth: "1px", padding: "4px", fontWeight: "bold" }}>User components</summary>
         <UserComponentLibrary/>

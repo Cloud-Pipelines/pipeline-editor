@@ -152,31 +152,20 @@ export const ComponentLibraryVisFromStruct = ({
   downloadData: DownloadDataType;
 }) => {
   return (
-    <details open>
-      <summary
-        style={{
-          border: "1px solid #aaa",
-          padding: "4px",
-          borderRadius: "4px",
-        }}
-      >
-        <strong>Component library</strong>
-      </summary>
-      <div style={{ paddingLeft: "10px" }}>
-        {componentLibraryStruct === undefined
-          ? "The library is not loaded"
-          : Array.from(componentLibraryStruct.folders).map(
-              (componentFolder, index) => (
-                <SingleFolderVis
-                  key={componentFolder.name}
-                  folder={componentFolder}
-                  isOpen={index === 0}
-                  downloadData={downloadData}
-                />
-              )
-            )}
-      </div>
-    </details>
+    <>
+      {componentLibraryStruct === undefined
+        ? "The library is not loaded"
+        : Array.from(componentLibraryStruct.folders).map(
+            (componentFolder, index) => (
+              <SingleFolderVis
+                key={componentFolder.name}
+                folder={componentFolder}
+                isOpen={index === 0}
+                downloadData={downloadData}
+              />
+            )
+          )}
+    </>
   );
 };
 
