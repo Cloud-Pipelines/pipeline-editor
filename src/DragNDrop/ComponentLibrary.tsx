@@ -83,7 +83,20 @@ export const SingleFolderVis = ({
         paddingLeft: "10px",
       }}
     >
-      <summary style={{ borderWidth: "1px", padding: "4px" }}>
+      <summary
+        style={{
+          borderWidth: "1px",
+          padding: "4px",
+          // Managing the summary text overflow
+          // Having the styles in <strong> causes the summary marker and the text to be on different lines.
+          textOverflow: "ellipsis",
+          //maxWidth: "90%",
+          overflow: "hidden",
+          whiteSpace: "nowrap",
+          //display: "block",
+        }}
+        title={folder.name}
+      >
         <strong>{folder.name}</strong>
       </summary>
       {folder.folders &&
