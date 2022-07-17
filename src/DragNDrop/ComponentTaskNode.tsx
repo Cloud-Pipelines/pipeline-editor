@@ -58,6 +58,8 @@ function generateHandles(
     classNames = classNames.map((className) => className.replace(/ /g, "_"));
 
     const [labelClasses, labelStyle] = generateLabelStyle(position, numHandles);
+    const handleTitle =
+      ioSpec.name + " : " + ioTypeName + "\n" + (ioSpec.description || "");
     handleComponents.push(
       <Handle
         key={id}
@@ -66,7 +68,7 @@ function generateHandles(
         id={id}
         style={style}
         isConnectable={true}
-        title={ioSpec.name + " : " + ioTypeName}
+        title={handleTitle}
         className={classNames.join(" ")}
       >
         <div className={labelClasses} style={labelStyle}>
