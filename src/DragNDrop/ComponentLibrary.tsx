@@ -63,6 +63,42 @@ export const DraggableComponentRow = ({
   }
 };
 
+export const FoldersAndComponentsVis = ({
+  folder,
+  isOpen = false,
+  downloadData = downloadDataWithCache,
+}: {
+  folder: ComponentLibraryFolder;
+  isOpen?: boolean;
+  downloadData: DownloadDataType;
+}) => {
+  return (
+    <>
+      {folder.folders &&
+        Array.from(folder.folders).map((componentFolder, index) => (
+          <SingleFolderVis
+            key={componentFolder.name}
+            folder={componentFolder}
+            isOpen={isOpen && index === 0}
+            downloadData={downloadData}
+          />
+        ))}
+      {folder.components &&
+        Array.from(folder.components).map((componentReference) => (
+          <DraggableComponentRow
+            key={
+              componentReference.digest ||
+              componentReference.url ||
+              componentReference.text
+            }
+            componentRef={componentReference}
+            downloadData={downloadData}
+          />
+        ))}
+    </>
+  );
+};
+
 export const SingleFolderVis = ({
   folder,
   isOpen = false,
@@ -99,27 +135,11 @@ export const SingleFolderVis = ({
       >
         <strong>{folder.name}</strong>
       </summary>
-      {folder.folders &&
-        Array.from(folder.folders).map((componentFolder, index) => (
-          <SingleFolderVis
-            key={componentFolder.name}
-            folder={componentFolder}
-            isOpen={isOpen && index === 0}
-            downloadData={downloadData}
-          />
-        ))}
-      {folder.components &&
-        Array.from(folder.components).map((componentReference) => (
-          <DraggableComponentRow
-            key={
-              componentReference.digest ||
-              componentReference.url ||
-              componentReference.text
-            }
-            componentRef={componentReference}
-            downloadData={downloadData}
-          />
-        ))}
+      <FoldersAndComponentsVis
+        folder={folder}
+        isOpen={isOpen}
+        downloadData={downloadData}
+      />
     </details>
   );
 };
