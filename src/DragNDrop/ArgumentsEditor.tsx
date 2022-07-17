@@ -76,6 +76,10 @@ const ArgumentsEditor = ({
           typeSpecToString(inputSpec.type) +
           (inputSpec.optional === true ? "?" : "");
 
+        const inputTitle = `${inputName} (${typeSpecString})\n${
+          inputSpec.description || ""
+        }`;
+
         return (
           <div
             key={inputName}
@@ -84,7 +88,7 @@ const ArgumentsEditor = ({
             }}
           >
             <label
-              title={`${inputName} (${typeSpecString})`}
+              title={inputTitle}
               style={{
                 textAlign: "right",
                 display: "table-cell",
