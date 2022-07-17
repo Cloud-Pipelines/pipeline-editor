@@ -34,12 +34,15 @@ const DraggableComponent = ({
   componentReference,
   ...props
 }: DraggableComponentProps) => {
-  let title = componentReference.spec?.name;
+  let title = componentReference.spec?.name || "";
   if (componentReference.url) {
     title += "\nUrl: " + componentReference.url;
   }
   if (componentReference.digest) {
     title += "\nDigest: " + componentReference.digest;
+  }
+  if (componentReference.spec?.description) {
+    title += "\nDescription: " + componentReference.spec?.description;
   }
   return (
     <div

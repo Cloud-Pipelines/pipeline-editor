@@ -143,6 +143,9 @@ const ComponentTaskNode = ({ data }: NodeProps<ComponentTaskNodeProps>) => {
   if (taskSpec.componentRef.digest) {
     title += "\nDigest: " + taskSpec.componentRef.digest;
   }
+  if (componentSpec.description) {
+    title += "\nDescription: " + componentSpec.description;
+  }
   const inputsWithInvalidArguments = (componentSpec.inputs ?? [])
     .filter(
       (inputSpec) =>
