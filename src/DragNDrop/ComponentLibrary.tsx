@@ -216,7 +216,7 @@ const ComponentLibraryVisFromUrl = ({
   }, [componentLibraryStruct, url, downloadData]);
 
   return componentLibraryStruct === undefined ? (
-    "The library is not loaded"
+    <>"The library is not loaded"</>
   ) : (
     <ComponentLibraryVisFromStruct
       componentLibraryStruct={componentLibraryStruct}
