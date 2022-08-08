@@ -465,7 +465,7 @@ function buildArgoDagTemplateFromGraphComponentSpec(
       return existingId;
     }
     const usedIds = new Set(Object.keys(argoTasks));
-    const id = sanitizeID(makeNameUniqueByAddingIndex(namePrefix, usedIds));
+    const id = makeNameUniqueByAddingIndex(namePrefix, usedIds, sanitizeID);
     taskStringToTaskId.set(serializedSpec, id);
     argoTasks[id] = task;
     // Setting the task name to the generated ID
@@ -788,13 +788,20 @@ const buildArgoDagTaskFromTaskSpec = (
 const makeNameUniqueByAddingIndex = (
   name: string,
   existingNames: Set<string>,
+  sanitizer: (name: string) => string = (x) => x,
   delimiter: string = "-"
 ): string => {
-  let finalName = name;
+  let finalName = sanitizer(name);
   let index = 1;
   while (existingNames.has(finalName)) {
     index++;
-    finalName = name + delimiter + index.toString();
+    const newFinalName = sanitizer(name + delimiter + index.toString());
+    if (newFinalName === finalName) {
+      throw Error(
+        `The name sanitizer seems to truncate the name which makes it impossible to make the name unique. ${newFinalName}`
+      );
+    }
+    finalName = newFinalName;
   }
   return finalName;
 };
@@ -819,8 +826,12 @@ export const buildArgoWorkflowSpecFromGraphComponentSpec = (
       return existingId;
     }
     const usedIds = new Set(Object.keys(argoTemplates));
-    const id = sanitizeID(
-      makeNameUniqueByAddingIndex(namePrefix, usedIds, "-")
+    // Note: The generated ID should be used without changes (e.g. sanitization).
+    // Otherwise the result of de-duplication will be incorrect.
+    const id = makeNameUniqueByAddingIndex(
+      namePrefix,
+      usedIds,
+      sanitizeID,
     );
     templateStringToTemplateId.set(serializedSpec, id);
     argoTemplates[id] = template;
