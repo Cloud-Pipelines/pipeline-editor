@@ -7,7 +7,6 @@
  */
 
 import {
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -16,6 +15,7 @@ import {
   MenuItem,
   TextField,
 } from "@mui/material";
+import { Button } from "@/components/ui/button"
 import { useCallback, useState, useEffect, useRef } from "react";
 import { useStore } from "@xyflow/react";
 import type { DownloadDataType } from "../cacheUtils";
@@ -387,9 +387,9 @@ const PipelineLibrary = ({
     >
       <div style={{ margin: "5px" }}>
         <Button
-          variant="contained"
+
           color="primary"
-          size="small"
+
           onClick={() => {
             if (pipelineFile) {
               handlePipelineSave(pipelineFile?.name, true);
@@ -401,9 +401,7 @@ const PipelineLibrary = ({
           Save
         </Button>
         <Button
-          variant="contained"
           color="primary"
-          size="small"
           onClick={openSaveAsDialog}
         >
           Save as
@@ -425,17 +423,13 @@ const PipelineLibrary = ({
           style={{ display: "none" }}
         />
         <Button
-          variant="contained"
           color="primary"
-          size="small"
           onClick={() => fileInput.current?.click()}
         >
           + Import
         </Button>
         <Button
-          variant="contained"
           color="primary"
-          size="small"
           onClick={() => {
             componentLink.current?.click();
           }}
@@ -460,9 +454,7 @@ const PipelineLibrary = ({
           <div key={fileName}>
             ⋮ {/* ⋮ ≡ ⋅ */}
             <Button
-              variant="contained"
               color="primary"
-              size="small"
               onClick={() => openPipelineFile(fileEntry)}
               style={
                 fileName === pipelineFile?.name

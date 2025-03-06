@@ -7,13 +7,17 @@
  */
 
 import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   TextField,
 } from "@mui/material";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
 import { useState } from "react";
 import { getMutableAppSettings } from "../appSettings";
 
@@ -68,10 +72,12 @@ const AppSettingsDialog = ({ isOpen, handleClose }: AppSettingsDialogProps) => {
   };
 
   return (
-    <Dialog open={isOpen} onClose={handleClose}>
-      <DialogTitle>Settings</DialogTitle>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogHeader>
+        <DialogTitle>Settings</DialogTitle>
+      </DialogHeader>
+
       <DialogContent>
-        {/* <DialogContentText>Application settings</DialogContentText> */}
         <TextField
           id="component_library_url"
           label="Component library URL"
@@ -128,18 +134,20 @@ const AppSettingsDialog = ({ isOpen, handleClose }: AppSettingsDialogProps) => {
           value={googleCloudOAuthClientId}
           onChange={(e) => setGoogleCloudOAuthClientId(e.target.value)}
         />
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose} color="primary">
+         <DialogFooter>
+          <Button onClick={handleClose} color="primary">
           Cancel
         </Button>
         <Button onClick={handleSave} color="primary">
           Save
         </Button>
-        <Button onClick={handleReset} color="secondary">
+        <Button onClick={handleReset} variant="outline" color="error">
           Reset
         </Button>
-      </DialogActions>
+        </DialogFooter>
+      </DialogContent>
+
+
     </Dialog>
   );
 };

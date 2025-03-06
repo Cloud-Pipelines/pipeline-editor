@@ -7,7 +7,6 @@
  */
 
 import {
-  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -16,6 +15,7 @@ import {
   MenuItem,
   TextField,
 } from "@mui/material";
+import { Button } from "@/components/ui/button"
 import { useCallback, useState, useEffect, useRef } from "react";
 import { useDropzone } from "react-dropzone";
 import {

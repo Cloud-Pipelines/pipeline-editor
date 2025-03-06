@@ -8,20 +8,21 @@
 
 import type {
   ArgumentType,
-  ComponentSpec,
+  InputSpec,
   TypeSpecType,
 } from "../componentSpec";
+import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { ScrollArea } from "@/components/ui/scroll-area"
+
 
 interface ArgumentsEditorProps {
-  componentSpec: ComponentSpec;
+  inputs: InputSpec[];
   componentArguments: Record<string, ArgumentType>;
   setComponentArguments: (args: Record<string, ArgumentType>) => void;
   shrinkToWidth?: boolean;
 }
-
-const getPatternForTypeSpec = (_typeSpec?: TypeSpecType) => {
-  return undefined;
-};
 
 const typeSpecToString = (typeSpec?: TypeSpecType): string => {
   if (typeSpec === undefined) {
@@ -33,133 +34,76 @@ const typeSpecToString = (typeSpec?: TypeSpecType): string => {
   return JSON.stringify(typeSpec);
 };
 
+const getInputValueOrPlaceholder = (argument: ArgumentType, inputSpec: InputSpec) => {
+
+  if (argument === undefined) {
+    return {
+      value: inputSpec.default,
+      placeholder: undefined
+    };
+  }
+
+  if (typeof argument === "string") {
+    return {
+      value: argument,
+      placeholder: undefined
+    };
+  }
+  if ("taskOutput" in argument) {
+    return {
+      value: undefined,
+      placeholder: `<from task ${argument.taskOutput.taskId} / ${argument.taskOutput.outputName}>`
+    };
+  }
+  if ("graphInput" in argument) {
+    return {
+      value: undefined,
+      placeholder: `<from graph input ${argument.graphInput.inputName}>`
+    };
+  }
+  return {
+    value: undefined,
+    placeholder: "<reference>"
+  };
+}
+
 const ArgumentsEditor = ({
-  componentSpec,
+  inputs,
   componentArguments,
   setComponentArguments,
-  shrinkToWidth = false,
 }: ArgumentsEditorProps) => {
-  return (
-    <div
-      className="highlight-invalid-inputs"
-      style={{
-        display: "table",
-        borderSpacing: "5px",
-        // Enables shrinking the table. But also makes all columns same width regardless of the content
-        tableLayout: shrinkToWidth ? "fixed" : "auto",
-        // Width is needed for table-layout: "fixed" to work
-        width: "100%",
-      }}
-    >
-      {(componentSpec.inputs ?? []).map((inputSpec) => {
-        const inputName = inputSpec.name;
-        let value: string | undefined = undefined;
-        let placeholder: string | undefined = undefined;
-        const argument = componentArguments[inputName];
-        if (argument === undefined) {
-          value = inputSpec.default;
-        } else {
-          if (typeof argument === "string") {
-            value = argument;
-          } else if ("taskOutput" in argument) {
-            placeholder = `<from task ${argument.taskOutput.taskId} / ${argument.taskOutput.outputName}>`;
-          } else if ("graphInput" in argument) {
-            placeholder = `<from graph input ${argument.graphInput.inputName}>`;
-          } else {
-            placeholder = "<reference>";
-          }
-        }
 
-        const argumentIsRequiredButMissing =
-          !(inputName in componentArguments) &&
-          inputSpec.optional !== true &&
-          inputSpec.default === undefined;
-
-        const typeSpecString =
-          typeSpecToString(inputSpec.type) +
-          (inputSpec.optional === true ? "?" : "");
-
-        const inputTitle = `${inputName} (${typeSpecString})\n${
-          inputSpec.description || ""
-        }`;
-
-        return (
-          <div
-            key={inputName}
-            style={{
-              display: "table-row",
+  const handleSetDefaultOrRemove = (input: InputSpec) => {
+    const newArgs = { ...componentArguments };
+    if (input.default !== undefined) {
+      newArgs[input.name] = input.default;
+    } else {
+      delete newArgs[input.name];
+    }
+    setComponentArguments(newArgs);
+  }
+  return <ScrollArea className="h-[500px] p-4">
+    {inputs.map((input) => {
+      return <div key={input.name} className="flex flex-col gap-2 mb-4">
+        <Label htmlFor={input.name}>{input.name} ({typeSpecToString(input.type) + (!input.optional ? "*" : "")})</Label>
+        <div className="flex w-full max-w-sm items-center space-x-2">
+          <Input
+            id={input.name}
+            {...getInputValueOrPlaceholder(componentArguments[input.name], input)}
+            onChange={(e) => {
+              setComponentArguments({ ...componentArguments, [input.name]: e.target.value });
             }}
-          >
-            <label
-              title={inputTitle}
-              style={{
-                textAlign: "right",
-                display: "table-cell",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-            >
-              <span>
-                {inputName} (
-                <span
-                  style={{
-                    textOverflow: "ellipsis",
-                    overflow: "hidden",
-                    maxWidth: "90px",
-                    display: "inline-block",
-                    verticalAlign: "bottom",
-                  }}
-                  title={typeSpecString}
-                >
-                  {typeSpecString}
-                </span>
-                )
-              </span>
-            </label>
-            <input
-              style={{
-                display: "table-cell",
-                // Prevents border flickering and disappearing on movement
-                borderWidth: "1px",
-                // Overriding both min-width and max-width to enable the input element shrinking
-                minWidth: "50px",
-                maxWidth: "100%",
-              }}
-              placeholder={placeholder}
-              required={argumentIsRequiredButMissing}
-              value={value ?? ""}
-              pattern={getPatternForTypeSpec(inputSpec.type)}
-              onChange={(e) => {
-                componentArguments[inputName] = e.target.value;
-                setComponentArguments({ ...componentArguments });
-              }}
-            />
-            <div
-              style={{
-                display: "table-cell",
-                // Setting explicit width to make the button column smaller. Otherwise it takes 1/3 of the total width when the table-layout is set to fixed.
-                // The width should have been set to "min-content", but that does not work for some reason
-                width: "30px",
-              }}
-            >
-              <button
-                type="button"
-                title="Reset to default"
-                onClick={() => {
-                  delete componentArguments[inputName];
-                  setComponentArguments({ ...componentArguments });
-                }}
-                disabled={!(inputName in componentArguments)}
-              >
-                ⌧
-              </button>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
+
+            required={!input.optional}
+          />
+          <Button type="button" onClick={() => {
+            handleSetDefaultOrRemove(input);
+          }}>⌧</Button>
+        </div>
+      </div>
+    })}
+  </ScrollArea>
+
 };
 
 export default ArgumentsEditor;
