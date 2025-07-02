@@ -1,8 +1,12 @@
-import { Frown, Videotape } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { CircleStopIcon, Frown, Videotape } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useExecutionStatusQuery } from "@/hooks/useExecutionStatusQuery";
+import useToastNotification from "@/hooks/useToastNotification";
 import {
   countTaskStatuses,
   fetchExecutionInfo,
@@ -17,6 +21,82 @@ import { TaskImplementation } from "../shared/TaskDetails";
 
 type RunDetailsProps = {
   executionId?: string;
+};
+
+const cancelPipelineRun = async (runId: string): Promise<{id: string, status: string}> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      console.log("Emulation of cancelling run", runId);
+
+      resolve({
+        id: runId,
+        status: "cancelled",
+      });
+    }, 1000);
+  });
+}
+
+const CancelButton = ({
+  runId
+}: {runId: string | null | undefined}) => {
+
+  const notify = useToastNotification();
+
+  const [confirmAction, setConfirmAction] = useState(false);
+
+  const {
+    mutate: cancelPipeline,
+    isPending,
+    isSuccess,
+  } = useMutation({
+    mutationFn: cancelPipelineRun,
+    onSuccess: (responseData) => {
+      notify(`Pipeline run ${responseData.id} cancelled`, "success");
+    },
+    onError: (error) => {
+      setConfirmAction(false);
+      notify(`Error cancelling run: ${error}`, "error");
+    },
+  });
+
+  const handleDelete = useCallback(async () => {
+    if (confirmAction && runId) {
+      try {
+        cancelPipeline(runId);
+      } catch (error) {
+        notify(`Error cancelling run: ${error}`, "error");
+      }
+    } else {
+      setConfirmAction(true);
+    }
+  }, [confirmAction]);
+
+  if(isSuccess) {
+    return <Button disabled>Cancelled</Button>;
+  }
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button variant="destructive" onClick={handleDelete} disabled={isPending}>
+          {isPending ? (
+            <Spinner className="mr-2" />
+          ) : (
+            <div className="flex items-center gap-2">
+              {confirmAction ? (
+                <span className="text-xs">Confirm run cancellation</span>
+              ): (
+                <>Cancel run <CircleStopIcon className="w-4 h-4" /></>
+              )}
+            </div>
+          )}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          Confirm run cancellation. This action cannot be undone.
+        </TooltipContent>
+      </Tooltip>
+  );
 };
 
 export const RunDetails = ({ executionId = "" }: RunDetailsProps) => {
@@ -67,6 +147,8 @@ export const RunDetails = ({ executionId = "" }: RunDetailsProps) => {
   const statusCounts = countTaskStatuses(details, state);
   const runStatus = getRunStatus(statusCounts);
 
+  const isRunning = status === "RUNNING";
+
   const annotations = componentSpec.metadata?.annotations || {};
 
   return (
@@ -77,6 +159,7 @@ export const RunDetails = ({ executionId = "" }: RunDetailsProps) => {
           {componentSpec.name ?? "Unnamed Pipeline"}
         </h2>
         <StatusIcon status={runStatus} tooltip />
+
       </div>
 
       {metadata && (
@@ -131,6 +214,9 @@ export const RunDetails = ({ executionId = "" }: RunDetailsProps) => {
           <StatusBar statusCounts={statusCounts} />
         </div>
       </div>
+
+      {isRunning && <CancelButton runId={runId}/>}
+
 
       {Object.keys(annotations).length > 0 && (
         <div>
