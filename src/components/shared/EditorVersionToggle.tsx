@@ -8,9 +8,42 @@ import { useFlagValue } from "./Settings/useFlags";
 
 type EditorVersion = "v1" | "v2";
 
-const detectEditorVersion = (pathname: string): EditorVersion | null => {
-  if (pathname.startsWith(`${APP_ROUTES.EDITOR_V2}/`)) return "v2";
-  if (pathname.startsWith(`${EDITOR_PATH}/`)) return "v1";
+// Pairs of v1/v2 route bases the toggle can switch between. Both the editor
+// (`/editor` ↔ `/editor-v2`) and the run view (`/runs` ↔ `/runs-v2`) share the
+// same `/$rest` suffix (pipeline name, run id, subgraph execution id), so the
+// toggle just swaps the base prefix and preserves the rest of the path.
+const ROUTE_BASE_PAIRS: { v1: string; v2: string }[] = [
+  { v1: EDITOR_PATH, v2: APP_ROUTES.EDITOR_V2 },
+  { v1: APP_ROUTES.RUNS, v2: APP_ROUTES.RUNS_V2 },
+];
+
+type ToggleTarget = {
+  to: string;
+  tooltip: string;
+  targetVersion: EditorVersion;
+};
+
+const getToggleTarget = (pathname: string): ToggleTarget | null => {
+  for (const { v1, v2 } of ROUTE_BASE_PAIRS) {
+    if (pathname.startsWith(`${v2}/`)) {
+      const rest = pathname.slice(v2.length + 1);
+      if (!rest) return null;
+      return {
+        to: `${v1}/${rest}`,
+        tooltip: "Switch to legacy editor",
+        targetVersion: "v1",
+      };
+    }
+    if (pathname.startsWith(`${v1}/`)) {
+      const rest = pathname.slice(v1.length + 1);
+      if (!rest) return null;
+      return {
+        to: `${v2}/${rest}`,
+        tooltip: "Switch to new editor",
+        targetVersion: "v2",
+      };
+    }
+  }
   return null;
 };
 
@@ -21,28 +54,16 @@ export const EditorVersionToggle = () => {
 
   if (!isEnabled) return null;
 
-  const version = detectEditorVersion(location.pathname);
-  if (!version) return null;
-
-  const lastSegment = location.pathname.split("/").pop() ?? "";
-  const pipelineName = decodeURIComponent(lastSegment);
-  if (!pipelineName) return null;
-
-  const targetVersion = version === "v1" ? "v2" : "v1";
-  const targetPath =
-    targetVersion === "v2"
-      ? `${APP_ROUTES.EDITOR_V2}/${encodeURIComponent(pipelineName)}`
-      : `${EDITOR_PATH}/${encodeURIComponent(pipelineName)}`;
-  const tooltip =
-    targetVersion === "v2" ? "Switch to new editor" : "Switch to legacy editor";
+  const target = getToggleTarget(location.pathname);
+  if (!target) return null;
 
   return (
     <TooltipButton
-      tooltip={tooltip}
-      onClick={() => navigate({ to: targetPath })}
-      aria-label={tooltip}
+      tooltip={target.tooltip}
+      onClick={() => navigate({ to: target.to })}
+      aria-label={target.tooltip}
     >
-      <Icon name={targetVersion === "v2" ? "Sparkles" : "History"} />
+      <Icon name={target.targetVersion === "v2" ? "Sparkles" : "History"} />
     </TooltipButton>
   );
 };
