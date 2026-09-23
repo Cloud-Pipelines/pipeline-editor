@@ -11,6 +11,7 @@
  * judgment over a small, well-defined list when literal matching is not enough.
  */
 
+import { isTangleAiProxyBaseUrl } from "@/utils/aiProxy";
 import type {
   ComponentReference,
   InputSpec,
@@ -302,6 +303,7 @@ async function callLlmResponse(
   const response = await fetch(`${base}/responses`, {
     method: "POST",
     signal: options.signal,
+    ...(isTangleAiProxyBaseUrl(base) ? { credentials: "include" } : {}),
     headers: {
       "content-type": "application/json",
       ...(key ? { authorization: `Bearer ${key}` } : {}),
