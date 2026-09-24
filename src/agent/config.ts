@@ -72,7 +72,11 @@ export class ProxyClient implements OpenAIProvider {
       );
     }
 
-    const configKey = JSON.stringify({ baseURL, apiKey });
+    const configKey = JSON.stringify({
+      baseURL,
+      apiKey,
+      credentials: config.credentials,
+    });
     if (this.#lastConfigKey === configKey && this.#client) return;
 
     this.#client = new OpenAI({
@@ -81,6 +85,7 @@ export class ProxyClient implements OpenAIProvider {
       apiKey: apiKey || "proxy-auth-disabled",
       baseURL,
       dangerouslyAllowBrowser: true,
+      fetchOptions: { credentials: config.credentials },
       ...(apiKey ? {} : { fetch: stripAuthorizationFetch }),
     });
     setDefaultOpenAIClient(this.#client);

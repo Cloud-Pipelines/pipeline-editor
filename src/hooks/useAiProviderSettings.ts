@@ -1,21 +1,27 @@
 import { useSyncExternalStore } from "react";
 
+import { getDefaultAiModelId } from "@/config/aiModels";
 import type { AiProviderConfig } from "@/types/aiProvider";
 import { getStorage } from "@/utils/typedStorage";
 import { isRecord } from "@/utils/typeGuards";
 
 /**
- * Bring-your-own-provider configuration shared by all AI features.
+ * Provider selection shared by all AI features. Turning off bring-your-own-key
+ * mode uses the local backend without overwriting the saved custom provider.
  *
  * Stored in localStorage so each user owns their credentials. API keys stored
  * in localStorage are readable by JavaScript on this origin; users should use
  * scoped keys and rotate them if needed.
  */
 export const AI_PROVIDER_STORAGE_KEY = "tangle.aiProvider.config";
+export const AI_USE_OWN_KEY_STORAGE_KEY = "tangle.aiProvider.useOwnKey";
 const LEGACY_COMPONENT_SEARCH_STORAGE_KEY = "tangle.componentSearchV2.config";
+const LOCAL_AI_PROXY_API_BASE = "http://localhost:8000/api/experimental/ai/v1";
 
 type StorageKey =
-  typeof AI_PROVIDER_STORAGE_KEY | typeof LEGACY_COMPONENT_SEARCH_STORAGE_KEY;
+  | typeof AI_PROVIDER_STORAGE_KEY
+  | typeof AI_USE_OWN_KEY_STORAGE_KEY
+  | typeof LEGACY_COMPONENT_SEARCH_STORAGE_KEY;
 
 type AiProviderSettingsStorage = Record<StorageKey, unknown>;
 
@@ -78,6 +84,7 @@ function subscribe(callback: () => void): () => void {
   const handler = (event: StorageEvent) => {
     if (
       event.key === AI_PROVIDER_STORAGE_KEY ||
+      event.key === AI_USE_OWN_KEY_STORAGE_KEY ||
       event.key === LEGACY_COMPONENT_SEARCH_STORAGE_KEY ||
       event.key === null
     ) {
@@ -105,11 +112,28 @@ function getServerSnapshot(): AiProviderConfig {
 }
 
 export function useAiProviderSettings() {
-  const config = useSyncExternalStore(
+  const customConfig = useSyncExternalStore(
     subscribe,
     getSnapshot,
     getServerSnapshot,
   );
+  const useOwnKey = useSyncExternalStore(
+    subscribe,
+    () => storage.getItem(AI_USE_OWN_KEY_STORAGE_KEY) !== false,
+    () => true,
+  );
+  const config: AiProviderConfig = useOwnKey
+    ? customConfig
+    : {
+        apiBase: LOCAL_AI_PROXY_API_BASE,
+        apiKey: "",
+        model: customConfig.model || getDefaultAiModelId(),
+        credentials: "include",
+      };
+
+  const setUseOwnKey = (enabled: boolean) => {
+    storage.setItem(AI_USE_OWN_KEY_STORAGE_KEY, enabled);
+  };
 
   // Read fresh from storage instead of merging onto the render-time `config`
   // so two updates in the same tick (e.g. two field handlers firing back-to-
@@ -130,5 +154,13 @@ export function useAiProviderSettings() {
 
   const isConfigured = config.apiBase.trim().length > 0;
 
-  return { config, update, clear, isConfigured };
+  return {
+    config,
+    customConfig,
+    useOwnKey,
+    setUseOwnKey,
+    update,
+    clear,
+    isConfigured,
+  };
 }

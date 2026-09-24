@@ -7,6 +7,8 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { AI_USE_OWN_KEY_STORAGE_KEY } from "@/hooks/useAiProviderSettings";
+
 import { AgentSettings } from "./AgentSettings";
 
 const STORAGE_KEY = "tangle.aiProvider.config";
@@ -29,6 +31,97 @@ describe("AgentSettings", () => {
   afterEach(() => {
     window.localStorage.clear();
     delete window.__TANGLE_AI_MODELS__;
+  });
+
+  it("switches to the local proxy and restores the saved provider when switched back", async () => {
+    const savedConfig = {
+      apiBase: "https://api.example.com/v1",
+      apiKey: "sk-personal",
+      model: "gpt-5-mini",
+    };
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(savedConfig));
+    mockFetch.mockResolvedValue(new Response(JSON.stringify({ ok: true })));
+    render(<AgentSettings />);
+    const toggle = screen.getByRole("switch", { name: "Bring your own key" });
+    expect(toggle).toBeChecked();
+
+    fireEvent.click(toggle);
+    expect(toggle).not.toBeChecked();
+    expect(screen.queryByLabelText("API key")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("API base URL")).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/Backend AI proxy: http:\/\/localhost:8000/),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Test AI" }));
+    await waitFor(() =>
+      expect(mockNotify).toHaveBeenCalledWith(
+        "Backend AI proxy is working.",
+        "success",
+      ),
+    );
+    expect(mockFetch).toHaveBeenCalledWith(
+      "http://localhost:8000/api/experimental/ai/v1/responses",
+      expect.objectContaining({
+        credentials: "include",
+        headers: { "content-type": "application/json" },
+      }),
+    );
+    expect(JSON.stringify(mockFetch.mock.calls)).not.toContain("sk-personal");
+    expect(JSON.parse(window.localStorage.getItem(STORAGE_KEY) ?? "")).toEqual(
+      savedConfig,
+    );
+
+    fireEvent.click(toggle);
+    expect(screen.getByLabelText("API base URL")).toHaveValue(
+      savedConfig.apiBase,
+    );
+    expect(screen.getByLabelText("API key")).toHaveValue(savedConfig.apiKey);
+  });
+
+  it("can test the proxy without entering a personal key, URL, or model", async () => {
+    window.localStorage.setItem(AI_USE_OWN_KEY_STORAGE_KEY, "false");
+    mockFetch.mockResolvedValue(new Response(JSON.stringify({ ok: true })));
+    render(<AgentSettings />);
+
+    expect(
+      screen.getByRole("switch", { name: "Bring your own key" }),
+    ).not.toBeChecked();
+    expect(screen.getByText("Status: configured ✅")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Test AI" }));
+
+    await waitFor(() =>
+      expect(mockNotify).toHaveBeenCalledWith(
+        "Backend AI proxy is working.",
+        "success",
+      ),
+    );
+    expect(JSON.parse(mockFetch.mock.calls[0][1].body)).toMatchObject({
+      model: "gpt-5.5",
+    });
+    expect(window.localStorage.getItem(STORAGE_KEY)).toBeNull();
+  });
+
+  it("ignores an in-flight provider test after the mode changes", async () => {
+    let finishTest!: (response: Response) => void;
+    mockFetch.mockReturnValue(
+      new Promise<Response>((resolve) => {
+        finishTest = resolve;
+      }),
+    );
+    render(<AgentSettings />);
+    fireEvent.change(screen.getByLabelText("API base URL"), {
+      target: { value: "https://api.example.com/v1" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save and test AI" }));
+    fireEvent.click(screen.getByRole("switch", { name: "Bring your own key" }));
+    await act(async () =>
+      finishTest(new Response(JSON.stringify({ ok: true }))),
+    );
+
+    expect(window.localStorage.getItem(STORAGE_KEY)).toBeNull();
+    expect(mockNotify).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Test AI" })).toBeEnabled();
   });
 
   it("shows inline feedback instead of saving when API base URL is blank", () => {
